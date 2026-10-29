@@ -756,10 +756,16 @@ void RADIO_SetupRegisters(bool switchToForeground)
     #endif
     BK4819_SetFrequency(Frequency);
 
+#if defined(ENABLE_SURVIVAL) && defined(ENABLE_FMRADIO)
+    gBK4819_KeepAfDac = gFmRadioMode && gScanStateDir != SCAN_OFF;   // FM background scan hop
+#endif
     BK4819_SetupSquelch(
         gRxVfo->SquelchOpenRSSIThresh,    gRxVfo->SquelchCloseRSSIThresh,
         gRxVfo->SquelchOpenNoiseThresh,   gRxVfo->SquelchCloseNoiseThresh,
         gRxVfo->SquelchCloseGlitchThresh, gRxVfo->SquelchOpenGlitchThresh);
+#if defined(ENABLE_SURVIVAL) && defined(ENABLE_FMRADIO)
+    gBK4819_KeepAfDac = false;
+#endif
 
     BK4819_PickRXFilterPathBasedOnFrequency(Frequency);
 

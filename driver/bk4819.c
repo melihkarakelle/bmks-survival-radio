@@ -41,6 +41,7 @@ static const uint8_t DTMF_TONE2_GAIN = 93;
 static uint16_t gBK4819_GpioOutState;
 
 bool gRxIdleMode;
+bool gBK4819_KeepAfDac;   // retune without powering down the AF DAC (no click while FM plays)
 
 __inline uint16_t scale_freq(const uint16_t freq)
 {
@@ -802,8 +803,9 @@ void BK4819_RX_TurnOn(void)
     //
     BK4819_WriteRegister(BK4819_REG_37, 0x1F0F);  // 0001111100001111
 
-    // Turn off everything
-    BK4819_WriteRegister(BK4819_REG_30, 0);
+    // Turn off everything (except the AF DAC when asked: its power cycle clicks
+    // in the speaker while the FM radio shares the audio path)
+    BK4819_WriteRegister(BK4819_REG_30, gBK4819_KeepAfDac ? BK4819_REG_30_ENABLE_AF_DAC : 0);
 
 
     BK4819_WriteRegister(BK4819_REG_30,
