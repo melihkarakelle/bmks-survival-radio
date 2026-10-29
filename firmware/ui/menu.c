@@ -51,6 +51,7 @@ const t_menu_item MenuList[] =
     // Basic
     {"Group",       MENU_SRV_GROUP,      "USE GROUP"  },
     {"Heard",       MENU_SRV_HEARD,      "LAST HEARD" },
+    {"Skip",        MENU_SRV_SKIP,       "SKIP LIST"  },
     {"Favs",        MENU_SRV_FAV,        "FAVORITE"   },
     {"Prio",        MENU_SRV_PRIO,       "PRIORITY"   },
     {"Quiet",       MENU_SQL,            "SQUELCH"    },
@@ -595,7 +596,7 @@ void UI_DisplayMenu(void)
         UI_PrintStringSmallNormal(
             gAskForConfirmation          ? "M:YES  EXIT:NO" :
             gIsInSubMenu                 ? "M:SAVE EXIT:CANCEL" :
-            id == MENU_SRV_ADV || id == MENU_SRV_HEARD || id == MENU_SRV_HELP ? "M:OPEN EXIT:BACK" :
+            id == MENU_SRV_ADV || id == MENU_SRV_HEARD || id == MENU_SRV_SKIP || id == MENU_SRV_HELP ? "M:OPEN EXIT:BACK" :
             IS_SURV_ACTION(id)           ? "M:DO   EXIT:BACK" : "M:EDIT EXIT:BACK", 0, 0, 6);
     }
 #else
@@ -729,6 +730,7 @@ void UI_DisplayMenu(void)
             break;
 
         case MENU_SRV_HEARD:
+        case MENU_SRV_SKIP:
         case MENU_SRV_HELP:
         case MENU_SRV_ADV:
             strcpy(String, "OPEN");

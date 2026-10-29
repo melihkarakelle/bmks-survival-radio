@@ -168,7 +168,12 @@ void CHFRSCANNER_ContinueScanning(void)
 void CHFRSCANNER_ContinueScanning(void)
 {
 #ifdef ENABLE_SURVIVAL
-    if (gCurrentFunction != FUNCTION_INCOMING) {
+    // a frequency on the skip list never stops the scan, even with the squelch open
+    const bool skipped = !sPrioPeek && SURVIVAL_IsSkipped(gRxVfo->freq_config_RX.Frequency);
+
+    if (skipped) {
+        sPrecheck = false;
+    } else if (gCurrentFunction != FUNCTION_INCOMING) {
         if (sPrioPeek) {
             // nothing on the priority channel: NextMemChannel goes on from gNextMrChannel
             sPrioPeek = false;
@@ -206,6 +211,9 @@ void CHFRSCANNER_ContinueScanning(void)
 #endif
 
     if (gCurrentFunction == FUNCTION_INCOMING &&
+#ifdef ENABLE_SURVIVAL
+        !skipped &&
+#endif
         (IS_FREQ_CHANNEL(gNextMrChannel) || gCurrentCodeType == CODE_TYPE_OFF))
     {
         APP_StartListening(gMonitor ? FUNCTION_MONITOR : FUNCTION_RECEIVE);

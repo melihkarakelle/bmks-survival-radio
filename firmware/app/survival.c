@@ -52,6 +52,45 @@ uint32_t gSurvivalCustomStart = SURV_RANGE_START;
 uint32_t gSurvivalCustomEnd   = SURV_RANGE_END;
 uint8_t  gSurvivalPrio        = 0xFF;
 
+// ---------------------------------------------------------------- skip list
+// Frequencies the scans pass over (noise, carriers), kept at the start of the list.
+// EEPROM 0x1C00: the DTMF contact area, unused here (DTMF calling is off)
+#define SURV_SKIP_ADDR 0x1C00
+
+static uint32_t sSkip[SURV_SKIP_N];   // 10 Hz units
+static uint8_t  sSkipCount;
+
+static void LoadSkip(void)
+{
+    EEPROM_ReadBuffer(SURV_SKIP_ADDR, sSkip, sizeof(sSkip));
+    sSkipCount = 0;
+    while (sSkipCount < SURV_SKIP_N && sSkip[sSkipCount] != 0 && sSkip[sSkipCount] != 0xFFFFFFFF)
+        sSkipCount++;
+    memset(&sSkip[sSkipCount], 0, (SURV_SKIP_N - sSkipCount) * sizeof(sSkip[0]));
+}
+
+static void SaveSkip(void)
+{
+    for (uint8_t i = 0; i < SURV_SKIP_N; i += 2)
+        EEPROM_WriteBuffer(SURV_SKIP_ADDR + i * 4, &sSkip[i]);
+}
+
+bool SURVIVAL_IsSkipped(uint32_t frequency)
+{
+    for (uint8_t i = 0; i < sSkipCount; i++)
+        if (sSkip[i] == frequency)
+            return true;
+    return false;
+}
+
+static void RemoveSkip(uint8_t index)
+{
+    memmove(&sSkip[index], &sSkip[index + 1], (SURV_SKIP_N - 1 - index) * sizeof(sSkip[0]));
+    sSkip[SURV_SKIP_N - 1] = 0;
+    sSkipCount--;
+    SaveSkip();
+}
+
 const char gSubMenu_SRV_MODE[SURV_MODE_COUNT][9] = {
     "PMR446", "FRS", "MARINE", "AIR", "HAM", "CB", "FM RADIO", "CUSTOM", "FAV",
 };
@@ -366,6 +405,7 @@ void SURVIVAL_Init(void)
 
     if (memcmp(marker, SURV_MAGIC, sizeof(SURV_MAGIC)) == 0 && marker[4] == SURV_TABLE_VERSION) {
         uint32_t range[2];
+        LoadSkip();
         EEPROM_ReadBuffer(SURV_RANGE_ADDR, range, sizeof(range));
         gSurvivalTxMask = marker[5];
         if (marker[6] <= SURV_FMSCAN_LAST)
@@ -391,6 +431,9 @@ void SURVIVAL_Init(void)
 
     WriteChannels();
     WriteDefaults();
+    sSkipCount = 0;   // new channel tables: an empty skip list
+    memset(sSkip, 0, sizeof(sSkip));
+    SaveSkip();
     gSurvivalPrio   = 0xFF;   // the channels were rewritten without a priority mark
     gSurvivalTxMask = SURV_TX_DEFAULT;
     SURVIVAL_SaveSettings();
@@ -838,10 +881,53 @@ bool SURVIVAL_HelpKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
     }
 }
 
+static bool sSkipView;   // the heard list slot shows the skip list
+
+// F+8: the current frequency in / out of the skip list. While scanning: skip it and scan on.
+void SURVIVAL_ToggleSkip(void)
+{
+    const bool     scanning = gScanStateDir != SCAN_OFF;
+    const uint32_t f        = scanning ? gRxVfo->freq_config_RX.Frequency : gTxVfo->pRX->Frequency;
+
+    for (uint8_t i = 0; i < sSkipCount; i++) {
+        if (sSkip[i] == f) {
+            RemoveSkip(i);
+            if (!scanning)
+                ShowMessage("NOT SKIPPED", "SCAN STOPS HERE");
+            return;
+        }
+    }
+
+    if (sSkipCount == SURV_SKIP_N) {
+        gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        if (!scanning)
+            ShowMessage("SKIP LIST FULL", "MENU > SKIP");
+        return;
+    }
+    sSkip[sSkipCount++] = f;
+    SaveSkip();
+
+    if (scanning) {   // as F4HWN's scan exclusion: back to the last real find, on to the next step
+        gVfoConfigureMode  = VFO_CONFIGURE;
+        gFlagResetVfos     = true;
+        lastFoundFrqOrChan = lastFoundFrqOrChanOld;
+        CHFRSCANNER_ContinueScanning();
+        return;
+    }
+    ShowMessage("SKIPPED", "SCAN PASSES BY");
+}
+
+void SURVIVAL_ShowSkipList(void)
+{
+    SURVIVAL_ShowLog();
+    sSkipView = true;
+}
+
 void SURVIVAL_ShowLog(void)
 {
     if (gScanStateDir != SCAN_OFF)
         CHFRSCANNER_StopHere();
+    sSkipView             = false;
     sLogCursor            = 0;
     sMsgTimer             = 0;
     gRequestDisplayScreen = DISPLAY_SCANNER;   // the code scanner screen is free in survival
@@ -881,6 +967,8 @@ void SURVIVAL_LogKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
         return;
     }
 
+    const uint8_t count = sSkipView ? sSkipCount : sHeardCount;
+
     switch (Key) {
         case KEY_UP:
             if (!bKeyPressed)
@@ -891,13 +979,21 @@ void SURVIVAL_LogKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
         case KEY_DOWN:
             if (!bKeyPressed)
                 return;
-            if (sLogCursor + 1 < sHeardCount)
+            if (sLogCursor + 1 < count)
                 sLogCursor++;
             break;
-        case KEY_MENU:   // go to the selected entry
+        case KEY_MENU:
             if (bKeyPressed)
                 return;
-            if (sHeardCount)
+            if (sSkipView) {   // delete the selected entry, stay on the list
+                if (count) {
+                    RemoveSkip(sLogCursor);
+                    if (sLogCursor > 0 && sLogCursor >= sSkipCount)
+                        sLogCursor--;
+                }
+                break;
+            }
+            if (sHeardCount)   // go to the selected entry
                 TuneTo(&sHeard[sLogCursor]);
             gRequestDisplayScreen = DISPLAY_MAIN;
             return;
@@ -922,6 +1018,21 @@ void SURVIVAL_DisplayLog(void)
     if (sMsgTimer) {
         UI_PrintString(sMsg1, 0, 127, 1, 8);
         UI_PrintString(sMsg2, 0, 127, 4, 8);
+        ST7565_BlitFullScreen();
+        return;
+    }
+
+    if (sSkipView) {
+        sprintf(String, "SKIP %u/%u  M:DEL", sSkipCount, SURV_SKIP_N);
+        UI_PrintStringSmallBold(String, 0, 127, 0);
+        if (sSkipCount == 0)
+            UI_PrintStringSmallNormal("empty, F+8 adds", 0, 127, 3);
+        const uint8_t top = (sLogCursor > 5) ? sLogCursor - 5 : 0;
+        for (uint8_t row = 0; row < 6 && top + row < sSkipCount; row++) {
+            const uint32_t f = sSkip[top + row];
+            sprintf(String, "%c%3lu.%05lu MHz", (top + row == sLogCursor) ? '>' : ' ', f / 100000, f % 100000);
+            UI_PrintStringSmallNormal(String, 1, 0, row + 1);
+        }
         ST7565_BlitFullScreen();
         return;
     }

@@ -112,7 +112,7 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
 
 #ifdef ENABLE_SURVIVAL
     // only the shortcuts on the help page; the other F functions are upstream VFO tools
-    if (Key != KEY_0 && Key != KEY_4 && Key != KEY_5 && Key != KEY_7 && Key != KEY_UP && Key != KEY_DOWN) {
+    if (Key != KEY_0 && Key != KEY_4 && Key != KEY_5 && Key != KEY_7 && Key != KEY_8 && Key != KEY_UP && Key != KEY_DOWN) {
         if (beep)
             gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
         return;
@@ -285,6 +285,10 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             break;
 
         case KEY_8:
+#ifdef ENABLE_SURVIVAL
+            SURVIVAL_ToggleSkip();
+            break;
+#endif
             gTxVfo->FrequencyReverse = gTxVfo->FrequencyReverse == false;
             gRequestSaveChannel = 1;
             break;
@@ -607,7 +611,7 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
     }
 
 #ifdef ENABLE_SURVIVAL
-    if (Key != KEY_0 && Key != KEY_4 && Key != KEY_5 && Key != KEY_7) {   // not on the help page: the page stays
+    if (Key != KEY_0 && Key != KEY_4 && Key != KEY_5 && Key != KEY_7 && Key != KEY_8) {   // not on the help page: the page stays
         gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
         return;
     }

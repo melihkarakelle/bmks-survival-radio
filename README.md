@@ -472,3 +472,16 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 
 - Yardım satırları `TUŞ>İşlev`: tuş adı büyük harf, işlev normal yazı (ör. `SIDE1>Light, blink`, `HOLD M>Menu`).
   Alt satır `M>Next  EXIT>Back`. v5.2: SIDE1 ikinci satırı `      Strobe, SOS` (aynı tuşun devamı, girintili).
+
+### v5.3 (2026-10-29): atlama listesi (skip)
+
+- Amaç: gürültülü / sürekli taşıyıcılı kanallar taramayı durdurmasın. Elle seçilen kanal yine dinlenir.
+- F+8: tararken o anki frekansı listeye ekler ve taramaya devam eder (F4HWN tarama hariç tutma yolu gibi);
+  taramıyorken mevcut frekansı ekler / çıkarır (SKIPPED / NOT SKIPPED mesajı).
+- Liste frekans tutar (16 adet, 10 Hz birimi), EEPROM 0x1C00 (DTMF rehber alanı, Survival'da DTMF kapalı).
+  İlk kurulum / Reset'te boşalır. Aynı frekans her grupta atlanır.
+- Tarayıcı: `CHFRSCANNER_ContinueScanning` listedeki frekansta ön kontrolü ve dinlemeyi atlar (squelch açık olsa da);
+  kanal grupları, AIR/CUSTOM ve FM arka plan taraması dahil.
+- Menü BASIC > Skip: liste (`SKIP n/16  M:DEL`), UP/DOWN seç, M sil (onaysız), EXIT çık.
+- Ana ekran: boştayken atlanan frekansta R0'da SKIP. Yardım 1/3: `5>Prio  7>Favorite`, `8>Skip in scan`.
+- Not: tarama sırasında M basılı tutmak hâlâ F4HWN'in RAM'de kalan kanal hariç tutmasını yapıyor (menü açmıyor).

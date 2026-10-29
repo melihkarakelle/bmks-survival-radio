@@ -1990,6 +1990,7 @@ static void MENU_SurvivalAction(uint8_t id)
 
     switch (id) {
         case MENU_SRV_HEARD: SURVIVAL_ShowLog();     break;
+        case MENU_SRV_SKIP:  SURVIVAL_ShowSkipList(); break;
         case MENU_SRV_FAV:   SURVIVAL_AddFav();      break;
         case MENU_SRV_PRIO:  SURVIVAL_TogglePrio();  break;
         case MENU_SRV_RADIO: SURVIVAL_ToggleFm();    break;
