@@ -113,7 +113,9 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
 
     switch (Key) {
         case KEY_0:
-            #ifdef ENABLE_FMRADIO
+            #if defined(ENABLE_SURVIVAL) && defined(ENABLE_FMRADIO)
+                SURVIVAL_SetMode(SURV_MODE_FM);   // stops a running scan first
+            #elif defined(ENABLE_FMRADIO)
                 ACTION_FM();
             #endif
             break;
@@ -701,7 +703,13 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
                 gWasFKeyPressed = false;
                 gUpdateStatus   = true;
 
+#ifdef ENABLE_SURVIVAL
+                // survival: hold M opens the menu (tap M switches mode, below)
+                gFlagRefreshSetting   = true;
+                gRequestDisplayScreen = DISPLAY_MENU;
+#else
                 ACTION_Handle(KEY_MENU, bKeyPressed, bKeyHeld);
+#endif
             }
         }
 
@@ -711,6 +719,13 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
     if (!bKeyPressed && !gDTMF_InputMode) { // menu key released
         const bool bFlag = !gInputBoxIndex;
         gInputBoxIndex   = 0;
+
+#ifdef ENABLE_SURVIVAL
+        if (bFlag) {   // tap M: next mode, also while scanning
+            ACTION_SurvivalGroup();
+            return;
+        }
+#endif
 
         if (bFlag) {
             if (gScanStateDir != SCAN_OFF) {
@@ -787,6 +802,13 @@ static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
     
     if (!gWasFKeyPressed) // pressed without the F-key
     {   
+#ifdef ENABLE_SURVIVAL
+        // survival: tap * starts/stops the scan (no DTMF entry)
+        ACTION_Scan(false);
+        gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
+        gUpdateStatus = true;
+        return;
+#endif
         if (gScanStateDir == SCAN_OFF 
 #ifdef ENABLE_NOAA
             && !IS_NOAA_CHANNEL(gTxVfo->CHANNEL_SAVE)

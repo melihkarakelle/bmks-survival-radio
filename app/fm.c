@@ -21,6 +21,9 @@
 #include "app/action.h"
 #include "app/fm.h"
 #include "app/generic.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "audio.h"
 #include "bsp/dp32g030/gpio.h"
 #include "driver/bk1080.h"
@@ -466,8 +469,18 @@ static void Key_EXIT(uint8_t state)
 
 static void Key_MENU(uint8_t state)
 {
+#ifdef ENABLE_SURVIVAL
+    // survival: tap M switches mode, hold M saves/deletes the station
+    if (state == BUTTON_EVENT_SHORT) {
+        ACTION_SurvivalGroup();
+        return;
+    }
+    if (state != BUTTON_EVENT_HELD)
+        return;
+#else
     if (state != BUTTON_EVENT_SHORT)
         return;
+#endif
 
 
     gRequestDisplayScreen = DISPLAY_FM;
