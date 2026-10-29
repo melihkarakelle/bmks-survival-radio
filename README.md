@@ -461,3 +461,9 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 - Yan tuş 1: tap = fener açık → yanıp sönme → SOS → kapalı; hold = monitor aç/kapat.
   Ayar revizyonu 3: mevcut telsizlerde yan tuş 1 ataması açılışta bu düzene çevrilir.
 - Yardım 3/3: SIDE1 LIGHT, AGAIN: BLINK, SOS, HOLD SIDE1 MONITOR, SIDE2 FM RADIO, HOLD SIDE2 SCAN.
+
+### v5.0 (2026-10-29): strobe
+
+- Fener sırası (yan tuş 1 tap): açık → yanıp sönme → strobe → SOS → kapalı.
+- Strobe: 3 × (30 ms açık, 30 ms kapalı), saniyenin kalanı (820 ms) kapalı; 10 ms zaman diliminde sayılır.
+- Yardım 3/3 R2: BLINK,STROBE,SOS.

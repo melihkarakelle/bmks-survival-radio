@@ -15,6 +15,17 @@
             return;
         }
 
+#ifdef ENABLE_SURVIVAL
+        if (gFlashLightState == FLASHLIGHT_STROBE) {   // called every 10 ms
+            const uint8_t phase = gFlashLightBlinkCounter % 100;
+            if (phase < 18 && (phase / 3) % 2 == 0)
+                GPIO_SetBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
+            else
+                GPIO_ClearBit(&GPIOC->DATA, GPIOC_PIN_FLASHLIGHT);
+            return;
+        }
+#endif
+
         if (gFlashLightState == FLASHLIGHT_SOS) {
             const uint16_t u = 15;
             static uint8_t c;
@@ -55,6 +66,9 @@
                 break;
             case FLASHLIGHT_ON:
             case FLASHLIGHT_BLINK:
+#ifdef ENABLE_SURVIVAL
+            case FLASHLIGHT_STROBE:
+#endif
                 gFlashLightState++;
                 break;
             case FLASHLIGHT_SOS:

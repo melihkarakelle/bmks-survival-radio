@@ -94,7 +94,7 @@ void UI_DisplayStatus(void)
 static const char HELP_MAIN[] = "0 FM RADIO\0"  "4 HEARD\0"          "5 PRIORITY\0"      "7 FAVORITE\0"     "UP/DN SQUELCH";
 static const char HELP_FM[]   = "0 EXIT FM\0"   "3 SAVED / TUNE\0"   "* FIND ALL FM\0"   "HOLD M SAVE\0"    "UP/DN TUNE";
 static const char HELP_KEYS[] = "M NEXT GROUP\0" "HOLD M MENU\0"     "* SCAN / STOP\0"   "HOLD UP/DN SCAN\0" "HOLD F LOCK";
-static const char HELP_SIDE[] = "SIDE1 LIGHT\0" "AGAIN: BLINK, SOS\0" "HOLD SIDE1 MONITOR\0" "SIDE2 FM RADIO\0" "HOLD SIDE2 SCAN";
+static const char HELP_SIDE[] = "SIDE1 LIGHT\0" "BLINK,STROBE,SOS\0" "HOLD SIDE1 MONITOR\0" "SIDE2 FM RADIO\0" "HOLD SIDE2 SCAN";
 
 static const char *const HELP_TITLE[] = {"F + KEY      1/3", "KEYS         2/3", "SIDE KEYS    3/3"};
 

@@ -10,6 +10,9 @@
         FLASHLIGHT_OFF = 0,
         FLASHLIGHT_ON,
         FLASHLIGHT_BLINK,
+#ifdef ENABLE_SURVIVAL
+        FLASHLIGHT_STROBE,   // 3 x (30 ms on, 30 ms off), dark for the rest of the second
+#endif
         FLASHLIGHT_SOS
     };
 
