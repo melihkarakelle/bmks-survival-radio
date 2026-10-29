@@ -881,6 +881,20 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
     gPowerHigh = false;
 #endif
 
+#ifdef ENABLE_SURVIVAL
+    // hold up/down: scan in that direction until there is activity
+    // (the fast repeat events while the key stays down are ignored)
+    if (bKeyHeld) {
+        if (bKeyPressed && gInputBoxIndex == 0) {
+            if (gScanStateDir == SCAN_OFF)
+                ACTION_ScanDirection(Direction);
+            else
+                gScanStateDir = Direction;
+        }
+        return;
+    }
+#endif
+
     uint8_t Channel = gEeprom.ScreenChannel[gEeprom.TX_VFO];
 
     if (bKeyHeld || !bKeyPressed) { // key held or released

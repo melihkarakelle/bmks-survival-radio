@@ -191,6 +191,18 @@ void ACTION_Monitor(void)
         gRequestDisplayScreen = gScreenToDisplay;
 }
 
+#ifdef ENABLE_SURVIVAL
+static int8_t sScanDirection = SCAN_FWD;
+
+// start the channel/frequency scan going up (+1) or down (-1)
+void ACTION_ScanDirection(int8_t direction)
+{
+    sScanDirection = direction;
+    ACTION_Scan(false);
+    sScanDirection = SCAN_FWD;
+}
+#endif
+
 void ACTION_Scan(bool bRestart)
 {
     (void)bRestart;
@@ -228,6 +240,12 @@ void ACTION_Scan(bool bRestart)
     if (gScanStateDir != SCAN_OFF) {
         // already scanning
 
+#ifdef ENABLE_SURVIVAL
+        // survival: scanning toggles off in every mode (no scan list cycling)
+        CHFRSCANNER_Stop();
+        gUpdateStatus = true;
+        return;
+#endif
         if (!IS_MR_CHANNEL(gNextMrChannel)) {
             CHFRSCANNER_Stop();
 #ifdef ENABLE_VOICE
@@ -259,7 +277,11 @@ void ACTION_Scan(bool bRestart)
         SETTINGS_WriteCurrentState();
         #endif
         // start scanning
+#ifdef ENABLE_SURVIVAL
+        CHFRSCANNER_Start(true, sScanDirection);
+#else
         CHFRSCANNER_Start(true, SCAN_FWD);
+#endif
 
 #ifdef ENABLE_VOICE
         AUDIO_SetVoiceID(0, VOICE_ID_SCANNING_BEGIN);

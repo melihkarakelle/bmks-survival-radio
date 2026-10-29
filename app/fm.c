@@ -527,6 +527,20 @@ static void Key_MENU(uint8_t state)
 
 static void Key_UP_DOWN(uint8_t state, int8_t Step)
 {
+#ifdef ENABLE_SURVIVAL
+    // hold up/down: seek the next station in that direction
+    if (state == BUTTON_EVENT_HELD) {
+        if (gInputBoxIndex == 0 && gFM_ScanState == FM_SCAN_OFF && !gAskToSave) {
+            gEeprom.FM_IsMrMode = false;
+            gFM_AutoScan        = false;
+            BK1080_GetFrequencyDeviation(gEeprom.FM_FrequencyPlaying);
+            FM_Tune(gEeprom.FM_FrequencyPlaying, Step, false);
+            gRequestDisplayScreen = DISPLAY_FM;
+        }
+        return;
+    }
+#endif
+
     if (state == BUTTON_EVENT_PRESSED) {
         if (gInputBoxIndex) {
             gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
