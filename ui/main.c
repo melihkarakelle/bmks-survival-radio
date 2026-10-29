@@ -640,11 +640,17 @@ void UI_DisplayMain(void)
                         shift = 3;
                     }
 
+#ifdef ENABLE_SURVIVAL
+                    // survival: the lower half shows the big frequency of AIR / CUSTOM
+                    if (!isMainOnly())
+#endif
+                    {
                     UI_PrintString("ScnRng", 5, 0, line + shift, 8);
                     sprintf(String, "%3u.%05u", gScanRangeStart / 100000, gScanRangeStart % 100000);
                     UI_PrintStringSmallNormal(String, 56, 0, line + shift);
                     sprintf(String, "%3u.%05u", gScanRangeStop / 100000, gScanRangeStop % 100000);
                     UI_PrintStringSmallNormal(String, 56, 0, line + shift + 1);
+                    }
 
                     if (!isMainOnly())
                         continue;
@@ -815,7 +821,7 @@ void UI_DisplayMain(void)
             // show the frequency band number
             const unsigned int x = 2;
 #ifdef ENABLE_SURVIVAL
-            strcpy(String, SURVIVAL_VfoLabel(gEeprom.ScreenChannel[vfo_num]));
+            strcpy(String, "VFO");
 #else
             char * buf = gEeprom.VfoInfo[vfo_num].pRX->Frequency < _1GHz_in_KHz ? "" : "+";
             sprintf(String, "F%u%s", 1 + gEeprom.ScreenChannel[vfo_num] - FREQ_CHANNEL_FIRST, buf);
@@ -1032,6 +1038,21 @@ void UI_DisplayMain(void)
             }
             else
             {   // frequency mode
+#ifdef ENABLE_SURVIVAL
+                if (isMainOnly()) {
+                    // like a named channel: AIR BAND / CUSTOM on top, big frequency below
+                    UI_PrintString(SURVIVAL_VfoLabel(gEeprom.ScreenChannel[vfo_num]), 32, 0, line, 8);
+                    sprintf(String, "%3u.%05u", frequency / 100000, frequency % 100000);
+                    if (frequency < _1GHz_in_KHz) {
+                        UI_PrintStringSmallNormal(String + 7, 113, 0, line + 4);
+                        String[7] = 0;
+                        UI_DisplayFrequency(String, 32, line + 3, false);
+                    } else {
+                        UI_PrintString(String, 32, 0, line + 3, 8);
+                    }
+                } else
+#endif
+                {
                 sprintf(String, "%3u.%05u", frequency / 100000, frequency % 100000);
 
 #ifdef ENABLE_BIG_FREQ
@@ -1047,6 +1068,8 @@ void UI_DisplayMain(void)
                 {
                     // show the frequency in the main font
                     UI_PrintString(String, 32, 0, line, 8);
+                }
+
                 }
 
                 // show the channel symbols

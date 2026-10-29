@@ -403,7 +403,7 @@ static void SelectModeChannel(uint8_t mode, uint8_t vfo)
 
 const char *SURVIVAL_VfoLabel(uint8_t channel)
 {
-    return (channel == AIR_VFO_CHANNEL) ? "AIR" : "CUST";
+    return (channel == AIR_VFO_CHANNEL) ? "AIR BAND" : "CUSTOM";
 }
 
 void SURVIVAL_SetMode(uint8_t mode)
