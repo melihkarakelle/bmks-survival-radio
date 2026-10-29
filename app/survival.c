@@ -30,7 +30,7 @@
 #define SURV_RANGE_START   14400000   // 144.000 MHz
 #define SURV_RANGE_END     14600000   // 146.000 MHz
 // bump when the channel tables or defaults change, radios re-init on next boot
-#define SURV_TABLE_VERSION 2
+#define SURV_TABLE_VERSION 3
 #define SURV_TX_DEFAULT    ((1u << SURV_TX_PMR) | (1u << SURV_TX_FRS))
 
 static const uint8_t SURV_MAGIC[4] = {'B', 'M', 'K', 'S'};
@@ -88,20 +88,33 @@ static const uint32_t FRS_FREQS[] = {
     46255000, 46257500, 46260000, 46262500, 46265000, 46267500, 46270000, 46272500,
 };
 
-// distress/calling first, then the common simplex ship channels
+// distress/calling first, then the common simplex ship channels, then the
+// duplex channels on the coast station frequency (coastguard MSI, ports, VTS);
+// duplex channels transmit 4.6 MHz lower on the ship frequency
 static const uint8_t MARINE_NUMS[] = {
     16, 6, 67, 8, 9, 10, 11, 12, 13, 14, 15, 17, 68, 69, 71, 72, 73, 74, 77, 201, 202,
+     1,  2,  3,  4,  5,  7, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+    60, 61, 62, 63, 64, 65, 66, 78, 79, 80, 81, 82, 83, 84, 85, 86,
 };
 static const uint32_t MARINE_FREQS[] = {
     15680000, 15630000, 15637500, 15640000, 15645000, 15650000, 15655000,
     15660000, 15665000, 15670000, 15675000, 15685000, 15642500, 15647500,
     15657500, 15662500, 15667500, 15672500, 15687500, 15785000, 16142500,
+    16065000, 16070000, 16075000, 16080000, 16085000, 16095000, 16150000,
+    16155000, 16160000, 16165000, 16170000, 16175000, 16180000, 16185000,
+    16190000, 16195000, 16200000, 16062500, 16067500, 16072500, 16077500,
+    16082500, 16087500, 16092500, 16152500, 16157500, 16162500, 16167500,
+    16172500, 16177500, 16182500, 16187500, 16192500,
 };
+#define MARINE_DUPLEX_OFFSET 460000   // 4.6 MHz
 
+// UK VOLMET: continuous airport weather broadcasts
 static const uint32_t AIR_FREQS[] = {
     12150000, 24300000, 12310000, 12345000, 12280000, 12997500,
+    13537500, 12860000, 12660000, 12572500,
 };
-static const char AIR_NAMES[] = "GUARD\0MIL GUARD\0SAR\0AIR2AIR\0UNICOM\0GLIDING";
+static const char AIR_NAMES[] = "GUARD\0MIL GUARD\0SAR\0AIR2AIR\0UNICOM\0GLIDING\0"
+                                "VOLMET MN\0VOLMET S\0VOLMET N\0VOLMET SC";
 
 static const uint32_t HAM_FREQS[] = {
     14550000, 43350000, 14580000,
@@ -213,6 +226,10 @@ static void WriteChannels(void)
             pVfo->Modulation        = (grp->flags & SURV_AM)     ? MODULATION_AM     : MODULATION_FM;
             pVfo->CHANNEL_BANDWIDTH = (grp->flags & SURV_NARROW) ? BANDWIDTH_NARROW  : BANDWIDTH_WIDE;
             pVfo->OUTPUT_POWER      = (grp->flags & SURV_HIGH)   ? OUTPUT_POWER_HIGH : OUTPUT_POWER_LOW4;
+            if (grp->freqs == MARINE_FREQS && grp->nums[i] < 200 && freq >= 16000000) {
+                pVfo->TX_OFFSET_FREQUENCY           = MARINE_DUPLEX_OFFSET;
+                pVfo->TX_OFFSET_FREQUENCY_DIRECTION = TX_OFFSET_FREQUENCY_DIRECTION_SUB;
+            }
             SETTINGS_SaveChannel(ch, 0, pVfo, 2);
 
             ChannelName(grp, i, name);
