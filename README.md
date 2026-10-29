@@ -399,3 +399,19 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
   fbcf26d, upstream geçmişi dahil değil), üstünde her Survival sürümü ayrı commit.
 - Repoda olmayanlar, yeniden kurulabilir: `refs/` (indirilen referans repolar), `toolchain/` (Arm GCC arşivleri),
   `.venv/` (pyserial, crcmod, pillow), ara build dosyaları, ekran kaydı kareleri (`design/screens/seq/`).
+
+## Arayüz v2 (Codex ile, design/ui_v2/)
+
+### Aşama 1 — v4.2/v4.3: ana ekran, durum satırı, FM ekranı (telsizde, ekran kaydıyla doğrulandı)
+
+- Yeni `firmware/ui/survival.c`; F4HWN'in ana ekranı, RSSI çubuğu ve durum satırı Survival'da derleme dışı.
+  Boş flash 4532 → 8392 bayt.
+- Durum satırı: durum kelimesi (READY / SCAN UP / SCAN DN / RX / TX / MONITOR / FM / FM SCAN / F / LOW BAT),
+  kilitliyken LOCK, alımda sinyal çubuğu, voltaj, 3 bölmeli pil.
+- Ana ekran: R0 grup (tarama/alım/gönderimde ters renk) + PRI; R1–R2 büyük kanal adı (AIR BAND / CUSTOM);
+  R3–R4 frekansın tüm haneleri büyük; R5 güç/bant genişliği/squelch veya RX ONLY (bantlarda modülasyon/adım), DUP, CT;
+  R6 o anki tuş ipucu ya da TX BLOCKED gibi durum.
+- FM: FM RADIO, büyük frekans, SAVED/TUNE/SEEK/FIND ALL ya da kaydet/sil sorusu (HOLD M), ters renkli arka plan alıcı
+  satırı ve frekansı, tuş ipucu.
+- v4.3: Reset sonrası FM bandı 64–76 MHz'e düşüyordu (silinmiş EEPROM = bant 3); ilk kurulum ve ayar revizyonu 2
+  87.5–108 MHz yapar.
