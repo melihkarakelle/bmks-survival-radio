@@ -811,6 +811,11 @@ void UI_DisplayMain(void)
             const unsigned int x = 2;
             const bool inputting = gInputBoxIndex != 0 && gEeprom.TX_VFO == vfo_num;
             if (!inputting)
+#ifdef ENABLE_SURVIVAL
+                if (SURVIVAL_IsFavChannel(gEeprom.ScreenChannel[vfo_num]))
+                    strcpy(String, "FAV");   // own channel, not a fixed group
+                else
+#endif
                 sprintf(String, "M%u", gEeprom.ScreenChannel[vfo_num] + 1);
             else
                 sprintf(String, "M%.3s", INPUTBOX_GetAscii());  // show the input text

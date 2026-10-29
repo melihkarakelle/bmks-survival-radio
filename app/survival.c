@@ -195,6 +195,11 @@ static uint8_t FirstFav(void)
     return 0xFF;
 }
 
+bool SURVIVAL_IsFavChannel(uint8_t channel)
+{
+    return IS_MR_CHANNEL(channel) && channel >= FavFirst();
+}
+
 bool SURVIVAL_GetGroupRange(uint8_t channel, uint8_t *first, uint8_t *last)
 {
     const uint8_t g = FindGroup(channel);

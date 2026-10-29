@@ -54,6 +54,7 @@ void    SURVIVAL_SaveSettings(void);
 void    SURVIVAL_SaveCustomRange(void);
 void    SURVIVAL_ApplyScanRange(void);
 bool    SURVIVAL_GetGroupRange(uint8_t channel, uint8_t *first, uint8_t *last);
+bool    SURVIVAL_IsFavChannel(uint8_t channel);
 uint8_t SURVIVAL_FindNextChannel(uint8_t Channel, int8_t Direction, bool bCheckScanList, uint8_t VFO);
 uint8_t SURVIVAL_GetMode(void);
 void    SURVIVAL_SetMode(uint8_t mode);
