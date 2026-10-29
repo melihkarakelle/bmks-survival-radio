@@ -1043,6 +1043,7 @@ void UI_DisplayMain(void)
                     // like a named channel: AIR BAND / CUSTOM on top, big frequency below
                     UI_PrintString(SURVIVAL_VfoLabel(gEeprom.ScreenChannel[vfo_num]), 32, 0, line, 8);
                     sprintf(String, "%3u.%05u", frequency / 100000, frequency % 100000);
+                    SURVIVAL_MaskScanDigits(String);
                     if (frequency < _1GHz_in_KHz) {
                         UI_PrintStringSmallNormal(String + 7, 113, 0, line + 4);
                         String[7] = 0;

@@ -18,6 +18,7 @@
 #include "driver/eeprom.h"
 #include "external/printf/printf.h"
 #include "frequencies.h"
+#include "functions.h"
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -399,6 +400,18 @@ static void SelectModeChannel(uint8_t mode, uint8_t vfo)
     const uint8_t ch = GroupStart(mode);
     gEeprom.MrChannel[vfo]     = ch;
     gEeprom.ScreenChannel[vfo] = ch;
+}
+
+// while a VFO range is scanned the screen is redrawn every few steps only,
+// so the kHz digits would lag: show "123.-----" until the scan stops on a signal
+void SURVIVAL_MaskScanDigits(char *freq)
+{
+    if (gScanStateDir == SCAN_OFF || FUNCTION_IsRx())
+        return;
+    char *p = strchr(freq, '.');
+    if (p)
+        while (*++p)
+            *p = '-';
 }
 
 const char *SURVIVAL_VfoLabel(uint8_t channel)

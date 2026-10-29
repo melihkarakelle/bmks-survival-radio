@@ -101,7 +101,10 @@ void UI_DisplayFM(void)
     UI_PrintStringSmallNormal(String, 0, 127, 5);
 
     const uint32_t f = gRxVfo->freq_config_RX.Frequency;
-    sprintf(String, "%u.%05u MHz", f / 100000, f % 100000);
+    sprintf(String, "%u.%05u", f / 100000, f % 100000);
+    if (!IS_MR_CHANNEL(channel))
+        SURVIVAL_MaskScanDigits(String);
+    strcat(String, " MHz");
     UI_PrintStringSmallNormal(String, 0, 127, 6);
 
     ST7565_BlitFullScreen();
