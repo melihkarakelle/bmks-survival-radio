@@ -3,6 +3,7 @@
 #include "app/chFrScanner.h"
 #ifdef ENABLE_SURVIVAL
     #include "app/survival.h"
+    #include "driver/bk4819.h"
 #endif
 #include "functions.h"
 #include "misc.h"
@@ -40,8 +41,53 @@ uint8_t             initialCROSS_BAND_RX_TX;
 static void NextFreqChannel(void);
 static void NextMemChannel(void);
 
+#ifdef ENABLE_SURVIVAL
+// Fast scan: a short first look at the RSSI after every hop. A step at the
+// noise floor is left after ~20 ms, anything clearly above it gets the full
+// 90 ms so the squelch can decide. The floor is learned from the empty steps.
+#define SCAN_PRECHECK_10MS 2
+#define SCAN_FULL_10MS     9
+
+static bool     sPrecheck;
+static uint16_t sNoiseFloor;    // RSSI (0.5 dB units) of empty steps, 0 = not known yet
+static uint8_t  sDisplaySteps;
+
+static void ScanStepDone(void)
+{
+    gScanPauseDelayIn_10ms = SCAN_PRECHECK_10MS;
+    sPrecheck              = true;
+
+    // redraw every few steps only, with the short dwell the LCD would slow the scan
+    if (++sDisplaySteps >= 4) {
+        sDisplaySteps  = 0;
+        gUpdateDisplay = true;
+    }
+}
+
+// true when the step is at the noise floor and can be left right away
+static bool PrecheckEmpty(void)
+{
+    const uint16_t rssi   = BK4819_GetRSSI();
+    const uint16_t margin = 4 + 2 * gEeprom.SQUELCH_LEVEL;   // 3 dB at SQL1, 5 dB at SQL3
+
+    if (sNoiseFloor == 0) {   // first step of a scan: learn, give it the full time
+        sNoiseFloor = rssi;
+        return false;
+    }
+    if (rssi > sNoiseFloor + margin)
+        return false;
+
+    sNoiseFloor = (sNoiseFloor * 7 + rssi) / 8;   // follow the floor slowly
+    return true;
+}
+#endif
+
 void CHFRSCANNER_Start(const bool storeBackupSettings, const int8_t scan_direction)
 {
+#ifdef ENABLE_SURVIVAL
+    sNoiseFloor = 0;   // bands differ, learn the floor again
+    sPrecheck   = false;
+#endif
 #ifdef ENABLE_SURVIVAL
     SURVIVAL_ApplyScanRange();
 #endif
@@ -111,6 +157,19 @@ void CHFRSCANNER_ContinueScanning(void)
 
 void CHFRSCANNER_ContinueScanning(void)
 {
+#ifdef ENABLE_SURVIVAL
+    if (sPrecheck && gCurrentFunction != FUNCTION_INCOMING) {
+        sPrecheck = false;
+        if (!PrecheckEmpty()) {
+            // something above the noise floor: give the squelch the full time
+            gScanPauseDelayIn_10ms = SCAN_FULL_10MS - SCAN_PRECHECK_10MS;
+            gScheduleScanListen    = false;
+            return;
+        }
+    }
+    sPrecheck = false;
+#endif
+
     if (gCurrentFunction == FUNCTION_INCOMING &&
         (IS_FREQ_CHANNEL(gNextMrChannel) || gCurrentCodeType == CODE_TYPE_OFF))
     {
@@ -245,6 +304,9 @@ static void NextFreqChannel(void)
     RADIO_ConfigureSquelchAndOutputPower(gRxVfo);
     RADIO_SetupRegisters(true);
 
+#ifdef ENABLE_SURVIVAL
+    ScanStepDone();
+#else
 #ifdef ENABLE_FASTER_CHANNEL_SCAN
     gScanPauseDelayIn_10ms = 9;   // 90ms
 #else
@@ -252,6 +314,7 @@ static void NextFreqChannel(void)
 #endif
 
     gUpdateDisplay     = true;
+#endif
 }
 
 static void NextMemChannel(void)
@@ -365,13 +428,19 @@ static void NextMemChannel(void)
         RADIO_ConfigureChannel(gEeprom.RX_VFO, VFO_CONFIGURE_RELOAD);
         RADIO_SetupRegisters(true);
 
+#ifndef ENABLE_SURVIVAL
         gUpdateDisplay = true;
+#endif
     }
 
+#ifdef ENABLE_SURVIVAL
+    ScanStepDone();
+#else
 #ifdef ENABLE_FASTER_CHANNEL_SCAN
     gScanPauseDelayIn_10ms = 9;  // 90ms .. <= ~60ms it misses signals (squelch response and/or PLL lock time) ?
 #else
     gScanPauseDelayIn_10ms = scan_pause_delay_in_3_10ms;
+#endif
 #endif
 
     if (enabled)
