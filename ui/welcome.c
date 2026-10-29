@@ -130,6 +130,10 @@ void UI_DisplayWelcome(void)
             gFrameBuffer[4][i] ^= 0xFF;
         }
 
+        #ifdef BMK_SIGNATURE
+            UI_PrintStringSmallNormal(BMK_SIGNATURE, 0, 127, 5);
+        #endif
+
         sprintf(WelcomeString3, "%s Edition", Edition);
         UI_PrintStringSmallNormal(WelcomeString3, 0, 127, 6);
 
