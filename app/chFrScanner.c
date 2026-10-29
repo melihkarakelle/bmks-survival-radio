@@ -78,8 +78,8 @@ static bool PrecheckEmpty(void)
         sNoiseFloor = rssi;
         return false;
     }
-    if (rssi < sNoiseFloor)
-        sNoiseFloor = rssi;   // fast down: the first step may have been busy
+    if (rssi + margin < sNoiseFloor)
+        sNoiseFloor = rssi;   // clearly lower: the first step was busy, drop at once
     if (rssi > sNoiseFloor + margin)
         return false;
 
