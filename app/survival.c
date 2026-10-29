@@ -42,6 +42,7 @@ uint8_t  gSurvivalFmScan      = SURV_FMSCAN_LAST;
 
 static bool sFmBgScan;       // BK4819 scans a group while the FM radio plays
 static bool sStopOnRxEnd;    // a background hit ends the scan when that transmission ends
+static bool sScanBeforeFm;   // a scan was running when FM was switched on
 uint32_t gSurvivalCustomStart = SURV_RANGE_START;
 uint32_t gSurvivalCustomEnd   = SURV_RANGE_END;
 
@@ -409,6 +410,9 @@ void SURVIVAL_SetMode(uint8_t mode)
 {
     const uint8_t vfo = gEeprom.TX_VFO;
 
+    // the FM background scan only continues a scan that was already running
+    sScanBeforeFm = (mode == SURV_MODE_FM) && gScanStateDir != SCAN_OFF;
+
     if (gScanStateDir != SCAN_OFF)
         CHFRSCANNER_Stop();
 
@@ -457,7 +461,11 @@ void SURVIVAL_FmStarted(void)
     // scan on the BK4819 while the BK1080 plays FM
     const uint8_t vfo = gEeprom.TX_VFO;
 
-    if (gSurvivalFmScan == 0 || gSurvivalFmScan > SURV_FMSCAN_LAST)
+    const bool scanning = sScanBeforeFm;
+    sScanBeforeFm = false;
+
+    // no scan before FM: only watch the current channel
+    if (!scanning || gSurvivalFmScan == 0 || gSurvivalFmScan > SURV_FMSCAN_LAST)
         return;
 
     if (gSurvivalFmScan == SURV_FMSCAN_LAST) {
