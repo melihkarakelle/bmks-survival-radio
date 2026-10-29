@@ -51,6 +51,10 @@ static void NextMemChannel(void);
 static bool     sPrecheck;
 static uint16_t sNoiseFloor;    // RSSI (0.5 dB units) of empty steps, 0 = not known yet
 static uint8_t  sDisplaySteps;
+static uint8_t  sPrioSteps;     // steps since the last look at the priority channel
+static bool     sPrioPeek;      // the radio is on the priority channel right now
+
+#define PRIO_EVERY_STEPS 20
 
 static void ScanStepDone(void)
 {
@@ -74,6 +78,8 @@ static bool PrecheckEmpty(void)
         sNoiseFloor = rssi;
         return false;
     }
+    if (rssi < sNoiseFloor)
+        sNoiseFloor = rssi;   // fast down: the first step may have been busy
     if (rssi > sNoiseFloor + margin)
         return false;
 
@@ -87,6 +93,8 @@ void CHFRSCANNER_Start(const bool storeBackupSettings, const int8_t scan_directi
 #ifdef ENABLE_SURVIVAL
     sNoiseFloor = 0;   // bands differ, learn the floor again
     sPrecheck   = false;
+    sPrioPeek   = false;
+    sPrioSteps  = 0;
 #endif
 #ifdef ENABLE_SURVIVAL
     SURVIVAL_ApplyScanRange();
@@ -158,13 +166,38 @@ void CHFRSCANNER_ContinueScanning(void)
 void CHFRSCANNER_ContinueScanning(void)
 {
 #ifdef ENABLE_SURVIVAL
-    if (sPrecheck && gCurrentFunction != FUNCTION_INCOMING) {
-        sPrecheck = false;
-        if (!PrecheckEmpty()) {
-            // something above the noise floor: give the squelch the full time
-            gScanPauseDelayIn_10ms = SCAN_FULL_10MS - SCAN_PRECHECK_10MS;
-            gScheduleScanListen    = false;
-            return;
+    if (gCurrentFunction != FUNCTION_INCOMING) {
+        if (sPrioPeek) {
+            // nothing on the priority channel: NextMemChannel goes on from gNextMrChannel
+            sPrioPeek = false;
+            sPrecheck = false;
+        } else {
+            if (sPrecheck) {
+                sPrecheck = false;
+                if (!PrecheckEmpty()) {
+                    // something above the noise floor: give the squelch the full time
+                    gScanPauseDelayIn_10ms = SCAN_FULL_10MS - SCAN_PRECHECK_10MS;
+                    gScheduleScanListen    = false;
+                    return;
+                }
+            }
+
+            // channel scans look at the priority channel every few steps (one receiver:
+            // a short call elsewhere can be missed while looking)
+            if (IS_MR_CHANNEL(gNextMrChannel) && IS_MR_CHANNEL(gSurvivalPrio) &&
+                gSurvivalPrio != gNextMrChannel && ++sPrioSteps >= PRIO_EVERY_STEPS)
+            {
+                sPrioSteps = 0;
+                sPrioPeek  = true;
+                gEeprom.ScreenChannel[gEeprom.RX_VFO] = gSurvivalPrio;
+                RADIO_ConfigureChannel(gEeprom.RX_VFO, VFO_CONFIGURE_RELOAD);
+                RADIO_SetupRegisters(true);
+                gScanPauseDelayIn_10ms = SCAN_FULL_10MS;
+                gScheduleScanListen    = false;
+                gScanPauseMode         = false;
+                gRxReceptionMode       = RX_MODE_NONE;
+                return;
+            }
         }
     }
     sPrecheck = false;

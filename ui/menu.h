@@ -170,6 +170,7 @@ enum
     MENU_SRV_C_START,
     MENU_SRV_C_END,
     MENU_SRV_FM_SCAN,
+    MENU_SRV_ECO,
 #endif
 };
 

@@ -19,6 +19,9 @@
 #include "app/generic.h"
 #include "app/menu.h"
 #include "app/scanner.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "audio.h"
 #include "driver/bk4819.h"
 #include "frequencies.h"
@@ -43,7 +46,7 @@ bool              gScanUseCssResult;
 
 void SCANNER_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
-    (void)Key; (void)bKeyPressed; (void)bKeyHeld;
+    SURVIVAL_LogKeys(Key, bKeyPressed, bKeyHeld);   // the screen shows the recently heard list
 }
 void SCANNER_Start(bool singleFreq) { (void)singleFreq; }
 void SCANNER_Stop(void) {}

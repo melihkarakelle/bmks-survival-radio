@@ -519,6 +519,8 @@ void APP_StartListening(FUNCTION_Type_t function)
 #endif
 
 #ifdef ENABLE_SURVIVAL
+    if (function == FUNCTION_RECEIVE)
+        SURVIVAL_LogHeard();
     if (SURVIVAL_FmBgScanning())
         SURVIVAL_FmBgFound();   // leave FM and stay on the channel with activity
 #endif
@@ -1544,6 +1546,9 @@ void cancelUserInputModes(void)
 // this is called once every 500ms
 void APP_TimeSlice500ms(void)
 {
+#ifdef ENABLE_SURVIVAL
+    SURVIVAL_TimeSlice500ms();
+#endif
     gNextTimeslice_500ms = false;
     bool exit_menu = false;
 

@@ -25,7 +25,8 @@
 #include "ui/scanner.h"
 
 #ifdef ENABLE_SURVIVAL
-void UI_DisplayScanner(void) {}   // no code scanner in survival
+#include "app/survival.h"
+void UI_DisplayScanner(void) { SURVIVAL_DisplayLog(); }   // recently heard list in this slot
 #else
 
 void UI_DisplayScanner(void)

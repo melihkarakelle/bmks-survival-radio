@@ -49,6 +49,7 @@ const t_menu_item MenuList[] =
 //   text,          menu ID
     {"Group",       MENU_SRV_GROUP     },
     {"FmScan",      MENU_SRV_FM_SCAN   },
+    {"Eco",         MENU_SRV_ECO       },
     {"Sql",         MENU_SQL           },
     {"Power",       MENU_TXP           },
     {"Mode",        MENU_AM            },
@@ -682,6 +683,7 @@ void UI_DisplayMenu(void)
             break;
 
         case MENU_SRV_TX_PMR ... MENU_SRV_TX_ALL:
+        case MENU_SRV_ECO:
             strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
             break;
 #endif

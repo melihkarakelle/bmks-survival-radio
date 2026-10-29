@@ -134,6 +134,7 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             break;
 
         case MENU_SRV_TX_PMR ... MENU_SRV_TX_ALL:
+        case MENU_SRV_ECO:
             *pMax = 1;
             break;
 #endif
@@ -559,6 +560,10 @@ void MENU_AcceptSetting(void)
         case MENU_SRV_FM_SCAN:
             gSurvivalFmScan = gSubMenuSelection;
             SURVIVAL_SaveSettings();
+            return;
+
+        case MENU_SRV_ECO:
+            SURVIVAL_SetEco(gSubMenuSelection);
             return;
 
         case MENU_SRV_C_START:
@@ -1186,6 +1191,10 @@ void MENU_ShowCurrentSetting(void)
 
         case MENU_SRV_FM_SCAN:
             gSubMenuSelection = gSurvivalFmScan;
+            break;
+
+        case MENU_SRV_ECO:
+            gSubMenuSelection = SURVIVAL_EcoOn();
             break;
 
         case MENU_SRV_TX_PMR ... MENU_SRV_TX_ALL:

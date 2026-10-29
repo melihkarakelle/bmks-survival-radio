@@ -22,6 +22,10 @@
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
+#include "audio.h"
+#include "driver/bk4819.h"
+#include "driver/st7565.h"
+#include "ui/helper.h"
 #include "ui/ui.h"
 
 // EEPROM 0x1FF8: 'B' 'M' 'K' 'S', table version, TX mask, FM background scan, settings revision
@@ -31,7 +35,7 @@
 #define SURV_RANGE_START   14400000   // 144.000 MHz
 #define SURV_RANGE_END     14600000   // 146.000 MHz
 // bump when the channel tables or defaults change, radios re-init on next boot
-#define SURV_TABLE_VERSION 5
+#define SURV_TABLE_VERSION 6
 // bump for setting changes that existing radios get without a re-init (byte 7)
 #define SURV_SETTINGS_REV  1
 #define SURV_TX_DEFAULT    ((1u << SURV_TX_PMR) | (1u << SURV_TX_FRS))
@@ -46,9 +50,10 @@ static bool sStopOnRxEnd;    // a background hit ends the scan when that transmi
 static bool sScanBeforeFm;   // a scan was running when FM was switched on
 uint32_t gSurvivalCustomStart = SURV_RANGE_START;
 uint32_t gSurvivalCustomEnd   = SURV_RANGE_END;
+uint8_t  gSurvivalPrio        = 0xFF;
 
 const char gSubMenu_SRV_MODE[SURV_MODE_COUNT][9] = {
-    "PMR446", "FRS", "MARINE", "AIR", "HAM", "CB", "FM RADIO", "CUSTOM",
+    "PMR446", "FRS", "MARINE", "AIR", "HAM", "CB", "FM RADIO", "CUSTOM", "FAV",
 };
 
 #define SURV_AM     (1u << 0)
@@ -65,7 +70,7 @@ static const TxBand_t TX_BANDS[] = {
     {44600625, 44619375, SURV_TX_PMR},
     {46255000, 46272500, SURV_TX_FRS},
     {46755000, 46772500, SURV_TX_FRS},
-    {15600000, 16202500, SURV_TX_MARINE},
+    {15600000, 15742500, SURV_TX_MARINE},   // ship side only, coast frequencies are RX
     {14400000, 14800000, SURV_TX_HAM},  // 2 m, widest (region 2/3)
     {42000000, 45000000, SURV_TX_HAM},  // 70 cm, widest (region 2)
     { 2656500,  2799125, SURV_TX_CB},   // 40 ch CEPT/FCC plus national CB plans
@@ -76,6 +81,7 @@ static const TxBand_t TX_BLOCKED[] = {
     { 8800000, 13700000, 0},   // FM broadcast + civil aviation (VOR/ILS, 121.5 guard)
     {22500000, 40000000, 0},   // military aviation (243.0 guard)
     {40600000, 40610000, 0},   // COSPAS-SARSAT distress beacons
+    {15651250, 15653750, 0},   // marine channel 70: DSC data only, no voice
 };
 
 typedef struct {
@@ -173,11 +179,30 @@ static uint8_t FindGroup(uint8_t channel)
     return GROUP_NONE;
 }
 
+// own channels (FAV) follow the fixed groups
+static uint8_t FavFirst(void)
+{
+    return GroupStart(ARRAY_SIZE(GROUPS));
+}
+
+static uint8_t FirstFav(void)
+{
+    for (uint8_t c = FavFirst(); IS_MR_CHANNEL(c); c++)
+        if (RADIO_CheckValidChannel(c, false, 0))
+            return c;
+    return 0xFF;
+}
+
 bool SURVIVAL_GetGroupRange(uint8_t channel, uint8_t *first, uint8_t *last)
 {
     const uint8_t g = FindGroup(channel);
-    if (g == GROUP_NONE)
-        return false;
+    if (g == GROUP_NONE) {
+        if (!IS_MR_CHANNEL(channel))
+            return false;
+        *first = FavFirst();   // FAV
+        *last  = MR_CHANNEL_LAST;
+        return true;
+    }
     *first = GroupStart(g);
     *last  = *first + GROUPS[g].count - 1;
     return true;
@@ -246,6 +271,10 @@ static void WriteChannels(void)
             SETTINGS_SaveChannelName(ch, name);
         }
     }
+
+    // FAV starts empty: clear whatever the stock firmware left there
+    for (; IS_MR_CHANNEL(ch); ch++)
+        SETTINGS_UpdateChannel(ch, pVfo, false, false, true);
 }
 
 static void WriteDefaults(void)
@@ -307,6 +336,14 @@ void SURVIVAL_Init(void)
     uint8_t marker[8];
 
     EEPROM_ReadBuffer(SURV_MARKER_ADDR, marker, sizeof(marker));
+    // the priority channel is marked with the (otherwise unused) scan list 1 bit
+    for (uint8_t c = 0; IS_MR_CHANNEL(c); c++) {
+        if (gMR_ChannelAttributes[c].scanlist1 && RADIO_CheckValidChannel(c, false, 0)) {
+            gSurvivalPrio = c;
+            break;
+        }
+    }
+
     if (memcmp(marker, SURV_MAGIC, sizeof(SURV_MAGIC)) == 0 && marker[4] == SURV_TABLE_VERSION) {
         uint32_t range[2];
         EEPROM_ReadBuffer(SURV_RANGE_ADDR, range, sizeof(range));
@@ -328,6 +365,7 @@ void SURVIVAL_Init(void)
 
     WriteChannels();
     WriteDefaults();
+    gSurvivalPrio   = 0xFF;   // the channels were rewritten without a priority mark
     gSurvivalTxMask = SURV_TX_DEFAULT;
     SURVIVAL_SaveSettings();
     SURVIVAL_SaveCustomRange();
@@ -350,13 +388,13 @@ void SURVIVAL_ApplyScanRange(void)
 
 bool SURVIVAL_TxAllowed(uint32_t frequency)
 {
-    if ((gSurvivalTxMask >> SURV_TX_ALL) & 1u) {
-        for (uint8_t i = 0; i < ARRAY_SIZE(TX_BLOCKED); i++) {
-            if (frequency >= TX_BLOCKED[i].lower && frequency < TX_BLOCKED[i].upper)
-                return false;
-        }
-        return true;
+    // the blocked ranges apply in every case, before any permission
+    for (uint8_t i = 0; i < ARRAY_SIZE(TX_BLOCKED); i++) {
+        if (frequency >= TX_BLOCKED[i].lower && frequency < TX_BLOCKED[i].upper)
+            return false;
     }
+    if ((gSurvivalTxMask >> SURV_TX_ALL) & 1u)
+        return true;
 
     // bands may overlap (70 cm contains PMR446), any permitted band is enough
     for (uint8_t i = 0; i < ARRAY_SIZE(TX_BANDS); i++) {
@@ -387,19 +425,23 @@ uint8_t SURVIVAL_GetMode(void)
         return SURV_MODE_CUSTOM;
 
     const uint8_t g = FindGroup(channel);
-    return (g == GROUP_NONE) ? SURV_MODE_CUSTOM : g;   // own saved channels count as custom
+    return (g == GROUP_NONE) ? SURV_MODE_FAV : g;   // own saved channels
 }
 
-// point the VFO at the first channel of a group, or at the air band VFO
-static void SelectModeChannel(uint8_t mode, uint8_t vfo)
+// point the VFO at the first channel of a group/FAV, or at the air band VFO;
+// false when FAV is empty
+static bool SelectModeChannel(uint8_t mode, uint8_t vfo)
 {
     if (mode == SURV_MODE_AIR) {
         gEeprom.ScreenChannel[vfo] = AIR_VFO_CHANNEL;
-        return;
+        return true;
     }
-    const uint8_t ch = GroupStart(mode);
+    const uint8_t ch = (mode == SURV_MODE_FAV) ? FirstFav() : GroupStart(mode);
+    if (ch == 0xFF)
+        return false;
     gEeprom.MrChannel[vfo]     = ch;
     gEeprom.ScreenChannel[vfo] = ch;
+    return true;
 }
 
 // while a VFO range is scanned the screen is redrawn every few steps only, so
@@ -445,8 +487,9 @@ void SURVIVAL_SetMode(uint8_t mode)
         if (gEeprom.FreqChannel[vfo] == AIR_VFO_CHANNEL)
             gEeprom.FreqChannel[vfo] = FREQ_CHANNEL_FIRST + BAND6_400MHz;
         gEeprom.ScreenChannel[vfo] = gEeprom.FreqChannel[vfo];
-    } else {
-        SelectModeChannel(mode, vfo);
+    } else if (!SelectModeChannel(mode, vfo)) {
+        gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;   // FAV empty: on to the first group
+        SelectModeChannel(SURV_MODE_PMR, vfo);
     }
 
     gRequestSaveVFO       = true;
@@ -483,11 +526,8 @@ void SURVIVAL_FmStarted(void)
         return;
 
     if (gSurvivalFmScan == SURV_FMSCAN_LAST) {
-        // the mode used before FM: its group from the current channel on,
-        // or the CStart..CEnd range in CUSTOM; own saved channels are not scanned
-        const uint8_t ch = gEeprom.ScreenChannel[vfo];
-        if (IS_MR_CHANNEL(ch) && FindGroup(ch) == GROUP_NONE)
-            return;
+        // the mode used before FM: its group or FAV from the current channel on,
+        // or the band/CStart..CEnd range for AIR/CUSTOM
     } else {
         SelectModeChannel(gSurvivalFmScan - 1, vfo);
         RADIO_ConfigureChannel(vfo, VFO_CONFIGURE_RELOAD);
@@ -536,6 +576,216 @@ void SURVIVAL_FmBgFound(void)
 uint8_t SURVIVAL_ScanResumeMode(void)
 {
     return sStopOnRxEnd ? 0 : gEeprom.SCAN_RESUME_MODE;   // 0 = STOP
+}
+
+// ---------------------------------------------------------------- FAV / PRIO
+
+void SURVIVAL_AddFav(void)
+{
+    VFO_Info_t     vfo = *gTxVfo;
+    const uint32_t f   = vfo.freq_config_RX.Frequency;
+    uint8_t        slot = 0xFF;
+
+    for (uint8_t c = FavFirst(); IS_MR_CHANNEL(c); c++) {
+        if (!RADIO_CheckValidChannel(c, false, 0)) {
+            if (slot == 0xFF)
+                slot = c;
+            continue;
+        }
+        uint32_t stored;
+        EEPROM_ReadBuffer(c * 16, &stored, 4);
+        if (stored == f)
+            slot = 0xFE;   // already in FAV
+    }
+    if (slot >= 0xFE) {    // already there or FAV full
+        gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        return;
+    }
+
+    char name[16] = {0};
+    if (IS_MR_CHANNEL(vfo.CHANNEL_SAVE))
+        SETTINGS_FetchChannelName(name, vfo.CHANNEL_SAVE);
+    if (name[0] == 0)
+        sprintf(name, "%u.%04u", f / 100000, (f / 10) % 10000);
+
+    vfo.SCANLIST1_PARTICIPATION = 0;   // not a second priority channel
+    SETTINGS_SaveChannel(slot, gEeprom.TX_VFO, &vfo, 2);
+    SETTINGS_SaveChannelName(slot, name);
+    gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
+}
+
+static void SetPrioFlag(uint8_t ch, bool on)
+{
+    uint8_t        state[8];
+    const uint16_t offset = 0x0D60 + (ch & ~7u);
+
+    gMR_ChannelAttributes[ch].scanlist1 = on;
+    EEPROM_ReadBuffer(offset, state, sizeof(state));
+    state[ch & 7u] = gMR_ChannelAttributes[ch].__val;
+    EEPROM_WriteBuffer(offset, state);
+}
+
+void SURVIVAL_TogglePrio(void)
+{
+    const uint8_t ch = gEeprom.ScreenChannel[gEeprom.TX_VFO];
+    if (!IS_MR_CHANNEL(ch)) {   // AIR/CUSTOM: put the frequency into FAV first (F+7)
+        gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        return;
+    }
+    if (IS_MR_CHANNEL(gSurvivalPrio))
+        SetPrioFlag(gSurvivalPrio, false);
+    gSurvivalPrio = (gSurvivalPrio == ch) ? 0xFF : ch;
+    if (IS_MR_CHANNEL(gSurvivalPrio))
+        SetPrioFlag(gSurvivalPrio, true);
+    gUpdateDisplay = true;
+}
+
+// ---------------------------------------------------------------- recently heard
+
+typedef struct {
+    uint32_t freq;
+    uint32_t time;   // seconds since power on
+    uint8_t  channel;
+    uint8_t  rssi;   // dBm + 160
+} Heard_t;
+
+#define HEARD_N 8
+
+static Heard_t  sHeard[HEARD_N];
+static uint8_t  sHeardCount;
+static uint8_t  sLogCursor;
+static uint32_t sHalfSeconds;
+
+void SURVIVAL_TimeSlice500ms(void)
+{
+    sHalfSeconds++;
+}
+
+void SURVIVAL_LogHeard(void)
+{
+    const uint32_t f = gRxVfo->freq_config_RX.Frequency;
+    uint8_t        d = (sHeardCount < HEARD_N) ? sHeardCount : HEARD_N - 1;
+
+    for (uint8_t i = 0; i < sHeardCount; i++) {
+        if (sHeard[i].freq == f) {   // heard again: move it to the top
+            d = i;
+            break;
+        }
+    }
+    if (d == sHeardCount)
+        sHeardCount++;
+
+    memmove(&sHeard[1], &sHeard[0], d * sizeof(Heard_t));
+    sHeard[0].freq    = f;
+    sHeard[0].time    = sHalfSeconds / 2;
+    sHeard[0].channel = gRxVfo->CHANNEL_SAVE;
+    sHeard[0].rssi    = BK4819_GetRSSI() / 2;
+}
+
+void SURVIVAL_ShowLog(void)
+{
+    if (gScanStateDir != SCAN_OFF)
+        CHFRSCANNER_StopHere();
+    sLogCursor            = 0;
+    gRequestDisplayScreen = DISPLAY_SCANNER;   // the code scanner screen is free in survival
+}
+
+static void TuneTo(const Heard_t *h)
+{
+    const uint8_t vfo = gEeprom.TX_VFO;
+
+    gEeprom.ScreenChannel[vfo] = h->channel;
+    if (IS_MR_CHANNEL(h->channel)) {
+        gEeprom.MrChannel[vfo] = h->channel;
+        gVfoConfigureMode      = VFO_CONFIGURE_RELOAD;
+    } else {
+        // AIR/CUSTOM: the band VFO, then the heard frequency
+        RADIO_ConfigureChannel(vfo, VFO_CONFIGURE_RELOAD);
+        gEeprom.VfoInfo[vfo].freq_config_RX.Frequency = h->freq;
+        gEeprom.VfoInfo[vfo].freq_config_TX.Frequency = h->freq;
+        gRequestSaveChannel = 1;
+        gVfoConfigureMode   = VFO_CONFIGURE;
+    }
+    gRequestSaveVFO = true;
+}
+
+void SURVIVAL_LogKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
+{
+    if (!bKeyPressed || bKeyHeld)
+        return;
+
+    switch (Key) {
+        case KEY_UP:
+            if (sLogCursor > 0)
+                sLogCursor--;
+            break;
+        case KEY_DOWN:
+            if (sLogCursor + 1 < sHeardCount)
+                sLogCursor++;
+            break;
+        case KEY_MENU:   // go to the selected entry
+            if (sHeardCount)
+                TuneTo(&sHeard[sLogCursor]);
+            gRequestDisplayScreen = DISPLAY_MAIN;
+            return;
+        case KEY_EXIT:
+            gRequestDisplayScreen = DISPLAY_MAIN;
+            return;
+        default:
+            return;
+    }
+    gBeepToPlay           = BEEP_1KHZ_60MS_OPTIONAL;
+    gRequestDisplayScreen = DISPLAY_SCANNER;
+}
+
+void SURVIVAL_DisplayLog(void)
+{
+    char String[24];
+    char Name[16];
+
+    UI_DisplayClear();
+    UI_PrintStringSmallBold("HEARD", 0, 127, 0);
+
+    if (sHeardCount == 0)
+        UI_PrintStringSmallNormal("nothing yet", 0, 127, 3);
+
+    const uint8_t first = (sLogCursor > 5) ? sLogCursor - 5 : 0;
+    for (uint8_t row = 0; row < 6 && first + row < sHeardCount; row++) {
+        const Heard_t *h   = &sHeard[first + row];
+        const uint32_t min = (sHalfSeconds / 2 - h->time) / 60;
+
+        memset(Name, 0, sizeof(Name));
+        if (IS_MR_CHANNEL(h->channel))
+            SETTINGS_FetchChannelName(Name, h->channel);
+        if (Name[0] == 0)
+            sprintf(Name, "%lu.%04lu", h->freq / 100000, (h->freq / 10) % 10000);
+
+        if (min < 60)
+            sprintf(String, "%c%-10s %2lum", (first + row == sLogCursor) ? '>' : ' ', Name, min);
+        else
+            sprintf(String, "%c%-10s %2luh", (first + row == sLogCursor) ? '>' : ' ', Name, min / 60);
+        UI_PrintStringSmallNormal(String, 1, 0, row + 1);
+    }
+
+    ST7565_BlitFullScreen();
+}
+
+// ---------------------------------------------------------------- eco
+
+bool SURVIVAL_EcoOn(void)
+{
+    return gEeprom.BATTERY_SAVE == 5 && gEeprom.BACKLIGHT_TIME == 2 && gEeprom.BACKLIGHT_MAX == 5;
+}
+
+// eco: deepest receive duty cycle, 10 s backlight at half brightness
+void SURVIVAL_SetEco(bool on)
+{
+    gEeprom.BATTERY_SAVE   = on ? 5 : 4;
+    gEeprom.BACKLIGHT_TIME = on ? 2 : 12;   // x 5 s
+    gEeprom.BACKLIGHT_MAX  = on ? 5 : 10;
+    if (gEeprom.BACKLIGHT_MIN >= gEeprom.BACKLIGHT_MAX)
+        gEeprom.BACKLIGHT_MIN = 0;
+    gRequestSaveSettings = true;
 }
 
 #endif

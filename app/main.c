@@ -215,7 +215,7 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
         case KEY_4:
             gWasFKeyPressed          = false;
 #ifdef ENABLE_SURVIVAL
-            gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;   // no frequency/code scanner in survival
+            SURVIVAL_ShowLog();   // recently heard list instead of the code scanner
             break;
 #endif
 
@@ -230,6 +230,10 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             break;
 
         case KEY_5:
+#ifdef ENABLE_SURVIVAL
+            SURVIVAL_TogglePrio();
+            break;
+#endif
             if(beep) {
 #ifdef ENABLE_NOAA
                 if (!IS_NOAA_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
@@ -259,6 +263,10 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             break;
 
         case KEY_7:
+#ifdef ENABLE_SURVIVAL
+            SURVIVAL_AddFav();
+            break;
+#endif
 #ifdef ENABLE_VOX
             ACTION_Vox();
 //#else
