@@ -17,6 +17,9 @@ extern uint32_t          gScanRangeStop;
 
 void CHFRSCANNER_Found(void);
 void CHFRSCANNER_Stop(void);
+#ifdef ENABLE_SURVIVAL
+void CHFRSCANNER_StopHere(void);
+#endif
 void CHFRSCANNER_Start(const bool storeBackupSettings, const int8_t scan_direction);
 void CHFRSCANNER_ContinueScanning(void);
 

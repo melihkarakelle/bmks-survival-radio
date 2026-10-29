@@ -251,6 +251,17 @@ void CHFRSCANNER_Found(void)
     gScanKeepResult = true;
 }
 
+#ifdef ENABLE_SURVIVAL
+// stop on the channel/frequency the scan is on now (Stop alone goes back to the
+// start position when nothing was found)
+void CHFRSCANNER_StopHere(void)
+{
+    lastFoundFrqOrChan = IS_MR_CHANNEL(gNextMrChannel) ? gRxVfo->CHANNEL_SAVE : gRxVfo->freq_config_RX.Frequency;
+    gScanKeepResult    = true;
+    CHFRSCANNER_Stop();
+}
+#endif
+
 void CHFRSCANNER_Stop(void)
 {
     if(initialCROSS_BAND_RX_TX != CROSS_BAND_OFF) {

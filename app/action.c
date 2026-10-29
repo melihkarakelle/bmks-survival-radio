@@ -243,8 +243,8 @@ void ACTION_Scan(bool bRestart)
         // already scanning
 
 #ifdef ENABLE_SURVIVAL
-        // survival: scanning toggles off in every mode (no scan list cycling)
-        CHFRSCANNER_Stop();
+        // survival: scanning toggles off in every mode (no scan list cycling), staying where it is
+        CHFRSCANNER_StopHere();
         gUpdateStatus = true;
         return;
 #endif
