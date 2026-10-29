@@ -393,8 +393,9 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 
 ## Repo yapısı (2026-10-29)
 
-- Bu klasör (`~/Documents/UV-K5`) git reposu: README, `tools/`, `design/`, `backups/` (EEPROM yedekleri, kalibrasyon dahil)
-  ve son Survival sürümü `builds/bmks.survival.bin` / `.packed.bin`.
-- `firmware/` ayrı git reposu (F4HWN v4.3 fork'u, branch `bmk`, her Survival sürümü ayrı commit). Üst repo onu izlemez.
+- Tek repo: `~/Documents/UV-K5`. README, `tools/`, `design/`, `backups/` (EEPROM yedekleri, kalibrasyon dahil),
+  `builds/bmks.survival.bin` / `.packed.bin` ve **`firmware/`** (F4HWN v4.3 tabanlı kaynak).
+- `firmware/` geçmişi korunarak eklendi: kök commit "F4HWN v4.3 upstream snapshot" (armel/uv-k5-firmware-custom
+  fbcf26d, upstream geçmişi dahil değil), üstünde her Survival sürümü ayrı commit.
 - Repoda olmayanlar, yeniden kurulabilir: `refs/` (indirilen referans repolar), `toolchain/` (Arm GCC arşivleri),
   `.venv/` (pyserial, crcmod, pillow), ara build dosyaları, ekran kaydı kareleri (`design/screens/seq/`).

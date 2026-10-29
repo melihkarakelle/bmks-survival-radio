@@ -4,9 +4,6 @@ toolchain/
 .venv/
 __pycache__/
 
-# the firmware source is its own git repo (branch bmk)
-firmware/
-
 # build outputs: keep only the current Survival release
 builds/*
 !builds/bmks.survival.bin
