@@ -16,3 +16,4 @@ design/screens/seq/
 
 # Codex session logs (the results are kept as .md / .png)
 design/codex/*.log
+design/ui_v2/*.log
