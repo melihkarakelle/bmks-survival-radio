@@ -1,0 +1,21 @@
+# downloaded or reinstallable
+refs/
+toolchain/
+.venv/
+__pycache__/
+
+# the firmware source is its own git repo (branch bmk)
+firmware/
+
+# build outputs: keep only the current Survival release
+builds/*
+!builds/bmks.survival.bin
+!builds/bmks.survival.packed.bin
+
+# screen capture frames (the sheets and single shots are kept)
+design/screens/seq/
+
+.DS_Store
+
+# Codex session logs (the results are kept as .md / .png)
+design/codex/*.log
