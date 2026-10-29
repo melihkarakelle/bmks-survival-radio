@@ -1,6 +1,9 @@
 
 #include "app/app.h"
 #include "app/chFrScanner.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "functions.h"
 #include "misc.h"
 #include "settings.h"
@@ -334,7 +337,11 @@ static void NextMemChannel(void)
 
     if (!enabled || chan == 0xff)
     {       
+#ifdef ENABLE_SURVIVAL
+        chan = SURVIVAL_FindNextChannel(gNextMrChannel + gScanStateDir, gScanStateDir, true, gEeprom.SCAN_LIST_DEFAULT);
+#else
         chan = RADIO_FindNextChannel(gNextMrChannel + gScanStateDir, gScanStateDir, true, gEeprom.SCAN_LIST_DEFAULT);
+#endif
         if (chan == 0xFF)
         {   // no valid channel found
             chan = MR_CHANNEL_FIRST;

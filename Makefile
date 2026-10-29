@@ -5,6 +5,9 @@
 
 # ---- STOCK QUANSHENG FEATURES ----
 ENABLE_FMRADIO                  ?= 0
+# BMKs Survival Radio: fixed channel groups, logo, side key 2 = next group
+ENABLE_SURVIVAL                 ?= 0
+SURVIVAL_VERSION                ?= v1.0
 ENABLE_UART                     ?= 1
 ENABLE_AIRCOPY                  ?= 0
 ENABLE_NOAA                     ?= 0
@@ -159,6 +162,9 @@ ifeq ($(ENABLE_FMRADIO),1)
 	OBJS += app/fm.o
 endif
 OBJS += app/generic.o
+ifeq ($(ENABLE_SURVIVAL),1)
+	OBJS += app/survival.o
+endif
 OBJS += app/main.o
 OBJS += app/menu.o
 ifeq ($(ENABLE_SPECTRUM), 1)
@@ -456,6 +462,9 @@ ifeq ($(ENABLE_FEAT_F4HWN),1)
 	endif
 else
 	CFLAGS  += -DSQL_TONE=550
+endif
+ifeq ($(ENABLE_SURVIVAL),1)
+	CFLAGS  += -DENABLE_SURVIVAL -DSURVIVAL_VERSION=\"$(SURVIVAL_VERSION)\"
 endif
 ifeq ($(ENABLE_FEAT_F4HWN_GAME),1)
 	CFLAGS  += -DENABLE_FEAT_F4HWN_GAME

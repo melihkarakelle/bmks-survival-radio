@@ -83,6 +83,15 @@ void UI_DisplayWelcome(void)
                 gBatteryVoltageAverage % 100,
                 BATTERY_VoltsToPercent(gBatteryVoltageAverage));
 
+#ifdef ENABLE_SURVIVAL
+        // BMKs Survival Radio logo, name and battery
+        memcpy(gFrameBuffer, BITMAP_SurvivalLogo, sizeof(BITMAP_SurvivalLogo));
+        UI_PrintStringSmallBold("RADIO", 0, 127, 5);
+        sprintf(WelcomeString3, "%s  " SURVIVAL_VERSION, WelcomeString2);
+        UI_PrintStringSmallNormal(WelcomeString3, 0, 127, 6);
+        (void)WelcomeString0;
+        (void)WelcomeString1;
+#else
         if (gEeprom.POWER_ON_DISPLAY_MODE == POWER_ON_DISPLAY_MODE_VOLTAGE)
         {
             strcpy(WelcomeString0, "VOLTAGE");
@@ -203,6 +212,7 @@ void UI_DisplayWelcome(void)
 #else
         UI_PrintStringSmallNormal(Version, 0, 127, 6);
 #endif
+#endif // ENABLE_SURVIVAL
 
         //ST7565_BlitStatusLine();  // blank status line : I think it's useless
         ST7565_BlitFullScreen();

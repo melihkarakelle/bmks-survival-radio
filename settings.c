@@ -26,6 +26,9 @@
 #include "misc.h"
 #include "settings.h"
 #include "ui/menu.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 
 #ifdef ENABLE_FEAT_F4HWN_RESET_CHANNEL
 static const uint32_t gDefaultFrequencyTable[] =
@@ -540,6 +543,10 @@ void SETTINGS_FactoryReset(bool bIsAll)
 
         #ifdef ENABLE_FEAT_F4HWN
             EEPROM_WriteBuffer(0x1FF0, Template);
+        #endif
+
+        #ifdef ENABLE_SURVIVAL
+            SURVIVAL_EraseMarker();   // channels and defaults are rewritten on next boot
         #endif
     }
 }

@@ -41,6 +41,9 @@
 #endif
 
 #include "app/app.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "app/dtmf.h"
 #include "bsp/dp32g030/gpio.h"
 #include "bsp/dp32g030/syscon.h"
@@ -105,6 +108,10 @@ void Main(void)
     BOARD_ADC_GetBatteryInfo(&gBatteryCurrentVoltage, &gBatteryCurrent);
 
     SETTINGS_InitEEPROM();
+
+#ifdef ENABLE_SURVIVAL
+    SURVIVAL_Init();
+#endif
 
     #ifdef ENABLE_FEAT_F4HWN
         gDW = gEeprom.DUAL_WATCH;

@@ -26,6 +26,9 @@
 #include "app/generic.h"
 #include "app/main.h"
 #include "app/scanner.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 
 #ifdef ENABLE_SPECTRUM
 #include "app/spectrum.h"
@@ -895,7 +898,11 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
                 return;
             }
 
+#ifdef ENABLE_SURVIVAL
+            Next = SURVIVAL_FindNextChannel(Channel + Direction, Direction, false, 0);
+#else
             Next = RADIO_FindNextChannel(Channel + Direction, Direction, false, 0);
+#endif
             if (Next == 0xFF)
                 return;
             if (Channel == Next)

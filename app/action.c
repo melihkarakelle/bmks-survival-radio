@@ -29,6 +29,9 @@
     #include "app/fm.h"
 #endif
 #include "app/scanner.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "audio.h"
 #include "bsp/dp32g030/gpio.h"
 #ifdef ENABLE_FMRADIO
@@ -125,6 +128,9 @@ void (*action_opt_table[])(void) = {
 #ifdef ENABLE_REGA
     [ACTION_OPT_REGA_ALARM] = &ACTION_RegaAlarm,
     [ACTION_OPT_REGA_TEST] = &ACTION_RegaTest,
+#endif
+#ifdef ENABLE_SURVIVAL
+    [ACTION_OPT_GROUP] = &ACTION_SurvivalGroup,
 #endif
 };
 

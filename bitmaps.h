@@ -25,6 +25,9 @@ extern const uint8_t gFontHold[2][5];
 extern const uint8_t BITMAP_BatteryLevel[2];
 extern const uint8_t BITMAP_BatteryLevel1[17];
 extern const uint8_t BITMAP_USB_C[9];
+#ifdef ENABLE_SURVIVAL
+    extern const uint8_t BITMAP_SurvivalLogo[5][128];
+#endif
 
 /*
 extern const uint8_t BITMAP_Ready[7];
