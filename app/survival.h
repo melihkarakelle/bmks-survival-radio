@@ -39,7 +39,8 @@ enum {
 
 extern const char gSubMenu_SRV_MODE[SURV_MODE_COUNT][9];
 extern uint8_t    gSurvivalTxMask;
-extern uint8_t    gSurvivalFmScan;        // FM background scan: 0 off, 1..6 = group (SURV_MODE_* + 1)
+extern uint8_t    gSurvivalFmScan;        // FM background scan: 0 off, 1..6 = group (SURV_MODE_* + 1), 7 = last mode
+#define SURV_FMSCAN_LAST (SURV_MODE_FM + 1)
 extern uint32_t   gSurvivalCustomStart;   // CUSTOM mode scan range, 10 Hz units
 extern uint32_t   gSurvivalCustomEnd;
 

@@ -126,7 +126,7 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             break;
 
         case MENU_SRV_FM_SCAN:
-            *pMax = SURV_MODE_FM;   // OFF + the six channel groups
+            *pMax = SURV_FMSCAN_LAST;   // OFF, the six channel groups, LAST
             break;
 
         case MENU_SRV_TX_PMR ... MENU_SRV_TX_ALL:

@@ -675,7 +675,10 @@ void UI_DisplayMenu(void)
             break;
 
         case MENU_SRV_FM_SCAN:
-            strcpy(String, gSubMenuSelection ? gSubMenu_SRV_MODE[gSubMenuSelection - 1] : gSubMenu_OFF_ON[0]);
+            if (gSubMenuSelection == SURV_FMSCAN_LAST)
+                strcpy(String, "LAST\nMODE");
+            else
+                strcpy(String, gSubMenuSelection ? gSubMenu_SRV_MODE[gSubMenuSelection - 1] : gSubMenu_OFF_ON[0]);
             break;
 
         case MENU_SRV_TX_PMR ... MENU_SRV_TX_ALL:

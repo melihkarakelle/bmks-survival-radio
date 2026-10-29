@@ -36,7 +36,7 @@
 static const uint8_t SURV_MAGIC[4] = {'B', 'M', 'K', 'S'};
 
 uint8_t  gSurvivalTxMask      = SURV_TX_DEFAULT;
-uint8_t  gSurvivalFmScan      = 1 + SURV_MODE_PMR;
+uint8_t  gSurvivalFmScan      = SURV_FMSCAN_LAST;
 
 static bool sFmBgScan;       // BK4819 scans a group while the FM radio plays
 static bool sStopOnRxEnd;    // a background hit ends the scan when that transmission ends
@@ -300,7 +300,7 @@ void SURVIVAL_Init(void)
         uint32_t range[2];
         EEPROM_ReadBuffer(SURV_RANGE_ADDR, range, sizeof(range));
         gSurvivalTxMask = marker[5];
-        if (marker[6] <= SURV_MODE_FM)
+        if (marker[6] <= SURV_FMSCAN_LAST)
             gSurvivalFmScan = marker[6];
         if (range[0] >= BX4819_band1.lower && range[0] < range[1] && range[1] <= BX4819_band2.upper) {
             gSurvivalCustomStart = range[0];
@@ -405,15 +405,24 @@ void ACTION_SurvivalGroup(void)
 
 void SURVIVAL_FmStarted(void)
 {
-    if (gSurvivalFmScan == 0 || gSurvivalFmScan > SURV_MODE_FM)
+    // scan on the BK4819 while the BK1080 plays FM
+    const uint8_t vfo = gEeprom.TX_VFO;
+
+    if (gSurvivalFmScan == 0 || gSurvivalFmScan > SURV_FMSCAN_LAST)
         return;
 
-    // scan the chosen group on the BK4819 while the BK1080 plays FM
-    const uint8_t vfo = gEeprom.TX_VFO;
-    const uint8_t ch  = GroupStart(gSurvivalFmScan - 1);
-    gEeprom.MrChannel[vfo]     = ch;
-    gEeprom.ScreenChannel[vfo] = ch;
-    RADIO_ConfigureChannel(vfo, VFO_CONFIGURE_RELOAD);
+    if (gSurvivalFmScan == SURV_FMSCAN_LAST) {
+        // the mode used before FM: its group from the current channel on,
+        // or the CStart..CEnd range in CUSTOM; own saved channels are not scanned
+        const uint8_t ch = gEeprom.ScreenChannel[vfo];
+        if (IS_MR_CHANNEL(ch) && FindGroup(ch) == GROUP_NONE)
+            return;
+    } else {
+        const uint8_t ch = GroupStart(gSurvivalFmScan - 1);
+        gEeprom.MrChannel[vfo]     = ch;
+        gEeprom.ScreenChannel[vfo] = ch;
+        RADIO_ConfigureChannel(vfo, VFO_CONFIGURE_RELOAD);
+    }
     RADIO_SelectVfos();
 
     sFmBgScan = true;
