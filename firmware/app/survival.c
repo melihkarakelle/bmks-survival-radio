@@ -37,7 +37,7 @@
 // bump when the channel tables or defaults change, radios re-init on next boot
 #define SURV_TABLE_VERSION 6
 // bump for setting changes that existing radios get without a re-init (byte 7)
-#define SURV_SETTINGS_REV  1
+#define SURV_SETTINGS_REV  2
 #define SURV_TX_DEFAULT    ((1u << SURV_TX_PMR) | (1u << SURV_TX_FRS))
 
 static const uint8_t SURV_MAGIC[4] = {'B', 'M', 'K', 'S'};
@@ -284,6 +284,18 @@ static void WriteChannels(void)
         SETTINGS_UpdateChannel(ch, pVfo, false, false, true);
 }
 
+// FM broadcast 87.5-108 MHz (an erased EEPROM reads as band 3 = 64-76 MHz)
+static void FmDefaults(void)
+{
+#ifdef ENABLE_FMRADIO
+    gEeprom.FM_Band              = 0;
+    gEeprom.FM_SelectedFrequency = 875;
+    gEeprom.FM_FrequencyPlaying  = 875;
+    gEeprom.FM_IsMrMode          = false;
+    SETTINGS_SaveFM();
+#endif
+}
+
 static void WriteDefaults(void)
 {
     gEeprom.KEY_1_SHORT_PRESS_ACTION = ACTION_OPT_MONITOR;
@@ -315,6 +327,7 @@ static void WriteDefaults(void)
 
     SETTINGS_SaveSettings();
     SETTINGS_SaveVfoIndices();
+    FmDefaults();
 }
 
 void SURVIVAL_SaveSettings(void)
@@ -361,6 +374,9 @@ void SURVIVAL_Init(void)
             // rev 1: side key 2 short press toggles the FM radio
             gEeprom.KEY_2_SHORT_PRESS_ACTION = ACTION_OPT_FM;
             SETTINGS_SaveSettings();
+            // rev 2: FM band back to 87.5-108 MHz after a reset left band 3
+            if (gEeprom.FM_Band == 3)
+                FmDefaults();
             SURVIVAL_SaveSettings();
         }
         if (range[0] >= BX4819_band1.lower && range[0] < range[1] && range[1] <= BX4819_band2.upper) {

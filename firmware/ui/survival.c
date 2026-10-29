@@ -51,14 +51,14 @@ static const char *StateWord(void)
         return "MONITOR";
     if (FUNCTION_IsRx())
         return "RX";
+#ifdef ENABLE_FMRADIO
+    if (gFmRadioMode)
+        return SURVIVAL_FmBgScanning() ? "FM SCAN" : "FM";
+#endif
     if (gScanStateDir != SCAN_OFF)
         return (gScanStateDir == SCAN_FWD) ? "SCAN UP" : "SCAN DN";
     if (gWasFKeyPressed)
         return "F";
-#ifdef ENABLE_FMRADIO
-    if (gFmRadioMode)
-        return "FM";
-#endif
     if (gScreenToDisplay == DISPLAY_MENU)
         return "MENU";
     return "READY";
