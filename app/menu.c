@@ -81,6 +81,10 @@ uint8_t gUnlockAllTxConfCnt;
 
 void MENU_StartCssScan(void)
 {
+#ifdef ENABLE_SURVIVAL
+    gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;   // no code scanner in survival
+    return;
+#endif
     SCANNER_Start(true);
     gUpdateStatus = true;
     gCssBackgroundScan = true;

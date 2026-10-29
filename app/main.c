@@ -214,6 +214,10 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
 
         case KEY_4:
             gWasFKeyPressed          = false;
+#ifdef ENABLE_SURVIVAL
+            gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;   // no frequency/code scanner in survival
+            break;
+#endif
 
             gBackup_CROSS_BAND_RX_TX  = gEeprom.CROSS_BAND_RX_TX;
             gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;

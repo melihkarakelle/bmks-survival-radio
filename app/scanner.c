@@ -28,6 +28,30 @@
 #include "ui/inputbox.h"
 #include "ui/ui.h"
 
+#ifdef ENABLE_SURVIVAL
+// Survival has no CTCSS/DCS code scanner (F + * scans channels instead):
+// keep the interface, drop the ~1.5 KB implementation.
+DCS_CodeType_t    gScanCssResultType;
+uint8_t           gScanCssResultCode;
+bool              gScanSingleFrequency;
+SCAN_SaveState_t  gScannerSaveState;
+uint8_t           gScanChannel;
+uint32_t          gScanFrequency;
+SCAN_CssState_t   gScanCssState;
+uint8_t           gScanProgressIndicator;
+bool              gScanUseCssResult;
+
+void SCANNER_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
+{
+    (void)Key; (void)bKeyPressed; (void)bKeyHeld;
+}
+void SCANNER_Start(bool singleFreq) { (void)singleFreq; }
+void SCANNER_Stop(void) {}
+void SCANNER_TimeSlice10ms(void) {}
+void SCANNER_TimeSlice500ms(void) {}
+bool SCANNER_IsScanning(void) { return false; }
+#else
+
 DCS_CodeType_t    gScanCssResultType;
 uint8_t           gScanCssResultCode;
 bool              gScanSingleFrequency; // scan CTCSS/DCS codes for current frequency
@@ -526,3 +550,5 @@ bool SCANNER_IsScanning(void)
 {
     return gCssBackgroundScan || (gScreenToDisplay == DISPLAY_SCANNER);
 }
+
+#endif // ENABLE_SURVIVAL

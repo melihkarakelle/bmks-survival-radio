@@ -24,6 +24,10 @@
 #include "ui/helper.h"
 #include "ui/scanner.h"
 
+#ifdef ENABLE_SURVIVAL
+void UI_DisplayScanner(void) {}   // no code scanner in survival
+#else
+
 void UI_DisplayScanner(void)
 {
     char  String[16] = {0};
@@ -81,3 +85,5 @@ void UI_DisplayScanner(void)
 
     ST7565_BlitFullScreen();
 }
+
+#endif // ENABLE_SURVIVAL
