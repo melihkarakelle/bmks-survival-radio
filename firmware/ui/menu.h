@@ -26,6 +26,9 @@
 typedef struct {
     const char  name[7];    // menu display area only has room for 6 characters
     uint8_t     menu_id;
+#ifdef ENABLE_SURVIVAL
+    const char  title[12];  // plain-language title above the value
+#endif
 } t_menu_item;
 
 enum
@@ -171,8 +174,20 @@ enum
     MENU_SRV_C_END,
     MENU_SRV_FM_SCAN,
     MENU_SRV_ECO,
+    MENU_SRV_HEARD,     // actions: M runs them, no value to edit
+    MENU_SRV_FAV,
+    MENU_SRV_PRIO,
+    MENU_SRV_RADIO,
+    MENU_SRV_ADV,
 #endif
 };
+
+#ifdef ENABLE_SURVIVAL
+    // MenuList starts with the Basic level; Adv is its last item, Advanced follows
+    #define SURV_BASIC_COUNT 9
+    #define IS_SURV_ACTION(id) ((id) >= MENU_SRV_HEARD && (id) <= MENU_SRV_ADV)
+    extern uint8_t gMenuLevel;      // 0 Basic, 1 Advanced
+#endif
 
 extern const uint8_t FIRST_HIDDEN_MENU_ITEM;
 extern const t_menu_item MenuList[];

@@ -41,6 +41,7 @@
 #include "ui/inputbox.h"
 #include "ui/menu.h"
 #ifdef ENABLE_SURVIVAL
+    #include "app/fm.h"
     #include "app/survival.h"
 #endif
 #include "ui/ui.h"
@@ -1732,6 +1733,13 @@ static void MENU_Key_0_to_9(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
     if (bKeyHeld || !bKeyPressed)
         return;
 
+#ifdef ENABLE_SURVIVAL
+    if (!gIsInSubMenu) {   // no numbered jumps in the short lists
+        gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        return;
+    }
+#endif
+
     gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 
     if (UI_MENU_GetCurrentMenuId() == MENU_MEM_NAME && edit_index >= 0)
@@ -1933,7 +1941,18 @@ static void MENU_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
             gAnotherVoiceID = VOICE_ID_CANCEL;
         #endif
 
+#ifdef ENABLE_SURVIVAL
+        if (gMenuLevel) {   // Advanced: back to Basic, on Adv
+            gMenuLevel            = 0;
+            gMenuCursor           = SURV_BASIC_COUNT - 1;
+            gFlagRefreshSetting   = true;
+            gRequestDisplayScreen = DISPLAY_MENU;
+            return;
+        }
+        gRequestDisplayScreen = gFmRadioMode ? DISPLAY_FM : DISPLAY_MAIN;
+#else
         gRequestDisplayScreen = DISPLAY_MAIN;
+#endif
 
         if (gEeprom.BACKLIGHT_TIME == 0) // backlight set to always off
         {
@@ -1954,8 +1973,50 @@ static void MENU_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
     gPttWasReleased = true;
 }
 
+#ifdef ENABLE_SURVIVAL
+// Basic menu actions run straight away and leave the menu (Adv opens the Advanced level)
+static void MENU_SurvivalAction(uint8_t id)
+{
+    if (id == MENU_SRV_ADV) {
+        gMenuLevel            = 1;
+        gMenuCursor           = SURV_BASIC_COUNT;
+        gFlagRefreshSetting   = true;
+        gRequestDisplayScreen = DISPLAY_MENU;
+        return;
+    }
+
+    // back to the radio first, the action may put its own message screen on top
+    gRequestDisplayScreen = gFmRadioMode ? DISPLAY_FM : DISPLAY_MAIN;
+
+    switch (id) {
+        case MENU_SRV_HEARD: SURVIVAL_ShowLog();     break;
+        case MENU_SRV_FAV:   SURVIVAL_AddFav();      break;
+        case MENU_SRV_PRIO:  SURVIVAL_TogglePrio();  break;
+        case MENU_SRV_RADIO: SURVIVAL_ToggleFm();    break;
+    }
+}
+#endif
+
 static void MENU_Key_MENU(const bool bKeyPressed, const bool bKeyHeld)
 {
+#ifdef ENABLE_SURVIVAL
+    // actions run on release: they leave the menu, and the screen they open
+    // must not get the release (main would take it as M tap = next mode)
+    static bool sActionArmed;
+
+    if (!gIsInSubMenu && IS_SURV_ACTION(UI_MENU_GetCurrentMenuId())) {
+        if (bKeyPressed && !bKeyHeld) {
+            sActionArmed = true;
+        } else if (!bKeyPressed && sActionArmed) {
+            sActionArmed = false;
+            gBeepToPlay  = BEEP_1KHZ_60MS_OPTIONAL;
+            MENU_SurvivalAction(UI_MENU_GetCurrentMenuId());
+        }
+        return;
+    }
+    sActionArmed = false;
+#endif
+
     if (bKeyHeld || !bKeyPressed)
         return;
 
@@ -2187,7 +2248,16 @@ static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 
     if (!gIsInSubMenu)
     {
+#ifdef ENABLE_SURVIVAL
+        // stay inside the level, no wrap-around
+        const uint8_t first = gMenuLevel ? SURV_BASIC_COUNT : 0;
+        const uint8_t last  = gMenuLevel ? gMenuListCount - 1 : SURV_BASIC_COUNT - 1;
+        if ((Direction > 0 && gMenuCursor == first) || (Direction < 0 && gMenuCursor == last))
+            return;
+        gMenuCursor -= Direction;
+#else
         gMenuCursor = NUMBER_AddWithWraparound(gMenuCursor, -Direction, 0, gMenuListCount - 1);
+#endif
 
         gFlagRefreshSetting = true;
 

@@ -28,6 +28,7 @@
 #include "app/scanner.h"
 #ifdef ENABLE_SURVIVAL
     #include "app/survival.h"
+    #include "ui/menu.h"
 #endif
 
 #ifdef ENABLE_SPECTRUM
@@ -722,7 +723,9 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
                 gUpdateStatus   = true;
 
 #ifdef ENABLE_SURVIVAL
-                // survival: hold M opens the menu (tap M switches mode, below)
+                // survival: hold M opens the menu (tap M switches mode, below), always on Basic / Group
+                gMenuLevel            = 0;
+                gMenuCursor           = 0;
                 gFlagRefreshSetting   = true;
                 gRequestDisplayScreen = DISPLAY_MENU;
 #else

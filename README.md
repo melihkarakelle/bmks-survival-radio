@@ -425,3 +425,18 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 - FM ekranı: büyük frekans R0–R1, durum R2, arka plan alıcı R4–R5.
 - Taramada yukarı/aşağı kısa basış: 0,4 sn'den uzun basınca "basılı tut" olayı taramayı yeniden başlatıyordu;
   taramayı durduran basış artık bırakılana kadar başka bir şey yapmaz.
+
+### Aşama 2 — v4.5/v4.6 (2026-10-29): Basic / Advanced menü
+
+- M basılı tut: menü her zaman BASIC seviyesinde, Group üzerinde açılır.
+- BASIC: Group, Heard, Favs, Prio, Quiet (squelch), Power, Eco, Radio, Adv.
+  ADV: FmScan, Mod, Width, Step, RxTone, RxCode, TxTone, TxCode, Shift, Offset, Resume, Start, End,
+  TxPMR…TxCB, TxAll, Rename, Lock, TxTime, Mic, Light, Contr, Beep, About, Reset (+ gizli F Lock, BatCal, BatTyp).
+- Düzen: R0 sol BASIC/ADV, sağ sade başlık (SQUELCH, TX POWER…); R1 önceki öğe, R2–R3 seçili öğe büyük ve ters,
+  R4 sonraki öğe; sağda değer, düzenlerken ters; R6 tuş ipucu (M:EDIT / M:SAVE EXIT:CANCEL / M:OPEN / M:DO, onayda M:YES EXIT:NO).
+- Liste uçlarda durur (dönmez), rakamla numaraya atlama yok. ADV'de EXIT → BASIC (Adv üzerinde), BASIC'te EXIT → ana ekran / FM.
+- Eylemler M bırakılınca çalışır (v4.6): Heard listeyi açar, Favs ekler/çıkarır, Prio ayarlar/kaldırır, Radio FM'i açar/kapatır,
+  Adv ADV seviyesine geçer. v4.5'te eylem basışta çalışıyordu, M'nin bırakılması ana ekrana gidip sonraki moda geçiyordu.
+- Değer metinleri: TxPMR…TxAll ALLOW/BLOCK, Quiet 0 = OPEN, FmScan OFF = WATCH ONLY, LAST MODE = LAST GROUP.
+- Menüden çıkanlar: ChSave, ChDele (FAV için F+7 / Favs), F1/F2 tuş atamaları (sabit), BatSav (Eco yönetir), BatTxt.
+- Sonraki aşama: Help öğesi ve F ile açılan kısayol yardım sayfaları.

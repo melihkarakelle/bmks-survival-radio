@@ -20,6 +20,7 @@
 #include "../app/dtmf.h"
 #include "../app/menu.h"
 #ifdef ENABLE_SURVIVAL
+    #include "../app/fm.h"
     #include "../app/survival.h"
 #endif
 #include "../bitmaps.h"
@@ -46,52 +47,51 @@
 const t_menu_item MenuList[] =
 {
 #ifdef ENABLE_SURVIVAL
-//   text,          menu ID
-    {"Group",       MENU_SRV_GROUP     },
-    {"FmScan",      MENU_SRV_FM_SCAN   },
-    {"Eco",         MENU_SRV_ECO       },
-    {"Sql",         MENU_SQL           },
-    {"Power",       MENU_TXP           },
-    {"Mode",        MENU_AM            },
-    {"W/N",         MENU_W_N           },
-    {"Step",        MENU_STEP          },
-    {"RxCTCS",      MENU_R_CTCS        },
-    {"RxDCS",       MENU_R_DCS         },
-    {"TxCTCS",      MENU_T_CTCS        },
-    {"TxDCS",       MENU_T_DCS         },
-    {"TxODir",      MENU_SFT_D         },
-    {"TxOffs",      MENU_OFFSET        },
-    {"ScnRev",      MENU_SC_REV        },
-    {"CStart",      MENU_SRV_C_START   },
-    {"CEnd",        MENU_SRV_C_END     },
-    {"TxPMR",       MENU_SRV_TX_PMR    },
-    {"TxFRS",       MENU_SRV_TX_FRS    },
-    {"TxMAR",       MENU_SRV_TX_MARINE },
-    {"TxHAM",       MENU_SRV_TX_HAM    },
-    {"TxCB",        MENU_SRV_TX_CB     },
-    {"TxAll",       MENU_SRV_TX_ALL    },
-    {"ChSave",      MENU_MEM_CH        },
-    {"ChDele",      MENU_DEL_CH        },
-    {"ChName",      MENU_MEM_NAME      },
-    {"F1Shrt",      MENU_F1SHRT        },
-    {"F1Long",      MENU_F1LONG        },
-    {"F2Shrt",      MENU_F2SHRT        },
-    {"F2Long",      MENU_F2LONG        },
-    {"KeyLck",      MENU_AUTOLK        },
-    {"TxTOut",      MENU_TOT           },
-    {"BatSav",      MENU_SAVE          },
-    {"BatTxt",      MENU_BAT_TXT       },
-    {"Mic",         MENU_MIC           },
-    {"BLTime",      MENU_ABR           },
-    {"Contr",       MENU_SET_CTR       },
-    {"Beep",        MENU_BEEP          },
-    {"SysInf",      MENU_VOL           },
-    {"Reset",       MENU_RESET         },
+//   text,          menu ID              title
+    // Basic
+    {"Group",       MENU_SRV_GROUP,      "USE GROUP"  },
+    {"Heard",       MENU_SRV_HEARD,      "LAST HEARD" },
+    {"Favs",        MENU_SRV_FAV,        "FAVORITE"   },
+    {"Prio",        MENU_SRV_PRIO,       "PRIORITY"   },
+    {"Quiet",       MENU_SQL,            "SQUELCH"    },
+    {"Power",       MENU_TXP,            "TX POWER"   },
+    {"Eco",         MENU_SRV_ECO,        "SAVE POWER" },
+    {"Radio",       MENU_SRV_RADIO,      "FM RADIO"   },
+    {"Adv",         MENU_SRV_ADV,        "ADVANCED"   },   // SURV_BASIC_COUNT items up to here
+    // Advanced
+    {"FmScan",      MENU_SRV_FM_SCAN,    "FM SCAN"    },
+    {"Mod",         MENU_AM,             "MODULATION" },
+    {"Width",       MENU_W_N,            "BANDWIDTH"  },
+    {"Step",        MENU_STEP,           "TUNE STEP"  },
+    {"RxTone",      MENU_R_CTCS,         "HEAR TONE"  },
+    {"RxCode",      MENU_R_DCS,          "HEAR CODE"  },
+    {"TxTone",      MENU_T_CTCS,         "SEND TONE"  },
+    {"TxCode",      MENU_T_DCS,          "SEND CODE"  },
+    {"Shift",       MENU_SFT_D,          "TX SHIFT"   },
+    {"Offset",      MENU_OFFSET,         "TX OFFSET"  },
+    {"Resume",      MENU_SC_REV,         "AFTER CALL" },
+    {"Start",       MENU_SRV_C_START,    "SCAN START" },
+    {"End",         MENU_SRV_C_END,      "SCAN END"   },
+    {"TxPMR",       MENU_SRV_TX_PMR,     "PMR SEND"   },
+    {"TxFRS",       MENU_SRV_TX_FRS,     "FRS SEND"   },
+    {"TxMAR",       MENU_SRV_TX_MARINE,  "MARINE SEND"},
+    {"TxHAM",       MENU_SRV_TX_HAM,     "HAM SEND"   },
+    {"TxCB",        MENU_SRV_TX_CB,      "CB SEND"    },
+    {"TxAll",       MENU_SRV_TX_ALL,     "WIDE TX"    },
+    {"Rename",      MENU_MEM_NAME,       "CH NAME"    },
+    {"Lock",        MENU_AUTOLK,         "AUTO LOCK"  },
+    {"TxTime",      MENU_TOT,            "TX LIMIT"   },
+    {"Mic",         MENU_MIC,            "MIC GAIN"   },
+    {"Light",       MENU_ABR,            "BACKLIGHT"  },
+    {"Contr",       MENU_SET_CTR,        "CONTRAST"   },
+    {"Beep",        MENU_BEEP,           "KEY SOUND"  },
+    {"About",       MENU_VOL,            "RADIO INFO" },
+    {"Reset",       MENU_RESET,          "RESET RADIO"},
     // hidden menu items from here on
     // enabled if pressing both the PTT and upper side button at power-on
-    {"F Lock",      MENU_F_LOCK        },
-    {"BatCal",      MENU_BATCAL        },
-    {"BatTyp",      MENU_BATTYP        },
+    {"F Lock",      MENU_F_LOCK,         "FREQ LOCK"  },
+    {"BatCal",      MENU_BATCAL,         "BAT CALIB"  },
+    {"BatTyp",      MENU_BATTYP,         "BAT TYPE"   },
 #else
 //   text,          menu ID
     {"Step",        MENU_STEP          },
@@ -235,7 +235,11 @@ const t_menu_item MenuList[] =
     {"Reset",       MENU_RESET         }, // might be better to move this to the hidden menu items ?
 #endif // ENABLE_SURVIVAL
 
+#ifdef ENABLE_SURVIVAL
+    {"",                              0xff,  ""          }  // end of list - DO NOT delete or move this this
+#else
     {"",                              0xff               }  // end of list - DO NOT delete or move this this
+#endif
 };
 
 const uint8_t FIRST_HIDDEN_MENU_ITEM = MENU_F_LOCK;
@@ -526,6 +530,9 @@ const uint8_t gSubMenu_SIDEFUNCTIONS_size = ARRAY_SIZE(gSubMenu_SIDEFUNCTIONS);
 
 bool    gIsInSubMenu;
 uint8_t gMenuCursor;
+#ifdef ENABLE_SURVIVAL
+uint8_t gMenuLevel;
+#endif
 int UI_MENU_GetCurrentMenuId() {
     if(gMenuCursor < ARRAY_SIZE(MenuList))
         return MenuList[gMenuCursor].menu_id;
@@ -562,6 +569,35 @@ void UI_DisplayMenu(void)
 
     UI_DisplayClear();
 
+#ifdef ENABLE_SURVIVAL
+    {   // UI v2 menu: R0 level + title, R1 previous, R2-R3 selected (big, inverted), R4 next, R6 keys
+        const uint8_t first = gMenuLevel ? SURV_BASIC_COUNT : 0;
+        const uint8_t last  = gMenuLevel ? gMenuListCount - 1 : SURV_BASIC_COUNT - 1;
+        const uint8_t id    = UI_MENU_GetCurrentMenuId();
+
+        for (i = 1; i < 7; i++)
+            gFrameBuffer[i][48] = 0xFF;   // divider R1..R5, the footer runs across
+
+        UI_PrintStringSmallBold(gMenuLevel ? "ADV" : "BASIC", 0, 0, 0);
+        UI_PrintStringSmallBold(MenuList[gMenuCursor].title, 50, 0, 0);
+
+        if (gMenuCursor > first)
+            UI_PrintStringSmallNormal(MenuList[gMenuCursor - 1].name, 0, 0, 1);
+        UI_PrintString(MenuList[gMenuCursor].name, 0, 0, 2, 8);
+        for (i = 0; i < 48; i++) {
+            gFrameBuffer[2][i] ^= 0xFF;
+            gFrameBuffer[3][i] ^= 0xFF;
+        }
+        if (gMenuCursor < last)
+            UI_PrintStringSmallNormal(MenuList[gMenuCursor + 1].name, 0, 0, 4);
+
+        UI_PrintStringSmallNormal(
+            gAskForConfirmation          ? "M:YES  EXIT:NO" :
+            gIsInSubMenu                 ? "M:SAVE EXIT:CANCEL" :
+            id == MENU_SRV_ADV || id == MENU_SRV_HEARD ? "M:OPEN EXIT:BACK" :
+            IS_SURV_ACTION(id)           ? "M:DO   EXIT:BACK" : "M:EDIT EXIT:BACK", 0, 0, 6);
+    }
+#else
 #ifdef ENABLE_FEAT_F4HWN
     UI_DrawLineBuffer(gFrameBuffer, 48, 0, 48, 55, 1); // Be ware, status zone = 8 lines, the rest = 56 ->total 64
     //UI_DrawLineDottedBuffer(gFrameBuffer, 0, 46, 50, 46, 1);
@@ -649,6 +685,7 @@ void UI_DisplayMenu(void)
 #endif
     }
 #endif
+#endif
 
     // **************
 
@@ -677,18 +714,46 @@ void UI_DisplayMenu(void)
 
         case MENU_SRV_FM_SCAN:
             if (gSubMenuSelection == SURV_FMSCAN_LAST)
-                strcpy(String, "LAST\nMODE");
+                strcpy(String, "LAST\nGROUP");
             else
-                strcpy(String, gSubMenuSelection ? gSubMenu_SRV_MODE[gSubMenuSelection - 1] : gSubMenu_OFF_ON[0]);
+                strcpy(String, gSubMenuSelection ? gSubMenu_SRV_MODE[gSubMenuSelection - 1] : "WATCH\nONLY");
             break;
 
         case MENU_SRV_TX_PMR ... MENU_SRV_TX_ALL:
+            strcpy(String, gSubMenuSelection ? "ALLOW" : "BLOCK");
+            break;
+
         case MENU_SRV_ECO:
             strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
+            break;
+
+        case MENU_SRV_HEARD:
+        case MENU_SRV_ADV:
+            strcpy(String, "OPEN");
+            break;
+
+        case MENU_SRV_FAV: {
+            const uint8_t ch = gEeprom.ScreenChannel[gEeprom.TX_VFO];
+            strcpy(String, SURVIVAL_IsFavChannel(ch) ? "REMOVE" : "ADD");
+            break;
+        }
+
+        case MENU_SRV_PRIO:
+            strcpy(String, (gEeprom.ScreenChannel[gEeprom.TX_VFO] == gSurvivalPrio) ? "CLEAR" : "SET HERE");
+            break;
+
+        case MENU_SRV_RADIO:
+            strcpy(String, gFmRadioMode ? "CLOSE" : "OPEN");
             break;
 #endif
 
         case MENU_SQL:
+#ifdef ENABLE_SURVIVAL
+            if (gSubMenuSelection == 0) {
+                strcpy(String, "OPEN");
+                break;
+            }
+#endif
             sprintf(String, "%d", gSubMenuSelection);
             break;
 
@@ -1373,7 +1438,7 @@ void UI_DisplayMenu(void)
 
                 UI_PrintStringSmallNormal(edit, 54, 127, 1);
 
-                #ifdef ENABLE_FEAT_F4HWN
+                #if defined(ENABLE_FEAT_F4HWN) && !defined(ENABLE_SURVIVAL)   // survival: R6 is the key footer
                     UI_PrintStringSmallNormal(Edition, 54, 127, 6);
                 #endif
 
@@ -1472,8 +1537,10 @@ void UI_DisplayMenu(void)
         || UI_MENU_GetCurrentMenuId() == MENU_D_LIST
 #endif
     ) {
+#ifndef ENABLE_SURVIVAL   // R0 holds the title
         sprintf(String, "%2d", gSubMenuSelection);
         UI_PrintStringSmallNormal(String, 105, 0, 0);
+#endif
     }
 
     if ((UI_MENU_GetCurrentMenuId() == MENU_RESET    ||
@@ -1482,8 +1549,20 @@ void UI_DisplayMenu(void)
          UI_MENU_GetCurrentMenuId() == MENU_DEL_CH) && gAskForConfirmation)
     {   // display confirmation
         char *pPrintStr = (gAskForConfirmation == 1) ? "SURE?" : "WAIT!";
+#ifdef ENABLE_SURVIVAL
+        UI_PrintStringSmallBold(pPrintStr, menu_item_x1, menu_item_x2, 5);
+#else
         UI_PrintString(pPrintStr, menu_item_x1, menu_item_x2, 5, 8);
+#endif
     }
+
+#ifdef ENABLE_SURVIVAL
+    if (gIsInSubMenu)   // the value being edited
+        for (i = 50; i < 128; i++) {
+            gFrameBuffer[2][i] ^= 0xFF;
+            gFrameBuffer[3][i] ^= 0xFF;
+        }
+#endif
 
     ST7565_BlitFullScreen();
 }
