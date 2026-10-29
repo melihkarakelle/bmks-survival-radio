@@ -81,28 +81,28 @@ void UI_DisplayFM(void)
     }
     UI_PrintStringSmallBold(pPrintStr, 0, 127, 2);
 
-    UI_DrawLineBuffer(gFrameBuffer, 0, 28, 127, 28, true);
+    // row 3: FM band, centred like the frequency (it belongs to the FM part)
+    sprintf(String, "%d%s-%dM",
+        BK1080_GetFreqLoLimit(gEeprom.FM_Band)/10,
+        gEeprom.FM_Band == 0 ? ".5" : "",
+        BK1080_GetFreqHiLimit(gEeprom.FM_Band)/10
+        );
+    UI_PrintStringSmallNormal(String, 0, 127, 3);
 
-    // rows 4-5: background receiver, refreshed on every scan step
+    UI_DrawLineBuffer(gFrameBuffer, 0, 36, 127, 36, true);
+
+    // rows 5-6: background receiver, refreshed on every scan step
     const uint8_t channel = gRxVfo->CHANNEL_SAVE;
     if (IS_MR_CHANNEL(channel))
         SETTINGS_FetchChannelName(Name, channel);
     else
         strcpy(Name, "VFO");
     sprintf(String, "%s %s", SURVIVAL_FmBgScanning() ? "SCAN" : "WATCH", Name);
-    UI_PrintStringSmallNormal(String, 0, 127, 4);
+    UI_PrintStringSmallNormal(String, 0, 127, 5);
 
     const uint32_t f = gRxVfo->freq_config_RX.Frequency;
     sprintf(String, "%u.%05u MHz", f / 100000, f % 100000);
-    UI_PrintStringSmallNormal(String, 0, 127, 5);
-
-    // row 6: FM band
-    sprintf(String, "%d%s-%dM",
-        BK1080_GetFreqLoLimit(gEeprom.FM_Band)/10,
-        gEeprom.FM_Band == 0 ? ".5" : "",
-        BK1080_GetFreqHiLimit(gEeprom.FM_Band)/10
-        );
-    UI_PrintStringSmallNormal(String, 1, 0, 6);
+    UI_PrintStringSmallNormal(String, 0, 127, 6);
 
     ST7565_BlitFullScreen();
 }
