@@ -153,25 +153,31 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             *pMax = 61;
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ABR_MIN:
             //*pMin = 0;
             *pMax = 9;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ABR_MAX:
             *pMin = 1;
             *pMax = 10;
             break;
+#endif
 
         case MENU_F_LOCK:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_F_LOCK) - 1;
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_MDF:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_MDF) - 1;
             break;
+#endif
 
         case MENU_TXP:
             //*pMin = 0;
@@ -200,15 +206,19 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             *pMax = 104;
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ROGER:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_ROGER) - 1;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_PONMSG:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_PONMSG) - 1;
             break;
+#endif
 
         case MENU_R_DCS:
         case MENU_T_DCS:
@@ -254,17 +264,33 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
         #ifdef ENABLE_AUDIO_BAR
             case MENU_MIC_BAR:
         #endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_BCL:
+#endif
         case MENU_BEEP:
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD1:
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD2:
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD3:
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_STE:
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_ST:
+#endif
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_DCD:
 #endif
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_LIVE_DEC:
+#endif
         #ifdef ENABLE_NOAA
             case MENU_NOAA_S:
         #endif
@@ -289,10 +315,12 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             break;
 
 #ifndef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SCR:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_SCRAMBLER) - 1;
             break;
+#endif
 #endif
 
         case MENU_AUTOLK:
@@ -308,25 +336,31 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
         #ifdef ENABLE_VOX
             case MENU_VOX:
         #endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_RP_STE:
             //*pMin = 0;
             *pMax = 10;
             break;
+#endif
 
         case MENU_MEM_CH:
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_1_CALL:
+#endif
         case MENU_DEL_CH:
         case MENU_MEM_NAME:
             //*pMin = 0;
             *pMax = MR_CHANNEL_LAST;
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SLIST1:
         case MENU_SLIST2:
         case MENU_SLIST3:
             *pMin = -1;
             *pMax = MR_CHANNEL_LAST;
             break;
+#endif
 
         case MENU_SAVE:
             //*pMin = 0;
@@ -338,21 +372,27 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             *pMax = 4;
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_LIST:
             //*pMin = 0;
             *pMax = 5;
             break;
+#endif
 
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_RSP:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_D_RSP) - 1;
             break;
 #endif
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_PTT_ID:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_PTT_ID) - 1;
             break;
+#endif
 
         case MENU_BAT_TXT:
             //*pMin = 0;
@@ -360,15 +400,19 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             break;
 
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_HOLD:
             *pMin = 5;
             *pMax = 60;
             break;
 #endif
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_PRE:
             *pMin = 3;
             *pMax = 99;
             break;
+#endif
 
 #ifdef ENABLE_DTMF_CALLING
         case MENU_D_LIST:
@@ -397,30 +441,40 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
         case MENU_F1LONG:
         case MENU_F2SHRT:
         case MENU_F2LONG:
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_MLONG:
+#endif
             //*pMin = 0;
             *pMax = gSubMenu_SIDEFUNCTIONS_size-1;
             break;
 
 #ifdef ENABLE_FEAT_F4HWN_SLEEP
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_OFF:
             *pMax = 120;
             break;
 #endif
+#endif
 
 #ifdef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_PWR:
             *pMax = ARRAY_SIZE(gSubMenu_SET_PWR) - 1;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_PTT:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_SET_PTT) - 1;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_TOT:
         case MENU_SET_EOT:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_SET_TOT) - 1;
             break;
+#endif
 #ifdef ENABLE_FEAT_F4HWN_CTR
         case MENU_SET_CTR:
             *pMin = 1;
@@ -434,10 +488,12 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             *pMax = ARRAY_SIZE(gSubMenu_OFF_ON) - 1;
             break;
 #endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_LCK:
             //*pMin = 0;
             *pMax = ARRAY_SIZE(gSubMenu_SET_LCK) - 1;
             break;
+#endif
         case MENU_SET_MET:
         case MENU_SET_GUI:
             //*pMin = 0;
@@ -594,6 +650,7 @@ void MENU_AcceptSetting(void)
             return;
 
 #ifndef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SCR:
             gTxVfo->SCRAMBLING_TYPE = gSubMenuSelection;
             #if 0
@@ -605,11 +662,14 @@ void MENU_AcceptSetting(void)
             gRequestSaveChannel     = 1;
             return;
 #endif
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_BCL:
             gTxVfo->BUSY_CHANNEL_LOCK = gSubMenuSelection;
             gRequestSaveChannel       = 1;
             return;
+#endif
 
         case MENU_MEM_CH:
             gTxVfo->CHANNEL_SAVE = gSubMenuSelection;
@@ -655,20 +715,27 @@ void MENU_AcceptSetting(void)
             #endif
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ABR_MIN:
             gEeprom.BACKLIGHT_MIN = gSubMenuSelection;
             gEeprom.BACKLIGHT_MAX = MAX(gSubMenuSelection + 1 , gEeprom.BACKLIGHT_MAX);
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ABR_MAX:
             gEeprom.BACKLIGHT_MAX = gSubMenuSelection;
             gEeprom.BACKLIGHT_MIN = MIN(gSubMenuSelection - 1, gEeprom.BACKLIGHT_MIN);
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ABR_ON_TX_RX:
             gSetting_backlight_on_tx_rx = gSubMenuSelection;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_TDR:
             gEeprom.DUAL_WATCH = (gEeprom.TX_VFO + 1) * (gSubMenuSelection & 1);
             gEeprom.CROSS_BAND_RX_TX = (gEeprom.TX_VFO + 1) * ((gSubMenuSelection & 2) > 0);
@@ -682,6 +749,7 @@ void MENU_AcceptSetting(void)
             gFlagReconfigureVfos = true;
             gUpdateStatus        = true;
             break;
+#endif
 
         case MENU_BEEP:
             gEeprom.BEEP_CONTROL = gSubMenuSelection;
@@ -702,43 +770,55 @@ void MENU_AcceptSetting(void)
             gEeprom.SCAN_RESUME_MODE = gSubMenuSelection;
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_MDF:
             gEeprom.CHANNEL_DISPLAY_MODE = gSubMenuSelection;
             break;
+#endif
 
         case MENU_AUTOLK:
             gEeprom.AUTO_KEYPAD_LOCK = gSubMenuSelection;
             gKeyLockCountdown        = gEeprom.AUTO_KEYPAD_LOCK * 30; // 15 seconds step
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD1:
             gTxVfo->SCANLIST1_PARTICIPATION = gSubMenuSelection;
             SETTINGS_UpdateChannel(gTxVfo->CHANNEL_SAVE, gTxVfo, true, false, true);
             gVfoConfigureMode = VFO_CONFIGURE;
             gFlagResetVfos    = true;
             return;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD2:
             gTxVfo->SCANLIST2_PARTICIPATION = gSubMenuSelection;
             SETTINGS_UpdateChannel(gTxVfo->CHANNEL_SAVE, gTxVfo, true, false, true);
             gVfoConfigureMode = VFO_CONFIGURE;
             gFlagResetVfos    = true;
             return;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD3:
             gTxVfo->SCANLIST3_PARTICIPATION = gSubMenuSelection;
             SETTINGS_UpdateChannel(gTxVfo->CHANNEL_SAVE, gTxVfo, true, false, true);
             gVfoConfigureMode = VFO_CONFIGURE;
             gFlagResetVfos    = true;
             return;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_STE:
             gEeprom.TAIL_TONE_ELIMINATION = gSubMenuSelection;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_RP_STE:
             gEeprom.REPEATER_TAIL_TONE_ELIMINATION = gSubMenuSelection;
             break;
+#endif
 
         case MENU_MIC:
             gEeprom.MIC_SENSITIVITY = gSubMenuSelection;
@@ -752,6 +832,7 @@ void MENU_AcceptSetting(void)
                 break;
         #endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_COMPAND:
             gTxVfo->Compander = gSubMenuSelection;
             SETTINGS_UpdateChannel(gTxVfo->CHANNEL_SAVE, gTxVfo, true, false, true);
@@ -759,10 +840,13 @@ void MENU_AcceptSetting(void)
             gFlagResetVfos    = true;
 //          gRequestSaveChannel = 1;
             return;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_1_CALL:
             gEeprom.CHAN_1_CALL = gSubMenuSelection;
             break;
+#endif
 
         case MENU_S_LIST:
             gEeprom.SCAN_LIST_DEFAULT = gSubMenuSelection;
@@ -774,40 +858,53 @@ void MENU_AcceptSetting(void)
                 break;
         #endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_ST:
             gEeprom.DTMF_SIDE_TONE = gSubMenuSelection;
             break;
+#endif
 
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_RSP:
             gEeprom.DTMF_DECODE_RESPONSE = gSubMenuSelection;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_HOLD:
             gEeprom.DTMF_auto_reset_time = gSubMenuSelection;
             break;
 #endif
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_PRE:
             gEeprom.DTMF_PRELOAD_TIME = gSubMenuSelection * 10;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_PTT_ID:
             gTxVfo->DTMF_PTT_ID_TX_MODE = gSubMenuSelection;
             gRequestSaveChannel         = 1;
             return;
+#endif
 
         case MENU_BAT_TXT:
             gSetting_battery_text = gSubMenuSelection;
             break;
 
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_DCD:
             gTxVfo->DTMF_DECODING_ENABLE = gSubMenuSelection;
             DTMF_clear_RX();
             gRequestSaveChannel = 1;
             return;
 #endif
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_LIVE_DEC:
             gSetting_live_DTMF_decoder = gSubMenuSelection;
             gDTMF_RX_live_timeout = 0;
@@ -817,8 +914,10 @@ void MENU_AcceptSetting(void)
             gFlagReconfigureVfos     = true;
             gUpdateStatus            = true;
             break;
+#endif
 
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_LIST:
             gDTMF_chosen_contact = gSubMenuSelection - 1;
             if (gIsDtmfContactValid)
@@ -831,13 +930,18 @@ void MENU_AcceptSetting(void)
             }
             return;
 #endif
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_PONMSG:
             gEeprom.POWER_ON_DISPLAY_MODE = gSubMenuSelection;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ROGER:
             gEeprom.ROGER = gSubMenuSelection;
             break;
+#endif
 
         case MENU_AM:
             gTxVfo->Modulation     = gSubMenuSelection;
@@ -872,9 +976,11 @@ void MENU_AcceptSetting(void)
             return;
 
 #ifndef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_350TX:
             gSetting_350TX = gSubMenuSelection;
             break;
+#endif
 #endif
 
         case MENU_F_LOCK: {
@@ -900,19 +1006,25 @@ void MENU_AcceptSetting(void)
             break;
         }
 #ifndef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_200TX:
             gSetting_200TX = gSubMenuSelection;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_500TX:
             gSetting_500TX = gSubMenuSelection;
             break;
 #endif
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_350EN:
             gSetting_350EN       = gSubMenuSelection;
             gVfoConfigureMode    = VFO_CONFIGURE_RELOAD;
             gFlagResetVfos       = true;
             break;
+#endif
 #ifndef ENABLE_FEAT_F4HWN
         case MENU_SCREN:
             gSetting_ScrambleEnable = gSubMenuSelection;
@@ -946,7 +1058,9 @@ void MENU_AcceptSetting(void)
         case MENU_F1LONG:
         case MENU_F2SHRT:
         case MENU_F2LONG:
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_MLONG:
+#endif
             {
                 uint8_t * fun[]= {
                     &gEeprom.KEY_1_SHORT_PRESS_ACTION,
@@ -959,40 +1073,56 @@ void MENU_AcceptSetting(void)
             break;
 
 #ifdef ENABLE_FEAT_F4HWN_SLEEP 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_OFF:
             gSetting_set_off = gSubMenuSelection;
             break;
 #endif
+#endif
 
 #ifdef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_PWR:
             gSetting_set_pwr = gSubMenuSelection;
             gRequestSaveChannel = 1;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_PTT:
             gSetting_set_ptt = gSubMenuSelection;
             gSetting_set_ptt_session = gSetting_set_ptt; // Special for action
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_TOT:
             gSetting_set_tot = gSubMenuSelection;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_EOT:
             gSetting_set_eot = gSubMenuSelection;
             break;
+#endif
 #ifdef ENABLE_FEAT_F4HWN_CTR
         case MENU_SET_CTR:
             gSetting_set_ctr = gSubMenuSelection;
             break;
 #endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_INV:
             gSetting_set_inv = gSubMenuSelection;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_LCK:
             gSetting_set_lck = gSubMenuSelection;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_MET:
             gSetting_set_met = gSubMenuSelection;
             break;
+#endif
         case MENU_SET_GUI:
             gSetting_set_gui = gSubMenuSelection;
             break;
@@ -1013,13 +1143,17 @@ void MENU_AcceptSetting(void)
                 gEeprom.SET_KEY = gSubMenuSelection;
                 break;
         #endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_TMR:
             gSetting_set_tmr = gSubMenuSelection;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_TX_LOCK:
             gTxVfo->TX_LOCK = gSubMenuSelection;
             gRequestSaveChannel       = 1;
             return;
+#endif
 #endif
     }
 
@@ -1147,14 +1281,18 @@ void MENU_ShowCurrentSetting(void)
             break;
 
 #ifndef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SCR:
             gSubMenuSelection = gTxVfo->SCRAMBLING_TYPE;
             break;
 #endif
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_BCL:
             gSubMenuSelection = gTxVfo->BUSY_CHANNEL_LOCK;
             break;
+#endif
 
         case MENU_MEM_CH:
             #if 0
@@ -1173,9 +1311,11 @@ void MENU_ShowCurrentSetting(void)
             break;
 
 #ifdef ENABLE_VOX
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_VOX:
             gSubMenuSelection = gEeprom.VOX_SWITCH ? gEeprom.VOX_LEVEL + 1 : 0;
             break;
+#endif
 #endif
 
         case MENU_ABR:
@@ -1193,21 +1333,29 @@ void MENU_ShowCurrentSetting(void)
             #endif
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ABR_MIN:
             gSubMenuSelection = gEeprom.BACKLIGHT_MIN;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ABR_MAX:
             gSubMenuSelection = gEeprom.BACKLIGHT_MAX;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ABR_ON_TX_RX:
             gSubMenuSelection = gSetting_backlight_on_tx_rx;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_TDR:
             gSubMenuSelection = (gEeprom.DUAL_WATCH != DUAL_WATCH_OFF) + (gEeprom.CROSS_BAND_RX_TX != CROSS_BAND_OFF) * 2;
             break;
+#endif
 
         case MENU_BEEP:
             gSubMenuSelection = gEeprom.BEEP_CONTROL;
@@ -1218,64 +1366,86 @@ void MENU_ShowCurrentSetting(void)
             break;
 
 #ifdef ENABLE_VOICE
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_VOICE:
             gSubMenuSelection = gEeprom.VOICE_PROMPT;
             break;
+#endif
 #endif
 
         case MENU_SC_REV:
             gSubMenuSelection = gEeprom.SCAN_RESUME_MODE;
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_MDF:
             gSubMenuSelection = gEeprom.CHANNEL_DISPLAY_MODE;
             break;
+#endif
 
         case MENU_AUTOLK:
             gSubMenuSelection = gEeprom.AUTO_KEYPAD_LOCK;
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD1:
             gSubMenuSelection = gTxVfo->SCANLIST1_PARTICIPATION;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD2:
             gSubMenuSelection = gTxVfo->SCANLIST2_PARTICIPATION;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD3:
             gSubMenuSelection = gTxVfo->SCANLIST3_PARTICIPATION;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_STE:
             gSubMenuSelection = gEeprom.TAIL_TONE_ELIMINATION;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_RP_STE:
             gSubMenuSelection = gEeprom.REPEATER_TAIL_TONE_ELIMINATION;
             break;
+#endif
 
         case MENU_MIC:
             gSubMenuSelection = gEeprom.MIC_SENSITIVITY;
             break;
 
 #ifdef ENABLE_AUDIO_BAR
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_MIC_BAR:
             gSubMenuSelection = gSetting_mic_bar;
             break;
 #endif
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_COMPAND:
             gSubMenuSelection = gTxVfo->Compander;
             return;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_1_CALL:
             gSubMenuSelection = gEeprom.CHAN_1_CALL;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_LIST:
             gSubMenuSelection = gEeprom.SCAN_LIST_DEFAULT;
             break;
+#endif
 
         case MENU_SLIST1:
         case MENU_SLIST2:
@@ -1289,51 +1459,71 @@ void MENU_ShowCurrentSetting(void)
                 break;
         #endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_ST:
             gSubMenuSelection = gEeprom.DTMF_SIDE_TONE;
             break;
+#endif
 
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_RSP:
             gSubMenuSelection = gEeprom.DTMF_DECODE_RESPONSE;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_HOLD:
             gSubMenuSelection = gEeprom.DTMF_auto_reset_time;
             break;
 #endif
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_PRE:
             gSubMenuSelection = gEeprom.DTMF_PRELOAD_TIME / 10;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_PTT_ID:
             gSubMenuSelection = gTxVfo->DTMF_PTT_ID_TX_MODE;
             break;
+#endif
 
         case MENU_BAT_TXT:
             gSubMenuSelection = gSetting_battery_text;
             return;
 
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_DCD:
             gSubMenuSelection = gTxVfo->DTMF_DECODING_ENABLE;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_LIST:
             gSubMenuSelection = gDTMF_chosen_contact + 1;
             break;
 #endif
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_LIVE_DEC:
             gSubMenuSelection = gSetting_live_DTMF_decoder;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_PONMSG:
             gSubMenuSelection = gEeprom.POWER_ON_DISPLAY_MODE;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ROGER:
             gSubMenuSelection = gEeprom.ROGER;
             break;
+#endif
 
         case MENU_AM:
             gSubMenuSelection = gTxVfo->Modulation;
@@ -1362,9 +1552,11 @@ void MENU_ShowCurrentSetting(void)
             break;
 
 #ifndef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_350TX:
             gSubMenuSelection = gSetting_350TX;
             break;
+#endif
 #endif
 
         case MENU_F_LOCK:
@@ -1372,18 +1564,24 @@ void MENU_ShowCurrentSetting(void)
             break;
 
 #ifndef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_200TX:
             gSubMenuSelection = gSetting_200TX;
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_500TX:
             gSubMenuSelection = gSetting_500TX;
             break;
+#endif
 
 #endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_350EN:
             gSubMenuSelection = gSetting_350EN;
             break;
+#endif
 
 #ifndef ENABLE_FEAT_F4HWN
         case MENU_SCREN:
@@ -1409,7 +1607,9 @@ void MENU_ShowCurrentSetting(void)
         case MENU_F1LONG:
         case MENU_F2SHRT:
         case MENU_F2LONG:
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_MLONG:
+#endif
         {
             uint8_t * fun[]= {
                 &gEeprom.KEY_1_SHORT_PRESS_ACTION,
@@ -1430,38 +1630,54 @@ void MENU_ShowCurrentSetting(void)
         }
 
 #ifdef ENABLE_FEAT_F4HWN_SLEEP 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_OFF:
             gSubMenuSelection = gSetting_set_off;
             break;
 #endif
+#endif
 
 #ifdef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_PWR:
             gSubMenuSelection = gSetting_set_pwr;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_PTT:
             gSubMenuSelection = gSetting_set_ptt_session;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_TOT:
             gSubMenuSelection = gSetting_set_tot;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_EOT:
             gSubMenuSelection = gSetting_set_eot;
             break;
+#endif
 #ifdef ENABLE_FEAT_F4HWN_CTR
         case MENU_SET_CTR:
             gSubMenuSelection = gSetting_set_ctr;
             break;
 #endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_INV:
             gSubMenuSelection = gSetting_set_inv;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_LCK:
             gSubMenuSelection = gSetting_set_lck;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_MET:
             gSubMenuSelection = gSetting_set_met;
             break;
+#endif
         case MENU_SET_GUI:
             gSubMenuSelection = gSetting_set_gui;
             break;
@@ -1480,12 +1696,16 @@ void MENU_ShowCurrentSetting(void)
                 gSubMenuSelection = gEeprom.SET_KEY;
                 break;
         #endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_TMR:
             gSubMenuSelection = gSetting_set_tmr;
             break;
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_TX_LOCK:
             gSubMenuSelection = gTxVfo->TX_LOCK;
             break;
+#endif
 #endif
 
         default:

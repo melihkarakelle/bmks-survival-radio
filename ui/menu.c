@@ -697,6 +697,7 @@ void UI_DisplayMenu(void)
             }
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_MIC_BAR:
             #ifdef ENABLE_AUDIO_BAR
                 strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
@@ -704,6 +705,7 @@ void UI_DisplayMenu(void)
                 strcpy(String, gSubMenu_NA);
             #endif
             break;
+#endif
 
         case MENU_STEP: {
             uint16_t step = gStepFrequencyTable[FREQUENCY_GetStepIdxFromSortedIdx(gSubMenuSelection)];
@@ -773,6 +775,7 @@ void UI_DisplayMenu(void)
             break;
 
 #ifndef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SCR:
             strcpy(String, gSubMenu_SCRAMBLER[gSubMenuSelection]);
             #if 1
@@ -783,7 +786,9 @@ void UI_DisplayMenu(void)
             #endif
             break;
 #endif
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_VOX:
             #ifdef ENABLE_VOX
                 sprintf(String, gSubMenuSelection == 0 ? gSubMenu_OFF_ON[0] : "%u", gSubMenuSelection);
@@ -791,6 +796,7 @@ void UI_DisplayMenu(void)
                 strcpy(String, gSubMenu_NA);
             #endif
             break;
+#endif
 
         case MENU_ABR:
             if(gSubMenuSelection == 0)
@@ -817,6 +823,7 @@ void UI_DisplayMenu(void)
             //    BACKLIGHT_SetBrightness(4);
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ABR_MIN:
         case MENU_ABR_MAX:
             sprintf(String, "%d", gSubMenuSelection);
@@ -826,6 +833,7 @@ void UI_DisplayMenu(void)
             //else if(BACKLIGHT_GetBrightness() < 4)
             //    BACKLIGHT_SetBrightness(4);
             break;
+#endif
 
         case MENU_AM:
             strcpy(String, gModulationStr[gSubMenuSelection]);
@@ -856,17 +864,33 @@ void UI_DisplayMenu(void)
                 case MENU_AM_FIX:
             #endif
         #endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_BCL:
+#endif
         case MENU_BEEP:
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD1:
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD2:
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_S_ADD3:
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_STE:
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_ST:
+#endif
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_DCD:
 #endif
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_LIVE_DEC:
+#endif
         #ifdef ENABLE_NOAA
             case MENU_NOAA_S:
         #endif
@@ -886,7 +910,9 @@ void UI_DisplayMenu(void)
             break;
 
         case MENU_MEM_CH:
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_1_CALL:
+#endif
         case MENU_DEL_CH:
         {
             const bool valid = RADIO_CheckValidChannel(gSubMenuSelection, false, 0);
@@ -951,9 +977,11 @@ void UI_DisplayMenu(void)
             sprintf(String, gSubMenuSelection == 0 ? gSubMenu_OFF_ON[0] : "1:%u", gSubMenuSelection);
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_TDR:
             strcpy(String, gSubMenu_RXMode[gSubMenuSelection]);
             break;
+#endif
 
         case MENU_TOT:
             sprintf(String, "%02dm:%02ds", (((gSubMenuSelection + 1) * 5) / 60), (((gSubMenuSelection + 1) * 5) % 60));
@@ -998,13 +1026,17 @@ void UI_DisplayMenu(void)
             }
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_MDF:
             strcpy(String, gSubMenu_MDF[gSubMenuSelection]);
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_RP_STE:
             sprintf(String, gSubMenuSelection == 0 ? gSubMenu_OFF_ON[0] : "%u*100ms", gSubMenuSelection);
             break;
+#endif
 
         case MENU_S_LIST:
             if (gSubMenuSelection == 0)
@@ -1024,40 +1056,55 @@ void UI_DisplayMenu(void)
         #endif
 
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ANI_ID:
             strcpy(String, gEeprom.ANI_DTMF_ID);
             break;
 #endif
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_UPCODE:
             sprintf(String, "%.8s\n%.8s", gEeprom.DTMF_UP_CODE, gEeprom.DTMF_UP_CODE + 8);
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_DWCODE:
             sprintf(String, "%.8s\n%.8s", gEeprom.DTMF_DOWN_CODE, gEeprom.DTMF_DOWN_CODE + 8);
             break;
+#endif
 
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_RSP:
             strcpy(String, gSubMenu_D_RSP[gSubMenuSelection]);
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_HOLD:
             sprintf(String, "%ds", gSubMenuSelection);
             break;
 #endif
+#endif
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_PRE:
             sprintf(String, "%d*10ms", gSubMenuSelection);
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_PTT_ID:
             strcpy(String, gSubMenu_PTT_ID[gSubMenuSelection]);
             break;
+#endif
 
         case MENU_BAT_TXT:
             strcpy(String, gSubMenu_BAT_TXT[gSubMenuSelection]);
             break;
 
 #ifdef ENABLE_DTMF_CALLING
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_D_LIST:
             gIsDtmfContactValid = DTMF_GetContact((int)gSubMenuSelection - 1, Contact);
             if (!gIsDtmfContactValid)
@@ -1066,14 +1113,19 @@ void UI_DisplayMenu(void)
                 memcpy(String, Contact, 8);
             break;
 #endif
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_PONMSG:
             strcpy(String, gSubMenu_PONMSG[gSubMenuSelection]);
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_ROGER:
             strcpy(String, gSubMenu_ROGER[gSubMenuSelection]);
             break;
+#endif
 
         case MENU_VOL:
 #ifdef ENABLE_FEAT_F4HWN
@@ -1133,11 +1185,14 @@ void UI_DisplayMenu(void)
         case MENU_F1LONG:
         case MENU_F2SHRT:
         case MENU_F2LONG:
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_MLONG:
+#endif
             strcpy(String, gSubMenu_SIDEFUNCTIONS[gSubMenuSelection].name);
             break;
 
 #ifdef ENABLE_FEAT_F4HWN_SLEEP
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_OFF:
             if(gSubMenuSelection == 0)
             {
@@ -1155,20 +1210,27 @@ void UI_DisplayMenu(void)
             }
             break;
 #endif
+#endif
 
 #ifdef ENABLE_FEAT_F4HWN
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_PWR:
             sprintf(String, "%s\n%sW", gSubMenu_TXP[gSubMenuSelection + 1], gSubMenu_SET_PWR[gSubMenuSelection]);
             break;
+#endif
     
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_PTT:
             strcpy(String, gSubMenu_SET_PTT[gSubMenuSelection]);
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_TOT:
         case MENU_SET_EOT:
             strcpy(String, gSubMenu_SET_TOT[gSubMenuSelection]); // Same as SET_TOT
             break;
+#endif
 
         case MENU_SET_CTR:
             #ifdef ENABLE_FEAT_F4HWN_CTR
@@ -1180,6 +1242,7 @@ void UI_DisplayMenu(void)
             #endif
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_INV:
             #ifdef ENABLE_FEAT_F4HWN_INV
                 strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
@@ -1188,7 +1251,9 @@ void UI_DisplayMenu(void)
                 strcpy(String, gSubMenu_NA);
             #endif
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_TX_LOCK:
             if(TX_freq_check(gEeprom.VfoInfo[gEeprom.TX_VFO].pTX->Frequency) == 0)
             {
@@ -1199,10 +1264,13 @@ void UI_DisplayMenu(void)
                 strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
             }
             break;
+#endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SET_LCK:
             strcpy(String, gSubMenu_SET_LCK[gSubMenuSelection]);
             break;
+#endif
 
         case MENU_SET_MET:
         case MENU_SET_GUI:
