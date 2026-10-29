@@ -83,7 +83,9 @@ void (*action_opt_table[])(void) = {
     [ACTION_OPT_VOX] = &FUNCTION_NOP,
 #endif
 
-#ifdef ENABLE_FMRADIO
+#if defined(ENABLE_SURVIVAL) && defined(ENABLE_FMRADIO)
+    [ACTION_OPT_FM] = &SURVIVAL_ToggleFm,
+#elif defined(ENABLE_FMRADIO)
     [ACTION_OPT_FM] = &ACTION_FM,
 #else
     [ACTION_OPT_FM] = &FUNCTION_NOP,

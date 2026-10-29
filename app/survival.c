@@ -23,7 +23,7 @@
 #include "settings.h"
 #include "ui/ui.h"
 
-// EEPROM 0x1FF8: 'B' 'M' 'K' 'S', table version, TX mask, FM background scan, FF
+// EEPROM 0x1FF8: 'B' 'M' 'K' 'S', table version, TX mask, FM background scan, settings revision
 #define SURV_MARKER_ADDR   0x1FF8
 // EEPROM 0x1FE8: CUSTOM scan range, start and end as uint32 (10 Hz units)
 #define SURV_RANGE_ADDR    0x1FE8
@@ -31,6 +31,8 @@
 #define SURV_RANGE_END     14600000   // 146.000 MHz
 // bump when the channel tables or defaults change, radios re-init on next boot
 #define SURV_TABLE_VERSION 5
+// bump for setting changes that existing radios get without a re-init (byte 7)
+#define SURV_SETTINGS_REV  1
 #define SURV_TX_DEFAULT    ((1u << SURV_TX_PMR) | (1u << SURV_TX_FRS))
 
 static const uint8_t SURV_MAGIC[4] = {'B', 'M', 'K', 'S'};
@@ -248,11 +250,11 @@ static void WriteDefaults(void)
 {
     gEeprom.KEY_1_SHORT_PRESS_ACTION = ACTION_OPT_MONITOR;
     gEeprom.KEY_1_LONG_PRESS_ACTION  = ACTION_OPT_FLASHLIGHT;
-    gEeprom.KEY_2_SHORT_PRESS_ACTION = ACTION_OPT_GROUP;
+    gEeprom.KEY_2_SHORT_PRESS_ACTION = ACTION_OPT_FM;      // FM radio on/off, M switches modes
     gEeprom.KEY_2_LONG_PRESS_ACTION  = ACTION_OPT_SCAN;
     gEeprom.SCAN_RESUME_MODE         = 0;   // STOP: stay on the channel with activity
     gEeprom.SCAN_LIST_DEFAULT        = 5;   // all channels, the group limits the scan
-    gEeprom.SQUELCH_LEVEL            = 3;   // 1 opens on noise and stops every scan
+    gEeprom.SQUELCH_LEVEL            = 1;   // most sensitive; raise it if noise stops the scan
     gEeprom.POWER_ON_DISPLAY_MODE    = POWER_ON_DISPLAY_MODE_ALL;
     gEeprom.CHANNEL_DISPLAY_MODE     = MDF_NAME_FREQ;
     gEeprom.DUAL_WATCH               = DUAL_WATCH_OFF;
@@ -281,7 +283,7 @@ void SURVIVAL_SaveSettings(void)
 {
     const uint8_t marker[8] = {
         SURV_MAGIC[0], SURV_MAGIC[1], SURV_MAGIC[2], SURV_MAGIC[3],
-        SURV_TABLE_VERSION, gSurvivalTxMask, gSurvivalFmScan, 0xFF,
+        SURV_TABLE_VERSION, gSurvivalTxMask, gSurvivalFmScan, SURV_SETTINGS_REV,
     };
     EEPROM_WriteBuffer(SURV_MARKER_ADDR, marker);
 }
@@ -309,6 +311,12 @@ void SURVIVAL_Init(void)
         gSurvivalTxMask = marker[5];
         if (marker[6] <= SURV_FMSCAN_LAST)
             gSurvivalFmScan = marker[6];
+        if (marker[7] != SURV_SETTINGS_REV) {
+            // rev 1: side key 2 short press toggles the FM radio
+            gEeprom.KEY_2_SHORT_PRESS_ACTION = ACTION_OPT_FM;
+            SETTINGS_SaveSettings();
+            SURVIVAL_SaveSettings();
+        }
         if (range[0] >= BX4819_band1.lower && range[0] < range[1] && range[1] <= BX4819_band2.upper) {
             gSurvivalCustomStart = range[0];
             gSurvivalCustomEnd   = range[1];
@@ -427,6 +435,16 @@ void SURVIVAL_SetMode(uint8_t mode)
     gVfoConfigureMode     = VFO_CONFIGURE_RELOAD;
     gRequestDisplayScreen = DISPLAY_MAIN;
     gUpdateStatus         = true;
+}
+
+void SURVIVAL_ToggleFm(void)
+{
+#ifdef ENABLE_FMRADIO
+    if (gFmRadioMode)
+        ACTION_FM();   // back to the previous mode
+    else
+        SURVIVAL_SetMode(SURV_MODE_FM);
+#endif
 }
 
 void ACTION_SurvivalGroup(void)

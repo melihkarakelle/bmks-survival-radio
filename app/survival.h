@@ -55,6 +55,7 @@ uint8_t SURVIVAL_GetMode(void);
 void    SURVIVAL_SetMode(uint8_t mode);
 bool    SURVIVAL_TxAllowed(uint32_t frequency);
 void    ACTION_SurvivalGroup(void);
+void    SURVIVAL_ToggleFm(void);
 const char *SURVIVAL_VfoLabel(uint8_t channel);   // "AIR" or "CUST" for VFO modes
 
 // FM radio with a background scan of one group on the BK4819
