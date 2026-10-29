@@ -900,12 +900,26 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 #endif
 
 #ifdef ENABLE_SURVIVAL
+    // a press that stopped the scan must not restart it when it lasts past the hold delay
+    static bool sStoppedScan;
+
+    if (!bKeyPressed) {
+        if (sStoppedScan) {
+            sStoppedScan = false;
+            return;
+        }
+    }
+
     // short press while scanning: stop right here
     if (bKeyPressed && !bKeyHeld && gScanStateDir != SCAN_OFF && gInputBoxIndex == 0) {
         CHFRSCANNER_StopHere();
-        gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
+        sStoppedScan = true;
+        gBeepToPlay  = BEEP_1KHZ_60MS_OPTIONAL;
         return;
     }
+
+    if (sStoppedScan)
+        return;
 
     // hold up/down: scan in that direction until there is activity
     // (the fast repeat events while the key stays down are ignored)

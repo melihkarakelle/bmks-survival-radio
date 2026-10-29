@@ -73,6 +73,7 @@ bool    SURVIVAL_EcoOn(void);
 void    SURVIVAL_SetEco(bool on);
 void    SURVIVAL_MaskScanDigits(char *freq);
 const char *SURVIVAL_VfoLabel(uint8_t channel);   // "AIR BAND" or "CUSTOM" for the VFO modes
+void    SURVIVAL_VfoRange(uint8_t channel, uint32_t *lower, uint32_t *upper);   // scan range of a VFO mode
 
 // FM radio with a background scan of one group on the BK4819
 void    SURVIVAL_FmStarted(void);

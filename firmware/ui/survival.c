@@ -1,9 +1,9 @@
 /* BMKs Survival Radio: status line and main screen (UI v2, design/ui_v2/UI_DESIGN.md)
  *
  * Single receiver layout, one meaning per row:
- *   status  state word (READY / SCAN UP / RX / TX ...), LOCK or RSSI bar, voltage, battery
- *   R0      group (inverted while scanning, receiving or sending), PRI on the priority channel
- *   R1-R2   channel name, AIR BAND or CUSTOM (big font)
+ *   status  screen title (PMR446, AIR BAND, FM RADIO, MENU ...), F or lock icon, voltage, battery
+ *   R0      only while something happens: inverted SCAN UP / RX + signal bar / TX; PRI on the priority channel
+ *   R1-R2   channel name, or the scan range of AIR BAND / CUSTOM (big font)
  *   R3-R4   frequency, every digit big
  *   R5      power / bandwidth / squelch, or RX ONLY; bands show modulation and step
  *   R6      the keys that matter right now
@@ -41,28 +41,19 @@ static void InvertRow(uint8_t *row)
 
 // ------------------------------------------------------------------ status line
 
-static const char *StateWord(void)
+static const char *Title(void)
 {
-    if (gLowBattery)
-        return "LOW BAT";
-    if (gCurrentFunction == FUNCTION_TRANSMIT)
-        return "TX";
-    if (gCurrentFunction == FUNCTION_MONITOR)
-        return "MONITOR";
-    if (FUNCTION_IsRx())
-        return "RX";
-#ifdef ENABLE_FMRADIO
-    if (gFmRadioMode)
-        return SURVIVAL_FmBgScanning() ? "FM SCAN" : "FM";
-#endif
-    if (gScanStateDir != SCAN_OFF)
-        return (gScanStateDir == SCAN_FWD) ? "SCAN UP" : "SCAN DN";
-    if (gWasFKeyPressed)
-        return "F";
     if (gScreenToDisplay == DISPLAY_MENU)
         return "MENU";
-    return "READY";
+#ifdef ENABLE_FMRADIO
+    if (gScreenToDisplay == DISPLAY_FM)
+        return "FM RADIO";
+#endif
+    const uint8_t mode = SURVIVAL_GetMode();
+    return (mode == SURV_MODE_AIR) ? "AIR BAND" : gSubMenu_SRV_MODE[mode];
 }
+
+static const uint8_t LOCK_ICON[7] = {0x78, 0x7E, 0x79, 0x49, 0x79, 0x7E, 0x78};
 
 void UI_DisplayStatus(void)
 {
@@ -71,49 +62,53 @@ void UI_DisplayStatus(void)
 
     memset(gStatusLine, 0, sizeof(gStatusLine));
 
-    UI_PrintStringSmallBufferBold(StateWord(), line);
+    UI_PrintStringSmallBufferBold(Title(), line);
 
-    if (gEeprom.KEY_LOCK) {
-        UI_PrintStringSmallBufferNormal("LOCK", line + 49);
-    } else if (FUNCTION_IsRx()) {
-        // signal strength bar x=49..76: -125 dBm empty, -70 dBm full
-        int16_t dbm   = BK4819_GetRSSI_dBm();
-        int16_t width = (dbm + 125) / 2;
-        if (width < 1)
-            width = 1;
-        if (width > 28)
-            width = 28;
-        for (uint8_t i = 0; i < width; i++)
-            line[49 + i] = 0x7E;
-    }
+    if (gWasFKeyPressed)
+        UI_PrintStringSmallBufferBold("F", line + 59);
+    else if (gEeprom.KEY_LOCK)
+        memcpy(line + 61, LOCK_ICON, sizeof(LOCK_ICON));
 
-    // voltage and a three segment battery
+    // voltage and a three segment battery, full status line height
     sprintf(String, "%u.%u", gBatteryVoltageAverage / 100, (gBatteryVoltageAverage / 10) % 10);
     UI_PrintStringSmallBufferNormal(String, line + 84);
 
     const uint8_t percent  = BATTERY_VoltsToPercent(gBatteryVoltageAverage);
     const uint8_t segments = (percent > 66) ? 3 : (percent > 33) ? 2 : (percent > 5) ? 1 : 0;
-    line[107] = 0x7E;
+    line[107] = 0x7F;
     for (uint8_t x = 108; x < 125; x++)
-        line[x] = 0x42;
-    line[125] = 0x7E;
-    line[126] = 0x3C;
+        line[x] = 0x41;
+    line[125] = 0x7F;
+    line[126] = 0x1C;
     for (uint8_t s = 0; s < segments; s++)
         for (uint8_t x = 0; x < 4; x++)
-            line[109 + s * 5 + x] = 0x7E;
+            line[109 + s * 5 + x] = 0x7F;
     if (gChargingWithTypeC)
-        line[117] ^= 0x18;
+        line[117] ^= 0x1C;
 
     ST7565_BlitStatusLine();
 }
 
 // ------------------------------------------------------------------ main screen
 
-// the main screen redraws on its own; this only refreshes the RSSI bar in the status line
+// called every 500 ms while receiving: the signal bar lives in R0 of the main screen
 void DisplayRSSIBar(const bool now)
 {
     (void)now;
-    gUpdateStatus = true;
+    gUpdateDisplay = true;
+}
+
+static const char *ActivityWord(void)
+{
+    if (gCurrentFunction == FUNCTION_TRANSMIT)
+        return "TX";
+    if (gCurrentFunction == FUNCTION_MONITOR)
+        return "MON";
+    if (FUNCTION_IsRx())
+        return "RX";
+    if (gScanStateDir != SCAN_OFF)
+        return (gScanStateDir == SCAN_FWD) ? "SCAN UP" : "SCAN DN";
+    return NULL;
 }
 
 static void PowerText(char *s, uint8_t power)
@@ -158,17 +153,37 @@ void UI_DisplayMain(void)
 
     UI_DisplayClear();
 
+    // the title follows the mode, whichever way the mode was changed
+    static const char *shownTitle;
+    if (Title() != shownTitle) {
+        shownTitle    = Title();
+        gUpdateStatus = true;
+    }
+
     if (gLowBattery && !gLowBatteryConfirmed) {
         UI_DisplayPopup("LOW BATTERY");
         ST7565_BlitFullScreen();
         return;
     }
 
-    // R0: group, PRI
-    UI_PrintStringSmallBold(gSubMenu_SRV_MODE[SURVIVAL_GetMode()], 0, 0, 0);
+    // R0: activity bar (the screen title is in the status line), PRI
+    const char *act = ActivityWord();
+    if (act) {
+        UI_PrintStringSmallBold(act, 0, 0, 0);
+        if (FUNCTION_IsRx() || gCurrentFunction == FUNCTION_MONITOR) {
+            // signal strength x=24..100: -125 dBm empty, -65 dBm full
+            int16_t width = (BK4819_GetRSSI_dBm() + 125) * 13 / 10;
+            if (width < 1)
+                width = 1;
+            if (width > 76)
+                width = 76;
+            for (uint8_t i = 0; i < width; i++)
+                gFrameBuffer[0][24 + i] = 0x3C;
+        }
+    }
     if (mr && ch == gSurvivalPrio)
         UI_PrintStringSmallBold("PRI", 105, 0, 0);
-    if (tx || FUNCTION_IsRx() || gScanStateDir != SCAN_OFF)
+    if (act)
         InvertRow(gFrameBuffer[0]);
 
     // R1-R2: name
@@ -179,7 +194,9 @@ void UI_DisplayMain(void)
         if (String[0] == 0)
             sprintf(String, "CH %u", ch + 1);
     } else {
-        strcpy(String, SURVIVAL_VfoLabel(ch));
+        uint32_t lo, hi;
+        SURVIVAL_VfoRange(ch, &lo, &hi);
+        sprintf(String, "%u.%03u-%u.%03u", lo / 100000, (lo / 100) % 1000, hi / 100000, (hi / 100) % 1000);
     }
     UI_PrintString(String, 0, 0, 1, 8);
 

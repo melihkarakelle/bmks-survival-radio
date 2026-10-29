@@ -415,3 +415,13 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
   satırı ve frekansı, tuş ipucu.
 - v4.3: Reset sonrası FM bandı 64–76 MHz'e düşüyordu (silinmiş EEPROM = bant 3); ilk kurulum ve ayar revizyonu 2
   87.5–108 MHz yapar.
+
+### v4.4 (2026-10-29): başlık durum satırında, tarama durdurma düzeltmesi
+
+- Durum satırı: sol üstte ekran başlığı (PMR446, FRS, MARINE, AIR BAND, HAM, CB, CUSTOM, FAV, FM RADIO, MENU);
+  F'ye basılınca `F`, kilitliyken kilit simgesi; pil simgesi 7 px, durum satırının tam yüksekliği.
+- Ana ekran R0: yalnızca bir şey olurken ters renkli çubuk: SCAN UP/DN, RX + sinyal çubuğu, MON, TX; öncelikli kanalda PRI.
+- AIR BAND / CUSTOM'da R1–R2 tarama aralığını gösterir (ör. `118.000-136.975`).
+- FM ekranı: büyük frekans R0–R1, durum R2, arka plan alıcı R4–R5.
+- Taramada yukarı/aşağı kısa basış: 0,4 sn'den uzun basınca "basılı tut" olayı taramayı yeniden başlatıyordu;
+  taramayı durduran basış artık bırakılana kadar başka bir şey yapmaz.

@@ -485,6 +485,13 @@ const char *SURVIVAL_VfoLabel(uint8_t channel)
     return (channel == AIR_VFO_CHANNEL) ? "AIR BAND" : "CUSTOM";
 }
 
+void SURVIVAL_VfoRange(uint8_t channel, uint32_t *lower, uint32_t *upper)
+{
+    const bool air = channel == AIR_VFO_CHANNEL;
+    *lower = air ? AIR_SCAN_START : gSurvivalCustomStart;
+    *upper = air ? AIR_SCAN_END   : gSurvivalCustomEnd;
+}
+
 void SURVIVAL_SetMode(uint8_t mode)
 {
     const uint8_t vfo = gEeprom.TX_VFO;

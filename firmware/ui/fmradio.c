@@ -34,7 +34,7 @@
 
 #ifdef ENABLE_SURVIVAL
 // UI v2 FM screen (design/ui_v2/UI_DESIGN.md):
-//   R0 FM RADIO, R1-R2 frequency in big digits, R3 what the FM receiver does,
+//   (title FM RADIO in the status line) R0-R1 frequency in big digits, R2 what the FM receiver does,
 //   R4 inverted: what the radio receiver does in the background, R5 its frequency,
 //   R6 the keys that matter now
 void UI_DisplayFM(void)
@@ -44,8 +44,6 @@ void UI_DisplayFM(void)
 
     UI_DisplayClear();
 
-    UI_PrintStringSmallBold("FM RADIO", 0, 0, 0);
-
     // R1-R2: frequency, or the number being typed
     if (gInputBoxIndex > 0 && !gEeprom.FM_IsMrMode) {
         const char *ascii = INPUTBOX_GetAscii();
@@ -53,9 +51,9 @@ void UI_DisplayFM(void)
     } else {
         sprintf(String, "%3d.%d", gEeprom.FM_FrequencyPlaying / 10, gEeprom.FM_FrequencyPlaying % 10);
     }
-    UI_DisplayFrequency(String, 0, 1, false);
+    UI_DisplayFrequency(String, 0, 0, false);
 
-    // R3: saved / tune / seek / find, or the save / delete question
+    // R2: saved / tune / seek / find, or the save / delete question
     if (gAskToSave) {
         sprintf(String, "SAVE AS %02u? HOLD M", gFM_ChannelPosition + 1);
     } else if (gAskToDelete) {
@@ -73,7 +71,7 @@ void UI_DisplayFM(void)
             gEeprom.FM_Band == 0 ? ".5" : "",
             BK1080_GetFreqHiLimit(gEeprom.FM_Band) / 10);
     }
-    UI_PrintStringSmallNormal(String, 0, 0, 3);
+    UI_PrintStringSmallNormal(String, 0, 0, 2);
 
     // R4 (inverted) + R5: the radio receiver, refreshed on every scan step
     const uint8_t channel = gRxVfo->CHANNEL_SAVE;
