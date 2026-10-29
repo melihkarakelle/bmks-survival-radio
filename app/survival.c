@@ -747,31 +747,42 @@ static void TuneTo(const Heard_t *h)
 
 void SURVIVAL_LogKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
-    if (!bKeyPressed || bKeyHeld)
+    if (bKeyHeld)
         return;
 
+    // keys that leave this screen act on release: otherwise the release would
+    // reach the main screen (M released there = next mode)
     if (sMsgTimer) {   // any key closes a message
-        sMsgTimer             = 0;
-        gRequestDisplayScreen = DISPLAY_MAIN;
+        if (!bKeyPressed) {
+            sMsgTimer             = 0;
+            gRequestDisplayScreen = DISPLAY_MAIN;
+        }
         return;
     }
 
     switch (Key) {
         case KEY_UP:
+            if (!bKeyPressed)
+                return;
             if (sLogCursor > 0)
                 sLogCursor--;
             break;
         case KEY_DOWN:
+            if (!bKeyPressed)
+                return;
             if (sLogCursor + 1 < sHeardCount)
                 sLogCursor++;
             break;
         case KEY_MENU:   // go to the selected entry
+            if (bKeyPressed)
+                return;
             if (sHeardCount)
                 TuneTo(&sHeard[sLogCursor]);
             gRequestDisplayScreen = DISPLAY_MAIN;
             return;
         case KEY_EXIT:
-            gRequestDisplayScreen = DISPLAY_MAIN;
+            if (!bKeyPressed)
+                gRequestDisplayScreen = DISPLAY_MAIN;
             return;
         default:
             return;
