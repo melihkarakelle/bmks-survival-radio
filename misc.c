@@ -305,7 +305,11 @@ volatile bool     gFlagTailNoteEliminationComplete;
     volatile bool gScheduleFM;
 #endif
 
+#ifdef ENABLE_SURVIVAL
+volatile uint16_t boot_counter_10ms;
+#else
 volatile uint8_t  boot_counter_10ms;
+#endif
 
 uint8_t           gIsLocked = 0xFF;
 

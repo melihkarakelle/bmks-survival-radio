@@ -2,7 +2,7 @@
  *
  * Channel groups are written to memory channels 0.. on first boot (marker at
  * EEPROM 0x1FF8). The group of a channel is found from its index, so scan and
- * up/down wrap inside the group (see RADIO_FindNextChannel).
+ * up/down wrap inside the group (see SURVIVAL_FindNextChannel).
  */
 
 #ifdef ENABLE_SURVIVAL
@@ -22,14 +22,40 @@
 #include "settings.h"
 #include "ui/ui.h"
 
-#define SURV_MARKER_ADDR 0x1FF8
+// EEPROM 0x1FF8: 'B' 'M' 'K' 'S', table version, TX mask, FF, FF
+#define SURV_MARKER_ADDR   0x1FF8
+// bump when the channel tables or defaults change, radios re-init on next boot
+#define SURV_TABLE_VERSION 2
+#define SURV_TX_DEFAULT    ((1u << SURV_TX_PMR) | (1u << SURV_TX_FRS))
 
-// bump the last byte when the channel tables change, radios re-init on next boot
-static const uint8_t SURV_MARKER[8] = {'B', 'M', 'K', 'S', 'R', 'V', 0, 1};
+static const uint8_t SURV_MAGIC[4] = {'B', 'M', 'K', 'S'};
+
+uint8_t gSurvivalTxMask = SURV_TX_DEFAULT;
+
+const char gSubMenu_SRV_MODE[SURV_MODE_COUNT][9] = {
+    "PMR446", "FRS", "MARINE", "AIR", "HAM", "CB", "FM RADIO", "CUSTOM",
+};
 
 #define SURV_AM     (1u << 0)
 #define SURV_NARROW (1u << 1)
-#define SURV_HIGH   (1u << 2)   // full power, used only if TX lock is opened in an emergency
+#define SURV_HIGH   (1u << 2)   // full power, otherwise LOW4 (~0.5 W)
+
+typedef struct {
+    uint32_t lower;
+    uint32_t upper;
+    uint8_t  bit;
+} TxBand_t;
+
+static const TxBand_t TX_BANDS[] = {
+    {44600625, 44619375, SURV_TX_PMR},
+    {46255000, 46272500, SURV_TX_FRS},
+    {46755000, 46772500, SURV_TX_FRS},
+    {15600000, 16202500, SURV_TX_MARINE},
+    {14400000, 14600000, SURV_TX_HAM},
+    {43000000, 44000000, SURV_TX_HAM},
+    { 2696500,  2740500, SURV_TX_CB},   // CEPT
+    { 2760125,  2799125, SURV_TX_CB},   // UK 27/81
+};
 
 typedef struct {
     const char     *prefix;  // name = prefix + channel number
@@ -79,7 +105,7 @@ static const uint32_t CB_FREQS[] = {
 
 static const SurvivalGroup_t GROUPS[] = {
     {"PMR ", NULL,         44600625, 1250, 16,                      SURV_NARROW,           NULL,        NULL},
-    {"FRS ", FRS_FREQS,    0,        0,    ARRAY_SIZE(FRS_FREQS),    SURV_HIGH,             NULL,        NULL},
+    {"FRS ", FRS_FREQS,    0,        0,    ARRAY_SIZE(FRS_FREQS),    0,                     NULL,        NULL},
     {"MAR ", MARINE_FREQS, 0,        0,    ARRAY_SIZE(MARINE_FREQS), SURV_HIGH,             MARINE_NUMS, NULL},
     {"",     AIR_FREQS,    0,        0,    ARRAY_SIZE(AIR_FREQS),    SURV_AM,               NULL,        AIR_NAMES},
     {"",     HAM_FREQS,    0,        0,    ARRAY_SIZE(HAM_FREQS),    SURV_HIGH,             NULL,        HAM_NAMES},
@@ -87,6 +113,7 @@ static const SurvivalGroup_t GROUPS[] = {
 };
 
 static_assert(ARRAY_SIZE(MARINE_NUMS) == ARRAY_SIZE(MARINE_FREQS));
+static_assert(ARRAY_SIZE(GROUPS) == SURV_MODE_FM);
 
 #define GROUP_NONE 0xFF
 
@@ -192,7 +219,6 @@ static void WriteDefaults(void)
     gEeprom.CHANNEL_DISPLAY_MODE     = MDF_NAME_FREQ;
     gEeprom.DUAL_WATCH               = DUAL_WATCH_OFF;
     gEeprom.CROSS_BAND_RX_TX         = CROSS_BAND_OFF;
-    gSetting_F_LOCK                  = F_LOCK_PMR;   // license-free TX only, open via menu in an emergency
 
     gEeprom.TX_VFO = 0;
     for (uint8_t vfo = 0; vfo < 2; vfo++) {
@@ -204,17 +230,38 @@ static void WriteDefaults(void)
     SETTINGS_SaveVfoIndices();
 }
 
+void SURVIVAL_SaveTxMask(void)
+{
+    const uint8_t marker[8] = {
+        SURV_MAGIC[0], SURV_MAGIC[1], SURV_MAGIC[2], SURV_MAGIC[3],
+        SURV_TABLE_VERSION, gSurvivalTxMask, 0xFF, 0xFF,
+    };
+    EEPROM_WriteBuffer(SURV_MARKER_ADDR, marker);
+}
+
 void SURVIVAL_Init(void)
 {
     uint8_t marker[8];
 
     EEPROM_ReadBuffer(SURV_MARKER_ADDR, marker, sizeof(marker));
-    if (memcmp(marker, SURV_MARKER, sizeof(marker)) == 0)
+    if (memcmp(marker, SURV_MAGIC, sizeof(SURV_MAGIC)) == 0 && marker[4] == SURV_TABLE_VERSION) {
+        gSurvivalTxMask = marker[5];
         return;
+    }
 
     WriteChannels();
     WriteDefaults();
-    EEPROM_WriteBuffer(SURV_MARKER_ADDR, SURV_MARKER);
+    gSurvivalTxMask = SURV_TX_DEFAULT;
+    SURVIVAL_SaveTxMask();
+}
+
+bool SURVIVAL_TxAllowed(uint32_t frequency)
+{
+    for (uint8_t i = 0; i < ARRAY_SIZE(TX_BANDS); i++) {
+        if (frequency >= TX_BANDS[i].lower && frequency <= TX_BANDS[i].upper)
+            return (gSurvivalTxMask >> TX_BANDS[i].bit) & 1u;
+    }
+    return false;
 }
 
 void SURVIVAL_EraseMarker(void)
@@ -224,41 +271,54 @@ void SURVIVAL_EraseMarker(void)
     EEPROM_WriteBuffer(SURV_MARKER_ADDR, blank);
 }
 
-void ACTION_SurvivalGroup(void)
+uint8_t SURVIVAL_GetMode(void)
 {
-    const uint8_t vfo  = gEeprom.TX_VFO;
-    uint8_t       next = 0;
-
 #ifdef ENABLE_FMRADIO
-    if (gFmRadioMode) {
-        ACTION_FM();   // FM is the last stop, wrap to the first group
-    } else
+    if (gFmRadioMode)
+        return SURV_MODE_FM;
 #endif
-    {
-        if (gScanStateDir != SCAN_OFF)
-            CHFRSCANNER_Stop();
+    const uint8_t channel = gEeprom.ScreenChannel[gEeprom.TX_VFO];
+    if (!IS_MR_CHANNEL(channel))
+        return SURV_MODE_CUSTOM;
 
-        const uint8_t g = FindGroup(gEeprom.MrChannel[vfo]);
-        if (g != GROUP_NONE)
-            next = g + 1;
+    const uint8_t g = FindGroup(channel);
+    return (g == GROUP_NONE) ? SURV_MODE_CUSTOM : g;   // own saved channels count as custom
+}
 
-        if (next >= ARRAY_SIZE(GROUPS)) {
+void SURVIVAL_SetMode(uint8_t mode)
+{
+    const uint8_t vfo = gEeprom.TX_VFO;
+
+    if (gScanStateDir != SCAN_OFF)
+        CHFRSCANNER_Stop();
+
 #ifdef ENABLE_FMRADIO
-            ACTION_FM();
-            return;
+    if (gFmRadioMode != (mode == SURV_MODE_FM))
+        ACTION_FM();   // toggles FM radio on/off
+    if (mode == SURV_MODE_FM)
+        return;
 #else
-            next = 0;
+    if (mode == SURV_MODE_FM)
+        mode = SURV_MODE_CUSTOM;
 #endif
-        }
+
+    if (mode == SURV_MODE_CUSTOM) {
+        gEeprom.ScreenChannel[vfo] = gEeprom.FreqChannel[vfo];   // free frequency (VFO)
+    } else {
+        const uint8_t ch = GroupStart(mode);
+        gEeprom.MrChannel[vfo]     = ch;
+        gEeprom.ScreenChannel[vfo] = ch;
     }
 
-    const uint8_t ch = GroupStart(next);
-    gEeprom.MrChannel[vfo]     = ch;
-    gEeprom.ScreenChannel[vfo] = ch;
-    gRequestSaveVFO            = true;
-    gVfoConfigureMode          = VFO_CONFIGURE_RELOAD;
-    gRequestDisplayScreen      = DISPLAY_MAIN;
-    gUpdateStatus              = true;
+    gRequestSaveVFO       = true;
+    gVfoConfigureMode     = VFO_CONFIGURE_RELOAD;
+    gRequestDisplayScreen = DISPLAY_MAIN;
+    gUpdateStatus         = true;
+}
+
+void ACTION_SurvivalGroup(void)
+{
+    SURVIVAL_SetMode((SURVIVAL_GetMode() + 1) % SURV_MODE_COUNT);
 }
 
 #endif

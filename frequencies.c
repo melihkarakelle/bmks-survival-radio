@@ -17,6 +17,9 @@
 #include "frequencies.h"
 #include "misc.h"
 #include "settings.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include <assert.h>
 
 // the BK4819 has 2 bands it covers, 18MHz ~ 630MHz and 760MHz ~ 1300MHz
@@ -168,6 +171,10 @@ int32_t TX_freq_check(const uint32_t Frequency)
 
     if (Frequency >= BX4819_band1.upper && Frequency < BX4819_band2.lower)
         return -1;  // BX chip does not work in this range
+
+#ifdef ENABLE_SURVIVAL
+    return SURVIVAL_TxAllowed(Frequency) ? 0 : -1;   // per-band permission from the menu
+#endif
 
     switch (gSetting_F_LOCK)
     {

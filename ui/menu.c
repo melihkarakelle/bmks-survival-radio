@@ -19,6 +19,9 @@
 
 #include "../app/dtmf.h"
 #include "../app/menu.h"
+#ifdef ENABLE_SURVIVAL
+    #include "../app/survival.h"
+#endif
 #include "../bitmaps.h"
 #include "../board.h"
 #include "../dcs.h"
@@ -42,6 +45,48 @@
 
 const t_menu_item MenuList[] =
 {
+#ifdef ENABLE_SURVIVAL
+//   text,          menu ID
+    {"Group",       MENU_SRV_GROUP     },
+    {"Sql",         MENU_SQL           },
+    {"Power",       MENU_TXP           },
+    {"Mode",        MENU_AM            },
+    {"W/N",         MENU_W_N           },
+    {"Step",        MENU_STEP          },
+    {"RxCTCS",      MENU_R_CTCS        },
+    {"RxDCS",       MENU_R_DCS         },
+    {"TxCTCS",      MENU_T_CTCS        },
+    {"TxDCS",       MENU_T_DCS         },
+    {"TxODir",      MENU_SFT_D         },
+    {"TxOffs",      MENU_OFFSET        },
+    {"ScnRev",      MENU_SC_REV        },
+    {"TxPMR",       MENU_SRV_TX_PMR    },
+    {"TxFRS",       MENU_SRV_TX_FRS    },
+    {"TxMAR",       MENU_SRV_TX_MARINE },
+    {"TxHAM",       MENU_SRV_TX_HAM    },
+    {"TxCB",        MENU_SRV_TX_CB     },
+    {"ChSave",      MENU_MEM_CH        },
+    {"ChDele",      MENU_DEL_CH        },
+    {"ChName",      MENU_MEM_NAME      },
+    {"F1Shrt",      MENU_F1SHRT        },
+    {"F1Long",      MENU_F1LONG        },
+    {"F2Shrt",      MENU_F2SHRT        },
+    {"F2Long",      MENU_F2LONG        },
+    {"KeyLck",      MENU_AUTOLK        },
+    {"TxTOut",      MENU_TOT           },
+    {"BatSav",      MENU_SAVE          },
+    {"BatTxt",      MENU_BAT_TXT       },
+    {"Mic",         MENU_MIC           },
+    {"BLTime",      MENU_ABR           },
+    {"Beep",        MENU_BEEP          },
+    {"SysInf",      MENU_VOL           },
+    {"Reset",       MENU_RESET         },
+    // hidden menu items from here on
+    // enabled if pressing both the PTT and upper side button at power-on
+    {"F Lock",      MENU_F_LOCK        },
+    {"BatCal",      MENU_BATCAL        },
+    {"BatTyp",      MENU_BATTYP        },
+#else
 //   text,          menu ID
     {"Step",        MENU_STEP          },
     {"Power",       MENU_TXP           }, // was "TXP"
@@ -182,6 +227,7 @@ const t_menu_item MenuList[] =
     {"BatCal",      MENU_BATCAL        }, // battery voltage calibration
     {"BatTyp",      MENU_BATTYP        }, // battery type 1600/2200mAh
     {"Reset",       MENU_RESET         }, // might be better to move this to the hidden menu items ?
+#endif // ENABLE_SURVIVAL
 
     {"",                              0xff               }  // end of list - DO NOT delete or move this this
 };
@@ -618,6 +664,16 @@ void UI_DisplayMenu(void)
 
     switch (UI_MENU_GetCurrentMenuId())
     {
+#ifdef ENABLE_SURVIVAL
+        case MENU_SRV_GROUP:
+            strcpy(String, gSubMenu_SRV_MODE[gSubMenuSelection]);
+            break;
+
+        case MENU_SRV_TX_PMR ... MENU_SRV_TX_CB:
+            strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
+            break;
+#endif
+
         case MENU_SQL:
             sprintf(String, "%d", gSubMenuSelection);
             break;

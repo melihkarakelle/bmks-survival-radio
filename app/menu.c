@@ -40,6 +40,9 @@
 #endif
 #include "ui/inputbox.h"
 #include "ui/menu.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "ui/ui.h"
 
 #ifndef ARRAY_SIZE
@@ -117,6 +120,16 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
 
     switch (menu_id)
     {
+#ifdef ENABLE_SURVIVAL
+        case MENU_SRV_GROUP:
+            *pMax = SURV_MODE_COUNT - 1;
+            break;
+
+        case MENU_SRV_TX_PMR ... MENU_SRV_TX_CB:
+            *pMax = 1;
+            break;
+#endif
+
         case MENU_SQL:
             //*pMin = 0;
             *pMax = 9;
@@ -466,6 +479,19 @@ void MENU_AcceptSetting(void)
     {
         default:
             return;
+
+#ifdef ENABLE_SURVIVAL
+        case MENU_SRV_GROUP:
+            SURVIVAL_SetMode(gSubMenuSelection);
+            return;
+
+        case MENU_SRV_TX_PMR ... MENU_SRV_TX_CB: {
+            const uint8_t bit = 1u << (UI_MENU_GetCurrentMenuId() - MENU_SRV_TX_PMR);
+            gSurvivalTxMask = gSubMenuSelection ? (gSurvivalTxMask | bit) : (gSurvivalTxMask & ~bit);
+            SURVIVAL_SaveTxMask();
+            return;
+        }
+#endif
 
         case MENU_SQL:
             gEeprom.SQUELCH_LEVEL = gSubMenuSelection;
@@ -996,6 +1022,16 @@ void MENU_ShowCurrentSetting(void)
 {
     switch (UI_MENU_GetCurrentMenuId())
     {
+#ifdef ENABLE_SURVIVAL
+        case MENU_SRV_GROUP:
+            gSubMenuSelection = SURVIVAL_GetMode();
+            break;
+
+        case MENU_SRV_TX_PMR ... MENU_SRV_TX_CB:
+            gSubMenuSelection = (gSurvivalTxMask >> (UI_MENU_GetCurrentMenuId() - MENU_SRV_TX_PMR)) & 1u;
+            break;
+#endif
+
         case MENU_SQL:
             gSubMenuSelection = gEeprom.SQUELCH_LEVEL;
             break;

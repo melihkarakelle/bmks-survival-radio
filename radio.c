@@ -1095,7 +1095,13 @@ void RADIO_PrepareTX(void)
 
     RADIO_SelectCurrentVfo();
 
-#ifdef ENABLE_FEAT_F4HWN
+#if defined(ENABLE_SURVIVAL)
+        // per-band TX permission always applies, the per-channel TX_LOCK bit is ignored
+        if(TX_freq_check(gCurrentVfo->pTX->Frequency) != 0
+    #if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
+            && gAlarmState != ALARM_STATE_SITE_ALARM
+    #endif
+#elif defined(ENABLE_FEAT_F4HWN)
         if(TX_freq_check(gCurrentVfo->pTX->Frequency) != 0 && gCurrentVfo->TX_LOCK == true
     #if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
             && gAlarmState != ALARM_STATE_SITE_ALARM

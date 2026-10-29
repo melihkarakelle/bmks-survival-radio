@@ -1,8 +1,9 @@
 /* BMKs Survival Radio
  *
- * Fixed channel groups (PMR, FRS, marine, air, ham, CB) stored as memory
- * channels, plus FM broadcast. Side key 2 cycles through the groups; scan
- * and up/down stay inside the current group.
+ * Modes: fixed channel groups (PMR, FRS, marine, air, ham, CB) stored as
+ * memory channels, FM broadcast, and CUSTOM (free frequency / VFO).
+ * Side key 2 or the "Group" menu selects the mode; scan and up/down stay
+ * inside the current group. TX is allowed per band (menu TxPMR..TxCB).
  */
 
 #ifndef APP_SURVIVAL_H
@@ -13,11 +14,40 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-void SURVIVAL_Init(void);
-void SURVIVAL_EraseMarker(void);
-bool SURVIVAL_GetGroupRange(uint8_t channel, uint8_t *first, uint8_t *last);
+enum {
+    SURV_MODE_PMR = 0,
+    SURV_MODE_FRS,
+    SURV_MODE_MARINE,
+    SURV_MODE_AIR,
+    SURV_MODE_HAM,
+    SURV_MODE_CB,
+    SURV_MODE_FM,
+    SURV_MODE_CUSTOM,
+    SURV_MODE_COUNT
+};
+
+// TX permission bits, one per transmit capable band
+enum {
+    SURV_TX_PMR = 0,
+    SURV_TX_FRS,
+    SURV_TX_MARINE,
+    SURV_TX_HAM,
+    SURV_TX_CB,
+    SURV_TX_COUNT
+};
+
+extern const char gSubMenu_SRV_MODE[SURV_MODE_COUNT][9];
+extern uint8_t    gSurvivalTxMask;
+
+void    SURVIVAL_Init(void);
+void    SURVIVAL_EraseMarker(void);
+void    SURVIVAL_SaveTxMask(void);
+bool    SURVIVAL_GetGroupRange(uint8_t channel, uint8_t *first, uint8_t *last);
 uint8_t SURVIVAL_FindNextChannel(uint8_t Channel, int8_t Direction, bool bCheckScanList, uint8_t VFO);
-void ACTION_SurvivalGroup(void);
+uint8_t SURVIVAL_GetMode(void);
+void    SURVIVAL_SetMode(uint8_t mode);
+bool    SURVIVAL_TxAllowed(uint32_t frequency);
+void    ACTION_SurvivalGroup(void);
 
 #endif
 

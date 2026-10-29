@@ -228,6 +228,9 @@ void Main(void)
     }
     else
     {
+#ifdef ENABLE_SURVIVAL
+        boot_counter_10ms = 400;   // logo stays 4 s (first boot channel setup may have used up the default)
+#endif
         UI_DisplayWelcome();
 
         BACKLIGHT_TurnOn();

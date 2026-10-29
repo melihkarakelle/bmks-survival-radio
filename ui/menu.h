@@ -158,7 +158,15 @@ enum
     MENU_F2SHRT,
     MENU_F2LONG,
     MENU_MLONG,
-    MENU_BATTYP
+    MENU_BATTYP,
+#ifdef ENABLE_SURVIVAL
+    MENU_SRV_GROUP,
+    MENU_SRV_TX_PMR,    // order must match SURV_TX_*
+    MENU_SRV_TX_FRS,
+    MENU_SRV_TX_MARINE,
+    MENU_SRV_TX_HAM,
+    MENU_SRV_TX_CB,
+#endif
 };
 
 extern const uint8_t FIRST_HIDDEN_MENU_ITEM;
