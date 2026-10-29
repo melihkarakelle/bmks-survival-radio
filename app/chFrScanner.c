@@ -61,8 +61,10 @@ static void ScanStepDone(void)
     gScanPauseDelayIn_10ms = SCAN_PRECHECK_10MS;
     sPrecheck              = true;
 
-    // redraw every few steps only, with the short dwell the LCD would slow the scan
-    if (++sDisplaySteps >= 4) {
+    // channel scans redraw on every step (a fixed step count aliases with small
+    // groups: with 2 FAV channels one of them was never shown); range scans
+    // redraw every 4th step, their kHz digits are dashed anyway
+    if (IS_MR_CHANNEL(gNextMrChannel) || ++sDisplaySteps >= 4) {
         sDisplaySteps  = 0;
         gUpdateDisplay = true;
     }
