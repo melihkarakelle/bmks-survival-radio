@@ -467,3 +467,8 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 - Fener sırası (yan tuş 1 tap): açık → yanıp sönme → strobe → SOS → kapalı.
 - Strobe: 3 × (30 ms açık, 30 ms kapalı), saniyenin kalanı (820 ms) kapalı; 10 ms zaman diliminde sayılır.
 - Yardım 3/3 R2: BLINK,STROBE,SOS.
+
+### v5.1 (2026-10-29): yardım metni biçimi
+
+- Yardım satırları `TUŞ>İşlev`: tuş adı büyük harf, işlev normal yazı (ör. `SIDE1>Light, blink`, `HOLD M>Menu`).
+  Alt satır `M>Next  EXIT>Back`.

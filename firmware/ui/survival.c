@@ -91,10 +91,11 @@ void UI_DisplayStatus(void)
 
 // ------------------------------------------------------------------ key help (F tap)
 
-static const char HELP_MAIN[] = "0 FM RADIO\0"  "4 HEARD\0"          "5 PRIORITY\0"      "7 FAVORITE\0"     "UP/DN SQUELCH";
-static const char HELP_FM[]   = "0 EXIT FM\0"   "3 SAVED / TUNE\0"   "* FIND ALL FM\0"   "HOLD M SAVE\0"    "UP/DN TUNE";
-static const char HELP_KEYS[] = "M NEXT GROUP\0" "HOLD M MENU\0"     "* SCAN / STOP\0"   "HOLD UP/DN SCAN\0" "HOLD F LOCK";
-static const char HELP_SIDE[] = "SIDE1 LIGHT\0" "BLINK,STROBE,SOS\0" "HOLD SIDE1 MONITOR\0" "SIDE2 FM RADIO\0" "HOLD SIDE2 SCAN";
+// key in capitals, then > and what it does in normal case; 18 characters per row
+static const char HELP_MAIN[] = "0>FM radio\0"         "4>Heard list\0"      "5>Priority\0"         "7>Favorite\0"       "UP/DN>Squelch";
+static const char HELP_FM[]   = "0>Exit FM\0"          "3>Saved / tune\0"    "*>Find all FM\0"      "HOLD M>Save\0"      "UP/DN>Tune";
+static const char HELP_KEYS[] = "M>Next group\0"       "HOLD M>Menu\0"       "*>Scan / stop\0"      "HOLD UP/DN>Scan\0"  "HOLD F>Key lock";
+static const char HELP_SIDE[] = "SIDE1>Light, blink\0" "AGAIN>Strobe, SOS\0" "HOLD SIDE1>Monitor\0" "SIDE2>FM radio\0"   "HOLD SIDE2>Scan";
 
 static const char *const HELP_TITLE[] = {"F + KEY      1/3", "KEYS         2/3", "SIDE KEYS    3/3"};
 
@@ -114,7 +115,7 @@ bool UI_DisplayHelp(bool fm)
         UI_PrintStringSmallNormal(text, 0, 0, row);
         text += strlen(text) + 1;
     }
-    UI_PrintStringSmallNormal("M:NEXT EXIT:BACK", 0, 0, 6);
+    UI_PrintStringSmallNormal("M>Next  EXIT>Back", 0, 0, 6);
     ST7565_BlitFullScreen();
     return true;
 }
