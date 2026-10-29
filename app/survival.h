@@ -62,7 +62,7 @@ bool    SURVIVAL_TxAllowed(uint32_t frequency);
 void    ACTION_SurvivalGroup(void);
 void    SURVIVAL_ToggleFm(void);
 
-void    SURVIVAL_AddFav(void);            // F+7: current channel/frequency into FAV
+void    SURVIVAL_AddFav(void);            // F+7: current channel/frequency into / out of FAV
 void    SURVIVAL_TogglePrio(void);        // F+5: current channel as priority channel
 void    SURVIVAL_LogHeard(void);          // a transmission was received
 void    SURVIVAL_TimeSlice500ms(void);

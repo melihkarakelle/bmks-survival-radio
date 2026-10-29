@@ -591,11 +591,35 @@ uint8_t SURVIVAL_ScanResumeMode(void)
 
 // ---------------------------------------------------------------- FAV / PRIO
 
+// F+7 on a channel/frequency that is already in FAV takes it out again
+static void RemoveFav(uint8_t c)
+{
+    const uint8_t vfo = gEeprom.TX_VFO;
+    char          name[16] = {0};
+
+    SETTINGS_FetchChannelName(name, c);
+    SETTINGS_UpdateChannel(c, gTxVfo, false, false, true);   // invalid attributes, name cleared
+    if (gSurvivalPrio == c)
+        gSurvivalPrio = 0xFF;
+
+    if (gEeprom.ScreenChannel[vfo] == c) {   // standing on it: next FAV channel, or PMR when empty
+        uint8_t next = FirstFav();
+        if (next == 0xFF)
+            next = GroupStart(SURV_MODE_PMR);
+        gEeprom.MrChannel[vfo]     = next;
+        gEeprom.ScreenChannel[vfo] = next;
+        gVfoConfigureMode          = VFO_CONFIGURE_RELOAD;
+        gRequestSaveVFO            = true;
+    }
+    ShowMessage("FAV REMOVED", name);
+}
+
 void SURVIVAL_AddFav(void)
 {
-    VFO_Info_t     vfo = *gTxVfo;
-    const uint32_t f   = vfo.freq_config_RX.Frequency;
-    uint8_t        slot = 0xFF;
+    VFO_Info_t     vfo   = *gTxVfo;
+    const uint32_t f     = vfo.freq_config_RX.Frequency;
+    uint8_t        slot  = 0xFF;
+    uint8_t        match = 0xFF;
 
     for (uint8_t c = FavFirst(); IS_MR_CHANNEL(c); c++) {
         if (!RADIO_CheckValidChannel(c, false, 0)) {
@@ -605,12 +629,16 @@ void SURVIVAL_AddFav(void)
         }
         uint32_t stored;
         EEPROM_ReadBuffer(c * 16, &stored, 4);
-        if (stored == f)
-            slot = 0xFE;   // already in FAV
+        if (stored == f && (match == 0xFF || c == vfo.CHANNEL_SAVE))
+            match = c;   // prefer the FAV channel we are standing on
     }
-    if (slot >= 0xFE) {    // already there or FAV full
+    if (match != 0xFF) {
+        RemoveFav(match);
+        return;
+    }
+    if (slot == 0xFF) {
         gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
-        ShowMessage(slot == 0xFE ? "ALREADY IN FAV" : "FAV FULL", NULL);
+        ShowMessage("FAV FULL", NULL);
         return;
     }
 
