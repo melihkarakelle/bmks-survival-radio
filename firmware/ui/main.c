@@ -38,6 +38,13 @@
 #ifdef ENABLE_SURVIVAL
     #include "app/survival.h"
 #endif
+
+#ifdef ENABLE_SURVIVAL
+// the main screen and RSSI bar live in ui/survival.c; the upstream helpers here stay unused
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+void DisplayRSSIBar(const bool now);
+#endif
 #include "ui/ui.h"
 #include "audio.h"
 
@@ -241,6 +248,7 @@ void UI_DisplayAudioBar(void)
 }
 #endif
 
+#ifndef ENABLE_SURVIVAL   // survival: ui/survival.c
 void DisplayRSSIBar(const bool now)
 {
 #if defined(ENABLE_RSSI_BAR)
@@ -423,6 +431,7 @@ void DisplayRSSIBar(const bool now)
 #endif
 
 }
+#endif
 
 #ifdef ENABLE_AGC_SHOW_DATA
 void UI_MAIN_PrintAGC(bool now)
@@ -528,6 +537,7 @@ void UI_MAIN_TimeSlice500ms(void)
 
 // ***************************************************************************
 
+#ifndef ENABLE_SURVIVAL   // survival: ui/survival.c
 void UI_DisplayMain(void)
 {
     char               String[22];
@@ -1555,5 +1565,6 @@ void UI_DisplayMain(void)
 
     ST7565_BlitFullScreen();
 }
+#endif
 
 // ***************************************************************************
