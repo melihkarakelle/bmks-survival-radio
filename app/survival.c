@@ -64,6 +64,13 @@ static const TxBand_t TX_BANDS[] = {
     { 2760125,  2799125, SURV_TX_CB},   // UK 27/81
 };
 
+// never transmit here, not even with TxAll
+static const TxBand_t TX_BLOCKED[] = {
+    { 8800000, 13700000, 0},   // FM broadcast + civil aviation (VOR/ILS, 121.5 guard)
+    {22500000, 40000000, 0},   // military aviation (243.0 guard)
+    {40600000, 40610000, 0},   // COSPAS-SARSAT distress beacons
+};
+
 typedef struct {
     const char     *prefix;  // name = prefix + channel number
     const uint32_t *freqs;   // 10 Hz units, NULL: base + i * step
@@ -292,6 +299,14 @@ void SURVIVAL_ApplyScanRange(void)
 
 bool SURVIVAL_TxAllowed(uint32_t frequency)
 {
+    if ((gSurvivalTxMask >> SURV_TX_ALL) & 1u) {
+        for (uint8_t i = 0; i < ARRAY_SIZE(TX_BLOCKED); i++) {
+            if (frequency >= TX_BLOCKED[i].lower && frequency < TX_BLOCKED[i].upper)
+                return false;
+        }
+        return true;
+    }
+
     for (uint8_t i = 0; i < ARRAY_SIZE(TX_BANDS); i++) {
         if (frequency >= TX_BANDS[i].lower && frequency <= TX_BANDS[i].upper)
             return (gSurvivalTxMask >> TX_BANDS[i].bit) & 1u;

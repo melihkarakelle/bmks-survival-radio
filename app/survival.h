@@ -33,6 +33,7 @@ enum {
     SURV_TX_MARINE,
     SURV_TX_HAM,
     SURV_TX_CB,
+    SURV_TX_ALL,      // everything except the blocked ranges, overrides the bits above
     SURV_TX_COUNT
 };
 

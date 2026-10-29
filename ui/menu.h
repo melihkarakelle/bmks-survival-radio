@@ -166,6 +166,7 @@ enum
     MENU_SRV_TX_MARINE,
     MENU_SRV_TX_HAM,
     MENU_SRV_TX_CB,
+    MENU_SRV_TX_ALL,
     MENU_SRV_C_START,
     MENU_SRV_C_END,
 #endif

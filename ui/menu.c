@@ -67,6 +67,7 @@ const t_menu_item MenuList[] =
     {"TxMAR",       MENU_SRV_TX_MARINE },
     {"TxHAM",       MENU_SRV_TX_HAM    },
     {"TxCB",        MENU_SRV_TX_CB     },
+    {"TxAll",       MENU_SRV_TX_ALL    },
     {"ChSave",      MENU_MEM_CH        },
     {"ChDele",      MENU_DEL_CH        },
     {"ChName",      MENU_MEM_NAME      },
@@ -671,7 +672,7 @@ void UI_DisplayMenu(void)
             strcpy(String, gSubMenu_SRV_MODE[gSubMenuSelection]);
             break;
 
-        case MENU_SRV_TX_PMR ... MENU_SRV_TX_CB:
+        case MENU_SRV_TX_PMR ... MENU_SRV_TX_ALL:
             strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
             break;
 #endif

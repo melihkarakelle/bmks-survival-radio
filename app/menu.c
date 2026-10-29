@@ -125,7 +125,7 @@ int MENU_GetLimits(uint8_t menu_id, int32_t *pMin, int32_t *pMax)
             *pMax = SURV_MODE_COUNT - 1;
             break;
 
-        case MENU_SRV_TX_PMR ... MENU_SRV_TX_CB:
+        case MENU_SRV_TX_PMR ... MENU_SRV_TX_ALL:
             *pMax = 1;
             break;
 #endif
@@ -485,7 +485,7 @@ void MENU_AcceptSetting(void)
             SURVIVAL_SetMode(gSubMenuSelection);
             return;
 
-        case MENU_SRV_TX_PMR ... MENU_SRV_TX_CB: {
+        case MENU_SRV_TX_PMR ... MENU_SRV_TX_ALL: {
             const uint8_t bit = 1u << (UI_MENU_GetCurrentMenuId() - MENU_SRV_TX_PMR);
             gSurvivalTxMask = gSubMenuSelection ? (gSurvivalTxMask | bit) : (gSurvivalTxMask & ~bit);
             SURVIVAL_SaveTxMask();
@@ -1037,7 +1037,7 @@ void MENU_ShowCurrentSetting(void)
             gSubMenuSelection = SURVIVAL_GetMode();
             break;
 
-        case MENU_SRV_TX_PMR ... MENU_SRV_TX_CB:
+        case MENU_SRV_TX_PMR ... MENU_SRV_TX_ALL:
             gSubMenuSelection = (gSurvivalTxMask >> (UI_MENU_GetCurrentMenuId() - MENU_SRV_TX_PMR)) & 1u;
             break;
 
