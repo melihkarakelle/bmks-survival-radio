@@ -89,6 +89,36 @@ void UI_DisplayStatus(void)
     ST7565_BlitStatusLine();
 }
 
+// ------------------------------------------------------------------ key help (F tap)
+
+static const char HELP_MAIN[] = "0 FM RADIO\0"  "4 HEARD\0"          "5 PRIORITY\0"      "7 FAVORITE\0"     "UP/DN SQUELCH";
+static const char HELP_FM[]   = "0 EXIT FM\0"   "3 SAVED / TUNE\0"   "* FIND ALL FM\0"   "HOLD M SAVE\0"    "UP/DN TUNE";
+static const char HELP_KEYS[] = "M NEXT GROUP\0" "HOLD M MENU\0"     "* SCAN / STOP\0"   "HOLD UP/DN SCAN\0" "HOLD F LOCK";
+static const char HELP_SIDE[] = "SIDE1 MONITOR\0" "HOLD SIDE1 LIGHT\0" "REPEAT HOLD: SOS\0" "SIDE2 FM RADIO\0" "HOLD SIDE2 SCAN";
+
+static const char *const HELP_TITLE[] = {"F + KEY      1/3", "KEYS         2/3", "SIDE KEYS    3/3"};
+
+// drawn instead of the main / FM screen while the F prefix is active
+bool UI_DisplayHelp(bool fm)
+{
+    if (!gWasFKeyPressed || gInputBoxIndex > 0)
+        return false;
+
+    const uint8_t page = SURVIVAL_HelpPage();
+    const char   *text = (page == 1) ? HELP_KEYS : (page == 2) ? HELP_SIDE : fm ? HELP_FM : HELP_MAIN;
+
+    UI_DisplayClear();
+    UI_PrintStringSmallBold(HELP_TITLE[page], 0, 0, 0);
+    InvertRow(gFrameBuffer[0]);
+    for (uint8_t row = 1; row <= 5; row++) {
+        UI_PrintStringSmallNormal(text, 0, 0, row);
+        text += strlen(text) + 1;
+    }
+    UI_PrintStringSmallNormal("M:NEXT EXIT:BACK", 0, 0, 6);
+    ST7565_BlitFullScreen();
+    return true;
+}
+
 // ------------------------------------------------------------------ main screen
 
 // called every 500 ms while receiving: the signal bar lives in R0 of the main screen
@@ -159,6 +189,9 @@ void UI_DisplayMain(void)
         shownTitle    = Title();
         gUpdateStatus = true;
     }
+
+    if (UI_DisplayHelp(false))
+        return;
 
     if (gLowBattery && !gLowBatteryConfirmed) {
         UI_DisplayPopup("LOW BATTERY");

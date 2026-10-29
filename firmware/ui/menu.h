@@ -178,13 +178,14 @@ enum
     MENU_SRV_FAV,
     MENU_SRV_PRIO,
     MENU_SRV_RADIO,
+    MENU_SRV_HELP,
     MENU_SRV_ADV,
 #endif
 };
 
 #ifdef ENABLE_SURVIVAL
     // MenuList starts with the Basic level; Adv is its last item, Advanced follows
-    #define SURV_BASIC_COUNT 9
+    #define SURV_BASIC_COUNT 10
     #define IS_SURV_ACTION(id) ((id) >= MENU_SRV_HEARD && (id) <= MENU_SRV_ADV)
     extern uint8_t gMenuLevel;      // 0 Basic, 1 Advanced
 #endif

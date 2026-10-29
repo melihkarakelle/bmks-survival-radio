@@ -67,6 +67,9 @@ void    SURVIVAL_TogglePrio(void);        // F+5: current channel as priority ch
 void    SURVIVAL_LogHeard(void);          // a transmission was received
 void    SURVIVAL_TimeSlice500ms(void);
 void    SURVIVAL_ShowLog(void);           // F+4: recently heard list
+uint8_t SURVIVAL_HelpPage(void);          // F tap: key help, page 0..2 while the F prefix is active
+void    SURVIVAL_ShowHelp(void);          // Menu > Help: same as an F tap
+bool    SURVIVAL_HelpKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);   // true = key used by the help pages
 void    SURVIVAL_LogKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);
 void    SURVIVAL_DisplayLog(void);
 bool    SURVIVAL_EcoOn(void);

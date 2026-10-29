@@ -30,6 +30,7 @@
 #endif
 #include "ui/helper.h"
 #include "ui/inputbox.h"
+#include "ui/main.h"
 #include "ui/ui.h"
 
 #ifdef ENABLE_SURVIVAL
@@ -41,6 +42,9 @@ void UI_DisplayFM(void)
 {
     char String[22] = {0};
     char Name[16]   = {0};
+
+    if (UI_DisplayHelp(true))
+        return;
 
     UI_DisplayClear();
 

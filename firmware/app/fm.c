@@ -391,10 +391,12 @@ static void Key_FUNC(KEY_Code_t Key, uint8_t state)
                 ACTION_FM();
                 break;
 
+#ifndef ENABLE_SURVIVAL   // survival keeps 87.5-108 MHz (other bands from the menu only)
             case KEY_1:
                 gEeprom.FM_Band++;
                 gRequestSaveFM = true;
                 break;
+#endif
 
             // case KEY_2:
             //  gEeprom.FM_Space = (gEeprom.FM_Space + 1) % 3;
@@ -600,6 +602,11 @@ Bail:
 void FM_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
     uint8_t state = bKeyPressed + 2 * bKeyHeld;
+
+#ifdef ENABLE_SURVIVAL
+    if (gWasFKeyPressed && gInputBoxIndex == 0 && SURVIVAL_HelpKeys(Key, bKeyPressed, bKeyHeld))
+        return;
+#endif
 
     switch (Key) {
         case KEY_0...KEY_9:

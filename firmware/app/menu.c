@@ -1993,6 +1993,12 @@ static void MENU_SurvivalAction(uint8_t id)
         case MENU_SRV_FAV:   SURVIVAL_AddFav();      break;
         case MENU_SRV_PRIO:  SURVIVAL_TogglePrio();  break;
         case MENU_SRV_RADIO: SURVIVAL_ToggleFm();    break;
+        case MENU_SRV_HELP:
+            // switch now: a screen change clears the F prefix the help pages live on
+            GUI_SelectNextDisplay(gRequestDisplayScreen);
+            gRequestDisplayScreen = DISPLAY_INVALID;
+            SURVIVAL_ShowHelp();
+            break;
     }
 }
 #endif

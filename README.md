@@ -440,3 +440,16 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 - Değer metinleri: TxPMR…TxAll ALLOW/BLOCK, Quiet 0 = OPEN, FmScan OFF = WATCH ONLY, LAST MODE = LAST GROUP.
 - Menüden çıkanlar: ChSave, ChDele (FAV için F+7 / Favs), F1/F2 tuş atamaları (sabit), BatSav (Eco yönetir), BatTxt.
 - Sonraki aşama: Help öğesi ve F ile açılan kısayol yardım sayfaları.
+
+### Aşama 3 — v4.7 (2026-10-29): yardım sayfaları
+
+- F tap = F öneki görünür hale gelir: 3 sayfa yardım (R0 ters başlık, R1–R5 metin, R6 `M:NEXT EXIT:BACK`).
+  - 1/3 F + KEY: 0 FM RADIO, 4 HEARD, 5 PRIORITY, 7 FAVORITE, UP/DN SQUELCH
+    (FM'de: 0 EXIT FM, 3 SAVED / TUNE, * FIND ALL FM, HOLD M SAVE, UP/DN TUNE).
+  - 2/3 KEYS: M NEXT GROUP, HOLD M MENU, * SCAN / STOP, HOLD UP/DN SCAN, HOLD F LOCK.
+  - 3/3 SIDE KEYS: SIDE1 MONITOR, HOLD SIDE1 LIGHT, REPEAT HOLD: SOS, SIDE2 FM RADIO, HOLD SIDE2 SCAN.
+- M tap (bırakınca) sonraki sayfa; 2/3 ve 3/3'te UP/DOWN sayfa çevirir; 1/3'te F+UP/DOWN squelch.
+  EXIT, F, PTT ya da 8 sn bekleme kapatır. Yardım açıkken F + 0/4/5/7/* eskisi gibi çalışır. Hold M yardımı kapatıp menüyü açar.
+- BASIC menüye `Help` (Adv'den önce): aynı sayfaları açar.
+- F + 1/2/3/6/8/9 (F4HWN VFO A/B, VFO/MR, güç, ters, çağrı kanalı) Survival'da kapalı; yardım açık kalır.
+  FM'de F+1 (FM bandı değiştir) kapalı: bant 87.5–108 MHz'de kalır.

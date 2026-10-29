@@ -57,6 +57,7 @@ const t_menu_item MenuList[] =
     {"Power",       MENU_TXP,            "TX POWER"   },
     {"Eco",         MENU_SRV_ECO,        "SAVE POWER" },
     {"Radio",       MENU_SRV_RADIO,      "FM RADIO"   },
+    {"Help",        MENU_SRV_HELP,       "KEY HELP"   },
     {"Adv",         MENU_SRV_ADV,        "ADVANCED"   },   // SURV_BASIC_COUNT items up to here
     // Advanced
     {"FmScan",      MENU_SRV_FM_SCAN,    "FM SCAN"    },
@@ -594,7 +595,7 @@ void UI_DisplayMenu(void)
         UI_PrintStringSmallNormal(
             gAskForConfirmation          ? "M:YES  EXIT:NO" :
             gIsInSubMenu                 ? "M:SAVE EXIT:CANCEL" :
-            id == MENU_SRV_ADV || id == MENU_SRV_HEARD ? "M:OPEN EXIT:BACK" :
+            id == MENU_SRV_ADV || id == MENU_SRV_HEARD || id == MENU_SRV_HELP ? "M:OPEN EXIT:BACK" :
             IS_SURV_ACTION(id)           ? "M:DO   EXIT:BACK" : "M:EDIT EXIT:BACK", 0, 0, 6);
     }
 #else
@@ -728,6 +729,7 @@ void UI_DisplayMenu(void)
             break;
 
         case MENU_SRV_HEARD:
+        case MENU_SRV_HELP:
         case MENU_SRV_ADV:
             strcpy(String, "OPEN");
             break;

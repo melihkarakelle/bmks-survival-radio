@@ -2051,6 +2051,9 @@ static void ProcessKey(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
         // cancel the F-key
         gWasFKeyPressed = false;
         gUpdateStatus   = true;
+#ifdef ENABLE_SURVIVAL
+        gUpdateDisplay  = true;   // close the key help
+#endif
     }
 
     if (bFlag) {

@@ -109,6 +109,15 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
         gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
         return;
     }
+
+#ifdef ENABLE_SURVIVAL
+    // only the shortcuts on the help page; the other F functions are upstream VFO tools
+    if (Key != KEY_0 && Key != KEY_4 && Key != KEY_5 && Key != KEY_7 && Key != KEY_UP && Key != KEY_DOWN) {
+        if (beep)
+            gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        return;
+    }
+#endif
     
     gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 
@@ -597,6 +606,13 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
         return;
     }
 
+#ifdef ENABLE_SURVIVAL
+    if (Key != KEY_0 && Key != KEY_4 && Key != KEY_5 && Key != KEY_7) {   // not on the help page: the page stays
+        gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        return;
+    }
+#endif
+
     gWasFKeyPressed = false;
     gUpdateStatus   = true;
 
@@ -893,6 +909,10 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
                 processFKeyFunction(KEY_DOWN, false);
                 break;
         }
+#ifdef ENABLE_SURVIVAL
+        gUpdateStatus  = true;   // close the key help, show the new SQL
+        gUpdateDisplay = true;
+#endif
         return;
     }
 #endif
@@ -1024,6 +1044,10 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 
 void MAIN_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
+#ifdef ENABLE_SURVIVAL
+    if (gWasFKeyPressed && gInputBoxIndex == 0 && SURVIVAL_HelpKeys(Key, bKeyPressed, bKeyHeld))
+        return;
+#endif
 #ifdef ENABLE_FMRADIO
     if (gFmRadioMode && Key != KEY_PTT && Key != KEY_EXIT) {
         if (!bKeyHeld && bKeyPressed)

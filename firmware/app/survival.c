@@ -768,6 +768,73 @@ void SURVIVAL_LogHeard(void)
     sHeard[0].rssi    = BK4819_GetRSSI() / 2;
 }
 
+// ------------------------------------------------------------------ key help
+
+// The help pages are the F prefix made visible: while they show, F + 0/4/5/7/* work as before.
+static uint8_t sHelpPage;
+
+uint8_t SURVIVAL_HelpPage(void)
+{
+    if (!gWasFKeyPressed)
+        sHelpPage = 0;
+    return sHelpPage;
+}
+
+void SURVIVAL_ShowHelp(void)
+{
+    sHelpPage          = 0;
+    gWasFKeyPressed    = true;
+    gKeyInputCountdown = key_input_timeout_500ms;
+    gUpdateStatus      = true;
+    gUpdateDisplay     = true;
+}
+
+static void HelpTurn(int8_t direction)
+{
+    sHelpPage          = (sHelpPage + 3 + direction) % 3;
+    gKeyInputCountdown = key_input_timeout_500ms;   // keep the page up a little longer
+    gUpdateDisplay     = true;
+}
+
+bool SURVIVAL_HelpKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
+{
+    switch (Key) {
+        case KEY_MENU:
+            if (bKeyHeld) {
+                if (bKeyPressed) {   // hold M: leave the help, M does what it does on the screen below
+                    gWasFKeyPressed = false;
+                    gUpdateStatus   = true;
+                }
+                return false;
+            }
+            if (bKeyPressed)
+                gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
+            else
+                HelpTurn(1);     // tap M: next page, on release
+            return true;
+
+        case KEY_EXIT:
+            if (bKeyPressed && !bKeyHeld) {
+                gWasFKeyPressed = false;
+                gUpdateStatus   = true;
+                gUpdateDisplay  = true;
+                gBeepToPlay     = BEEP_1KHZ_60MS_OPTIONAL;
+            }
+            return true;
+
+        case KEY_UP:
+        case KEY_DOWN:
+            if (sHelpPage == 0)
+                return false;    // page 1: F + UP/DOWN sets the squelch
+            if (bKeyPressed)
+                HelpTurn(Key == KEY_UP ? -1 : 1);
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 void SURVIVAL_ShowLog(void)
 {
     if (gScanStateDir != SCAN_OFF)
