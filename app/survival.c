@@ -486,10 +486,11 @@ void SURVIVAL_FmBgFound(void)
 #ifdef ENABLE_FMRADIO
     FM_TurnOff();
 #endif
-    // the switch to the main screen ends the scan, keep the found channel
+    // switch to the main screen right away (gRequestDisplayScreen is only
+    // handled after a key press); the switch also ends the scan, keep the channel
     gEeprom.MrChannel[gEeprom.RX_VFO] = gRxVfo->CHANNEL_SAVE;
-    gRequestSaveVFO       = true;
-    gRequestDisplayScreen = DISPLAY_MAIN;
+    gRequestSaveVFO = true;
+    GUI_SelectNextDisplay(DISPLAY_MAIN);
 }
 
 uint8_t SURVIVAL_ScanResumeMode(void)
