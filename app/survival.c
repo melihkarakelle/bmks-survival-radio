@@ -160,6 +160,8 @@ static_assert(ARRAY_SIZE(GROUPS) == SURV_MODE_FM);
 
 #define GROUP_NONE 0xFF
 
+static void ShowMessage(const char *line1, const char *line2);   // feedback screen, see below
+
 static uint8_t GroupStart(uint8_t g)
 {
     uint8_t start = 0;
@@ -490,6 +492,10 @@ void SURVIVAL_SetMode(uint8_t mode)
     } else if (!SelectModeChannel(mode, vfo)) {
         gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;   // FAV empty: on to the first group
         SelectModeChannel(SURV_MODE_PMR, vfo);
+        ShowMessage("FAV EMPTY", "F+7 ADDS");
+        gVfoConfigureMode = VFO_CONFIGURE_RELOAD;
+        gRequestSaveVFO   = true;
+        return;
     }
 
     gRequestSaveVFO       = true;
@@ -599,6 +605,7 @@ void SURVIVAL_AddFav(void)
     }
     if (slot >= 0xFE) {    // already there or FAV full
         gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        ShowMessage(slot == 0xFE ? "ALREADY IN FAV" : "FAV FULL", NULL);
         return;
     }
 
@@ -612,6 +619,7 @@ void SURVIVAL_AddFav(void)
     SETTINGS_SaveChannel(slot, gEeprom.TX_VFO, &vfo, 2);
     SETTINGS_SaveChannelName(slot, name);
     gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
+    ShowMessage("ADDED TO FAV", name);
 }
 
 static void SetPrioFlag(uint8_t ch, bool on)
@@ -630,14 +638,20 @@ void SURVIVAL_TogglePrio(void)
     const uint8_t ch = gEeprom.ScreenChannel[gEeprom.TX_VFO];
     if (!IS_MR_CHANNEL(ch)) {   // AIR/CUSTOM: put the frequency into FAV first (F+7)
         gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        ShowMessage("CHANNELS ONLY", "F+7: FAV FIRST");
         return;
     }
     if (IS_MR_CHANNEL(gSurvivalPrio))
         SetPrioFlag(gSurvivalPrio, false);
     gSurvivalPrio = (gSurvivalPrio == ch) ? 0xFF : ch;
-    if (IS_MR_CHANNEL(gSurvivalPrio))
+    if (IS_MR_CHANNEL(gSurvivalPrio)) {
+        char name[16] = {0};
         SetPrioFlag(gSurvivalPrio, true);
-    gUpdateDisplay = true;
+        SETTINGS_FetchChannelName(name, gSurvivalPrio);
+        ShowMessage("PRIORITY", name);
+    } else {
+        ShowMessage("PRIORITY OFF", NULL);
+    }
 }
 
 // ---------------------------------------------------------------- recently heard
@@ -651,6 +665,19 @@ typedef struct {
 
 #define HEARD_N 8
 
+static const char *sMsg1;
+static char        sMsg2[16];
+static uint8_t     sMsgTimer;   // half seconds left on the message screen
+
+// short feedback for keys that otherwise only beep, back to main after 1.5 s
+static void ShowMessage(const char *line1, const char *line2)
+{
+    sMsg1 = line1;
+    strncpy(sMsg2, line2 ? line2 : "", sizeof(sMsg2) - 1);
+    sMsgTimer             = 3;
+    gRequestDisplayScreen = DISPLAY_SCANNER;
+}
+
 static Heard_t  sHeard[HEARD_N];
 static uint8_t  sHeardCount;
 static uint8_t  sLogCursor;
@@ -659,6 +686,9 @@ static uint32_t sHalfSeconds;
 void SURVIVAL_TimeSlice500ms(void)
 {
     sHalfSeconds++;
+
+    if (sMsgTimer && --sMsgTimer == 0 && gScreenToDisplay == DISPLAY_SCANNER)
+        GUI_SelectNextDisplay(DISPLAY_MAIN);
 }
 
 void SURVIVAL_LogHeard(void)
@@ -687,6 +717,7 @@ void SURVIVAL_ShowLog(void)
     if (gScanStateDir != SCAN_OFF)
         CHFRSCANNER_StopHere();
     sLogCursor            = 0;
+    sMsgTimer             = 0;
     gRequestDisplayScreen = DISPLAY_SCANNER;   // the code scanner screen is free in survival
 }
 
@@ -713,6 +744,12 @@ void SURVIVAL_LogKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
     if (!bKeyPressed || bKeyHeld)
         return;
+
+    if (sMsgTimer) {   // any key closes a message
+        sMsgTimer             = 0;
+        gRequestDisplayScreen = DISPLAY_MAIN;
+        return;
+    }
 
     switch (Key) {
         case KEY_UP:
@@ -744,7 +781,15 @@ void SURVIVAL_DisplayLog(void)
     char Name[16];
 
     UI_DisplayClear();
-    UI_PrintStringSmallBold("HEARD", 0, 127, 0);
+
+    if (sMsgTimer) {
+        UI_PrintString(sMsg1, 0, 127, 1, 8);
+        UI_PrintString(sMsg2, 0, 127, 4, 8);
+        ST7565_BlitFullScreen();
+        return;
+    }
+
+    UI_PrintStringSmallBold("HEARD   M:GO", 0, 127, 0);
 
     if (sHeardCount == 0)
         UI_PrintStringSmallNormal("nothing yet", 0, 127, 3);
