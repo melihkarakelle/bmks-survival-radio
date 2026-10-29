@@ -39,12 +39,13 @@ enum {
 
 extern const char gSubMenu_SRV_MODE[SURV_MODE_COUNT][9];
 extern uint8_t    gSurvivalTxMask;
+extern uint8_t    gSurvivalFmScan;        // FM background scan: 0 off, 1..6 = group (SURV_MODE_* + 1)
 extern uint32_t   gSurvivalCustomStart;   // CUSTOM mode scan range, 10 Hz units
 extern uint32_t   gSurvivalCustomEnd;
 
 void    SURVIVAL_Init(void);
 void    SURVIVAL_EraseMarker(void);
-void    SURVIVAL_SaveTxMask(void);
+void    SURVIVAL_SaveSettings(void);
 void    SURVIVAL_SaveCustomRange(void);
 void    SURVIVAL_ApplyScanRange(void);
 bool    SURVIVAL_GetGroupRange(uint8_t channel, uint8_t *first, uint8_t *last);
@@ -53,6 +54,13 @@ uint8_t SURVIVAL_GetMode(void);
 void    SURVIVAL_SetMode(uint8_t mode);
 bool    SURVIVAL_TxAllowed(uint32_t frequency);
 void    ACTION_SurvivalGroup(void);
+
+// FM radio with a background scan of one group on the BK4819
+void    SURVIVAL_FmStarted(void);
+void    SURVIVAL_FmStopped(void);
+bool    SURVIVAL_FmBgScanning(void);
+void    SURVIVAL_FmBgFound(void);
+uint8_t SURVIVAL_ScanResumeMode(void);
 
 #endif
 

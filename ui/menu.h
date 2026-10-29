@@ -169,6 +169,7 @@ enum
     MENU_SRV_TX_ALL,
     MENU_SRV_C_START,
     MENU_SRV_C_END,
+    MENU_SRV_FM_SCAN,
 #endif
 };
 

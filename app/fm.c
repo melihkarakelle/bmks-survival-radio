@@ -141,6 +141,10 @@ void FM_TurnOff(void)
         gEeprom.CURRENT_STATE = 0;
         SETTINGS_WriteCurrentState();
     #endif
+
+#ifdef ENABLE_SURVIVAL
+    SURVIVAL_FmStopped();
+#endif
 }
 
 void FM_EraseChannels(void)

@@ -34,6 +34,10 @@
 #include "helper/battery.h"
 #include "misc.h"
 #include "radio.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/chFrScanner.h"
+    #include "app/survival.h"
+#endif
 #include "settings.h"
 #include "ui/menu.h"
 
@@ -693,9 +697,14 @@ void RADIO_SetupRegisters(bool switchToForeground)
         }
     #endif
 
-    AUDIO_AudioPathOff();
-
-    gEnableSpeaker = false;
+#if defined(ENABLE_SURVIVAL) && defined(ENABLE_FMRADIO)
+    // keep the FM radio audible while the BK4819 scans channels in the background
+    if (!(gFmRadioMode && gScanStateDir != SCAN_OFF))
+#endif
+    {
+        AUDIO_AudioPathOff();
+        gEnableSpeaker = false;
+    }
 
     BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, false);
 

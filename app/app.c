@@ -25,6 +25,9 @@
     #include "app/aircopy.h"
 #endif
 #include "app/app.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "app/chFrScanner.h"
 #include "app/dtmf.h"
 #ifdef ENABLE_FLASHLIGHT
@@ -408,15 +411,20 @@ Skip:
                 }
                 */
 
-                if(gEeprom.SCAN_RESUME_MODE < 81)
+#ifdef ENABLE_SURVIVAL
+                const uint8_t resumeMode = SURVIVAL_ScanResumeMode();
+#else
+                const uint8_t resumeMode = gEeprom.SCAN_RESUME_MODE;
+#endif
+                if(resumeMode < 81)
                 {
-                    if(gEeprom.SCAN_RESUME_MODE == 0)
+                    if(resumeMode == 0)
                     {
                         CHFRSCANNER_Stop();
                     }
                     else
                     {
-                        gScanPauseDelayIn_10ms = gEeprom.SCAN_RESUME_MODE * (250 / 10); // 250ms
+                        gScanPauseDelayIn_10ms = resumeMode * (250 / 10); // 250ms
                         gScheduleScanListen    = false;
                     }
                 }
@@ -508,6 +516,11 @@ void APP_StartListening(FUNCTION_Type_t function)
 #ifdef ENABLE_DTMF_CALLING
     if (gSetting_KILLED)
         return;
+#endif
+
+#ifdef ENABLE_SURVIVAL
+    if (SURVIVAL_FmBgScanning())
+        SURVIVAL_FmBgFound();   // leave FM and stay on the channel with activity
 #endif
 
 #ifdef ENABLE_FMRADIO

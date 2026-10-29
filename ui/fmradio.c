@@ -25,10 +25,88 @@
 #include "misc.h"
 #include "settings.h"
 #include "ui/fmradio.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "ui/helper.h"
 #include "ui/inputbox.h"
 #include "ui/ui.h"
 
+#ifdef ENABLE_SURVIVAL
+// FM screen with a smaller frequency, leaving room for what the BK4819 does
+// in the background: the channel it watches or the channel the scan is on.
+void UI_DisplayFM(void)
+{
+    char String[22] = {0};
+    char Name[16]   = {0};
+    const char *pPrintStr = String;
+
+    UI_DisplayClear();
+
+    // rows 0-1: FM frequency (or the number being typed) in the normal font
+    if (gInputBoxIndex > 0 && !gEeprom.FM_IsMrMode) {
+        const char *ascii = INPUTBOX_GetAscii();
+        sprintf(String, "FM %.3s.%.1s", ascii, ascii + 3);
+    } else if (gAskToSave || (gEeprom.FM_IsMrMode && gInputBoxIndex > 0)) {
+        UI_GenerateChannelString(Name, gFM_ChannelPosition);
+        sprintf(String, "FM %s", Name);
+    } else if (gAskToDelete) {
+        sprintf(String, "FM CH-%02u", gEeprom.FM_SelectedChannel + 1);
+    } else {
+        sprintf(String, "FM %3d.%d", gEeprom.FM_FrequencyPlaying / 10, gEeprom.FM_FrequencyPlaying % 10);
+    }
+    UI_PrintString(String, 0, 127, 0, 8);
+
+    // row 2: memory / vfo / scan state
+    if (gAskToSave) {
+        pPrintStr = "SAVE?";
+    } else if (gAskToDelete) {
+        pPrintStr = "DEL?";
+    } else if (gFM_ScanState == FM_SCAN_OFF) {
+        if (gEeprom.FM_IsMrMode) {
+            sprintf(String, "MR(CH%02u)", gEeprom.FM_SelectedChannel + 1);
+        } else {
+            strcpy(String, "VFO");
+            for (unsigned int i = 0; i < 20; i++) {
+                if (gEeprom.FM_FrequencyPlaying == gFM_Channels[i]) {
+                    sprintf(String, "VFO(CH%02u)", i + 1);
+                    break;
+                }
+            }
+        }
+    } else if (gFM_AutoScan) {
+        sprintf(String, "A-SCAN(%u)", gFM_ChannelPosition + 1);
+    } else {
+        pPrintStr = "M-SCAN";
+    }
+    UI_PrintStringSmallBold(pPrintStr, 0, 127, 2);
+
+    UI_DrawLineBuffer(gFrameBuffer, 0, 28, 127, 28, true);
+
+    // rows 4-5: background receiver, refreshed on every scan step
+    const uint8_t channel = gRxVfo->CHANNEL_SAVE;
+    if (IS_MR_CHANNEL(channel))
+        SETTINGS_FetchChannelName(Name, channel);
+    else
+        strcpy(Name, "VFO");
+    sprintf(String, "%s %s", SURVIVAL_FmBgScanning() ? "SCAN" : "WATCH", Name);
+    UI_PrintStringSmallNormal(String, 0, 127, 4);
+
+    const uint32_t f = gRxVfo->freq_config_RX.Frequency;
+    sprintf(String, "%u.%05u MHz", f / 100000, f % 100000);
+    UI_PrintStringSmallNormal(String, 0, 127, 5);
+
+    // row 6: FM band
+    sprintf(String, "%d%s-%dM",
+        BK1080_GetFreqLoLimit(gEeprom.FM_Band)/10,
+        gEeprom.FM_Band == 0 ? ".5" : "",
+        BK1080_GetFreqHiLimit(gEeprom.FM_Band)/10
+        );
+    UI_PrintStringSmallNormal(String, 1, 0, 6);
+
+    ST7565_BlitFullScreen();
+}
+#else
 void UI_DisplayFM(void)
 {
     char String[16] = {0};
@@ -44,6 +122,7 @@ void UI_DisplayFM(void)
         );
     
     UI_PrintStringSmallNormal(String, 1, 0, 6);
+
 
     //uint8_t spacings[] = {20,10,5};
     //sprintf(String, "%d0k", spacings[gEeprom.FM_Space % 3]);
@@ -98,5 +177,7 @@ void UI_DisplayFM(void)
 
     ST7565_BlitFullScreen();
 }
+#endif
+
 
 #endif

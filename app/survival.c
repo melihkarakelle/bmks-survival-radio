@@ -23,7 +23,7 @@
 #include "settings.h"
 #include "ui/ui.h"
 
-// EEPROM 0x1FF8: 'B' 'M' 'K' 'S', table version, TX mask, FF, FF
+// EEPROM 0x1FF8: 'B' 'M' 'K' 'S', table version, TX mask, FM background scan, FF
 #define SURV_MARKER_ADDR   0x1FF8
 // EEPROM 0x1FE8: CUSTOM scan range, start and end as uint32 (10 Hz units)
 #define SURV_RANGE_ADDR    0x1FE8
@@ -36,6 +36,10 @@
 static const uint8_t SURV_MAGIC[4] = {'B', 'M', 'K', 'S'};
 
 uint8_t  gSurvivalTxMask      = SURV_TX_DEFAULT;
+uint8_t  gSurvivalFmScan      = 1 + SURV_MODE_PMR;
+
+static bool sFmBgScan;       // BK4819 scans a group while the FM radio plays
+static bool sStopOnRxEnd;    // a background hit ends the scan when that transmission ends
 uint32_t gSurvivalCustomStart = SURV_RANGE_START;
 uint32_t gSurvivalCustomEnd   = SURV_RANGE_END;
 
@@ -265,11 +269,11 @@ static void WriteDefaults(void)
     SETTINGS_SaveVfoIndices();
 }
 
-void SURVIVAL_SaveTxMask(void)
+void SURVIVAL_SaveSettings(void)
 {
     const uint8_t marker[8] = {
         SURV_MAGIC[0], SURV_MAGIC[1], SURV_MAGIC[2], SURV_MAGIC[3],
-        SURV_TABLE_VERSION, gSurvivalTxMask, 0xFF, 0xFF,
+        SURV_TABLE_VERSION, gSurvivalTxMask, gSurvivalFmScan, 0xFF,
     };
     EEPROM_WriteBuffer(SURV_MARKER_ADDR, marker);
 }
@@ -295,6 +299,8 @@ void SURVIVAL_Init(void)
         uint32_t range[2];
         EEPROM_ReadBuffer(SURV_RANGE_ADDR, range, sizeof(range));
         gSurvivalTxMask = marker[5];
+        if (marker[6] <= SURV_MODE_FM)
+            gSurvivalFmScan = marker[6];
         if (range[0] >= BX4819_band1.lower && range[0] < range[1] && range[1] <= BX4819_band2.upper) {
             gSurvivalCustomStart = range[0];
             gSurvivalCustomEnd   = range[1];
@@ -305,12 +311,14 @@ void SURVIVAL_Init(void)
     WriteChannels();
     WriteDefaults();
     gSurvivalTxMask = SURV_TX_DEFAULT;
-    SURVIVAL_SaveTxMask();
+    SURVIVAL_SaveSettings();
     SURVIVAL_SaveCustomRange();
 }
 
 void SURVIVAL_ApplyScanRange(void)
 {
+    sStopOnRxEnd = false;   // every scan start clears a pending background stop
+
     // CUSTOM mode (VFO) scans the user range with the VFO step
     if (!IS_MR_CHANNEL(gRxVfo->CHANNEL_SAVE)) {
         gScanRangeStart = gSurvivalCustomStart;
@@ -392,6 +400,59 @@ void SURVIVAL_SetMode(uint8_t mode)
 void ACTION_SurvivalGroup(void)
 {
     SURVIVAL_SetMode((SURVIVAL_GetMode() + 1) % SURV_MODE_COUNT);
+}
+
+void SURVIVAL_FmStarted(void)
+{
+    if (gSurvivalFmScan == 0 || gSurvivalFmScan > SURV_MODE_FM)
+        return;
+
+    // scan the chosen group on the BK4819 while the BK1080 plays FM
+    const uint8_t vfo = gEeprom.TX_VFO;
+    const uint8_t ch  = GroupStart(gSurvivalFmScan - 1);
+    gEeprom.MrChannel[vfo]     = ch;
+    gEeprom.ScreenChannel[vfo] = ch;
+    RADIO_ConfigureChannel(vfo, VFO_CONFIGURE_RELOAD);
+    RADIO_SelectVfos();
+
+    sFmBgScan = true;
+    CHFRSCANNER_Start(true, SCAN_FWD);
+}
+
+void SURVIVAL_FmStopped(void)
+{
+    if (!sFmBgScan)
+        return;
+
+    sFmBgScan = false;
+    if (gScanStateDir != SCAN_OFF)
+        CHFRSCANNER_Stop();
+}
+
+bool SURVIVAL_FmBgScanning(void)
+{
+#ifdef ENABLE_FMRADIO
+    return sFmBgScan && gFmRadioMode && gScanStateDir != SCAN_OFF;
+#else
+    return false;
+#endif
+}
+
+void SURVIVAL_FmBgFound(void)
+{
+    // activity on a scanned channel: leave FM for good and stay on that channel,
+    // the user goes back to FM by hand (F+0 or M)
+    sFmBgScan    = false;
+    sStopOnRxEnd = true;
+#ifdef ENABLE_FMRADIO
+    FM_TurnOff();
+#endif
+    gRequestDisplayScreen = DISPLAY_MAIN;
+}
+
+uint8_t SURVIVAL_ScanResumeMode(void)
+{
+    return sStopOnRxEnd ? 0 : gEeprom.SCAN_RESUME_MODE;   // 0 = STOP
 }
 
 #endif

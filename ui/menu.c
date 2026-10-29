@@ -48,6 +48,7 @@ const t_menu_item MenuList[] =
 #ifdef ENABLE_SURVIVAL
 //   text,          menu ID
     {"Group",       MENU_SRV_GROUP     },
+    {"FmScan",      MENU_SRV_FM_SCAN   },
     {"Sql",         MENU_SQL           },
     {"Power",       MENU_TXP           },
     {"Mode",        MENU_AM            },
@@ -671,6 +672,10 @@ void UI_DisplayMenu(void)
 #ifdef ENABLE_SURVIVAL
         case MENU_SRV_GROUP:
             strcpy(String, gSubMenu_SRV_MODE[gSubMenuSelection]);
+            break;
+
+        case MENU_SRV_FM_SCAN:
+            strcpy(String, gSubMenuSelection ? gSubMenu_SRV_MODE[gSubMenuSelection - 1] : gSubMenu_OFF_ON[0]);
             break;
 
         case MENU_SRV_TX_PMR ... MENU_SRV_TX_ALL:

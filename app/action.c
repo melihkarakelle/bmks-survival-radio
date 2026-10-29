@@ -385,6 +385,9 @@ void ACTION_FM(void)
         RADIO_SetupRegisters(true);
 
         FM_Start();
+#ifdef ENABLE_SURVIVAL
+        SURVIVAL_FmStarted();
+#endif
 
         gRequestDisplayScreen = DISPLAY_FM;
     }
