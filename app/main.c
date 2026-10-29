@@ -290,11 +290,17 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             gEeprom.SQUELCH_LEVEL = (gEeprom.SQUELCH_LEVEL < 9) ? gEeprom.SQUELCH_LEVEL + 1: 9;
             gVfoConfigureMode     = VFO_CONFIGURE;
             gWasFKeyPressed = false;
+#ifdef ENABLE_SURVIVAL
+            gRequestSaveSettings  = true;   // F4HWN kept this change in RAM only
+#endif
             break;
         case KEY_DOWN:
             gEeprom.SQUELCH_LEVEL = (gEeprom.SQUELCH_LEVEL > 0) ? gEeprom.SQUELCH_LEVEL - 1: 0;
             gVfoConfigureMode     = VFO_CONFIGURE;
             gWasFKeyPressed = false;
+#ifdef ENABLE_SURVIVAL
+            gRequestSaveSettings  = true;
+#endif
             break;
 
         case KEY_SIDE1:
