@@ -544,11 +544,13 @@ void SETTINGS_FactoryReset(bool bIsAll)
         #ifdef ENABLE_FEAT_F4HWN
             EEPROM_WriteBuffer(0x1FF0, Template);
         #endif
-
-        #ifdef ENABLE_SURVIVAL
-            SURVIVAL_EraseMarker();   // channels and defaults are rewritten on next boot
-        #endif
     }
+
+#ifdef ENABLE_SURVIVAL
+    // both resets: the VFO reset also wipes the channel frequencies, so the
+    // survival channels and defaults are rewritten on the next boot
+    SURVIVAL_EraseMarker();
+#endif
 }
 
 #ifdef ENABLE_FMRADIO
