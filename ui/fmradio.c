@@ -96,7 +96,7 @@ void UI_DisplayFM(void)
     if (IS_MR_CHANNEL(channel))
         SETTINGS_FetchChannelName(Name, channel);
     else
-        strcpy(Name, "VFO");
+        strcpy(Name, SURVIVAL_VfoLabel(channel));
     sprintf(String, "%s %s", SURVIVAL_FmBgScanning() ? "SCAN" : "WATCH", Name);
     UI_PrintStringSmallNormal(String, 0, 127, 5);
 

@@ -35,6 +35,9 @@
 #include "ui/helper.h"
 #include "ui/inputbox.h"
 #include "ui/main.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "ui/ui.h"
 #include "audio.h"
 
@@ -811,8 +814,12 @@ void UI_DisplayMain(void)
         {   // frequency mode
             // show the frequency band number
             const unsigned int x = 2;
+#ifdef ENABLE_SURVIVAL
+            strcpy(String, SURVIVAL_VfoLabel(gEeprom.ScreenChannel[vfo_num]));
+#else
             char * buf = gEeprom.VfoInfo[vfo_num].pRX->Frequency < _1GHz_in_KHz ? "" : "+";
             sprintf(String, "F%u%s", 1 + gEeprom.ScreenChannel[vfo_num] - FREQ_CHANNEL_FIRST, buf);
+#endif
             UI_PrintStringSmallNormal(String, x, 0, line + 1);
         }
 #ifdef ENABLE_NOAA

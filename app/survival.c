@@ -30,7 +30,7 @@
 #define SURV_RANGE_START   14400000   // 144.000 MHz
 #define SURV_RANGE_END     14600000   // 146.000 MHz
 // bump when the channel tables or defaults change, radios re-init on next boot
-#define SURV_TABLE_VERSION 4
+#define SURV_TABLE_VERSION 5
 #define SURV_TX_DEFAULT    ((1u << SURV_TX_PMR) | (1u << SURV_TX_FRS))
 
 static const uint8_t SURV_MAGIC[4] = {'B', 'M', 'K', 'S'};
@@ -114,11 +114,12 @@ static const uint32_t MARINE_FREQS[] = {
 };
 #define MARINE_DUPLEX_OFFSET 460000   // 4.6 MHz
 
-// worldwide frequencies only, local tower/ATIS/VOLMET go in CUSTOM
-static const uint32_t AIR_FREQS[] = {
-    12150000, 24300000, 12310000, 12345000, 12280000,
-};
-static const char AIR_NAMES[] = "GUARD\0MIL GUARD\0SAR\0AIR2AIR\0UNICOM";
+// AIR is not a channel group but the whole air band on its own VFO slot
+// (108-137 MHz band memory): AM, 25 kHz steps, scanned 118.000-136.975 MHz
+#define AIR_VFO_CHANNEL (FREQ_CHANNEL_FIRST + BAND2_108MHz)
+#define AIR_SCAN_START  11800000
+#define AIR_SCAN_END    13697500
+#define AIR_START_FREQ  12150000   // 121.500 guard
 
 // FM calling channels for ITU region 1 (Europe/Africa/Middle East) and 2 (Americas)
 static const uint32_t HAM_FREQS[] = {
@@ -139,7 +140,7 @@ static const SurvivalGroup_t GROUPS[] = {
     {"PMR ", NULL,         44600625, 1250, 16,                      SURV_NARROW,           NULL,        NULL},
     {"FRS ", FRS_FREQS,    0,        0,    ARRAY_SIZE(FRS_FREQS),    0,                     NULL,        NULL},
     {"MAR ", MARINE_FREQS, 0,        0,    ARRAY_SIZE(MARINE_FREQS), SURV_HIGH,             MARINE_NUMS, NULL},
-    {"",     AIR_FREQS,    0,        0,    ARRAY_SIZE(AIR_FREQS),    SURV_AM,               NULL,        AIR_NAMES},
+    {"",     NULL,         0,        0,    0,                        SURV_AM,               NULL,        NULL},   // AIR: band mode, no channels
     {"",     HAM_FREQS,    0,        0,    ARRAY_SIZE(HAM_FREQS),    SURV_HIGH,             NULL,        HAM_NAMES},
     {"CB ",  CB_FREQS,     0,        0,    ARRAY_SIZE(CB_FREQS),     SURV_NARROW|SURV_HIGH, NULL,        NULL},
 };
@@ -264,6 +265,12 @@ static void WriteDefaults(void)
     for (uint8_t vfo = 0; vfo < 2; vfo++) {
         gEeprom.MrChannel[vfo]     = 0;
         gEeprom.ScreenChannel[vfo] = 0;
+
+        VFO_Info_t *pVfo = &gEeprom.VfoInfo[vfo];
+        RADIO_InitInfo(pVfo, AIR_VFO_CHANNEL, AIR_START_FREQ);   // AM for this band
+        pVfo->STEP_SETTING  = STEP_25kHz;
+        pVfo->StepFrequency = gStepFrequencyTable[STEP_25kHz];
+        SETTINGS_SaveChannel(AIR_VFO_CHANNEL, vfo, pVfo, 2);
     }
 
     SETTINGS_SaveSettings();
@@ -320,8 +327,12 @@ void SURVIVAL_ApplyScanRange(void)
 {
     sStopOnRxEnd = false;   // every scan start clears a pending background stop
 
-    // CUSTOM mode (VFO) scans the user range with the VFO step
-    if (!IS_MR_CHANNEL(gRxVfo->CHANNEL_SAVE)) {
+    // VFO modes scan a range with the VFO step: AIR the air band, CUSTOM the user range
+    const uint8_t channel = gRxVfo->CHANNEL_SAVE;
+    if (channel == AIR_VFO_CHANNEL) {
+        gScanRangeStart = AIR_SCAN_START;
+        gScanRangeStop  = AIR_SCAN_END;
+    } else if (!IS_MR_CHANNEL(channel)) {
         gScanRangeStart = gSurvivalCustomStart;
         gScanRangeStop  = gSurvivalCustomEnd;
     }
@@ -360,11 +371,30 @@ uint8_t SURVIVAL_GetMode(void)
         return SURV_MODE_FM;
 #endif
     const uint8_t channel = gEeprom.ScreenChannel[gEeprom.TX_VFO];
+    if (channel == AIR_VFO_CHANNEL)
+        return SURV_MODE_AIR;
     if (!IS_MR_CHANNEL(channel))
         return SURV_MODE_CUSTOM;
 
     const uint8_t g = FindGroup(channel);
     return (g == GROUP_NONE) ? SURV_MODE_CUSTOM : g;   // own saved channels count as custom
+}
+
+// point the VFO at the first channel of a group, or at the air band VFO
+static void SelectModeChannel(uint8_t mode, uint8_t vfo)
+{
+    if (mode == SURV_MODE_AIR) {
+        gEeprom.ScreenChannel[vfo] = AIR_VFO_CHANNEL;
+        return;
+    }
+    const uint8_t ch = GroupStart(mode);
+    gEeprom.MrChannel[vfo]     = ch;
+    gEeprom.ScreenChannel[vfo] = ch;
+}
+
+const char *SURVIVAL_VfoLabel(uint8_t channel)
+{
+    return (channel == AIR_VFO_CHANNEL) ? "AIR" : "CUST";
 }
 
 void SURVIVAL_SetMode(uint8_t mode)
@@ -385,11 +415,12 @@ void SURVIVAL_SetMode(uint8_t mode)
 #endif
 
     if (mode == SURV_MODE_CUSTOM) {
-        gEeprom.ScreenChannel[vfo] = gEeprom.FreqChannel[vfo];   // free frequency (VFO)
+        // free frequency (VFO); the air band slot belongs to AIR
+        if (gEeprom.FreqChannel[vfo] == AIR_VFO_CHANNEL)
+            gEeprom.FreqChannel[vfo] = FREQ_CHANNEL_FIRST + BAND6_400MHz;
+        gEeprom.ScreenChannel[vfo] = gEeprom.FreqChannel[vfo];
     } else {
-        const uint8_t ch = GroupStart(mode);
-        gEeprom.MrChannel[vfo]     = ch;
-        gEeprom.ScreenChannel[vfo] = ch;
+        SelectModeChannel(mode, vfo);
     }
 
     gRequestSaveVFO       = true;
@@ -418,9 +449,7 @@ void SURVIVAL_FmStarted(void)
         if (IS_MR_CHANNEL(ch) && FindGroup(ch) == GROUP_NONE)
             return;
     } else {
-        const uint8_t ch = GroupStart(gSurvivalFmScan - 1);
-        gEeprom.MrChannel[vfo]     = ch;
-        gEeprom.ScreenChannel[vfo] = ch;
+        SelectModeChannel(gSurvivalFmScan - 1, vfo);
         RADIO_ConfigureChannel(vfo, VFO_CONFIGURE_RELOAD);
     }
     RADIO_SelectVfos();
