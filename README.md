@@ -471,4 +471,4 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 ### v5.1 (2026-10-29): yardım metni biçimi
 
 - Yardım satırları `TUŞ>İşlev`: tuş adı büyük harf, işlev normal yazı (ör. `SIDE1>Light, blink`, `HOLD M>Menu`).
-  Alt satır `M>Next  EXIT>Back`.
+  Alt satır `M>Next  EXIT>Back`. v5.2: SIDE1 ikinci satırı `      Strobe, SOS` (aynı tuşun devamı, girintili).
