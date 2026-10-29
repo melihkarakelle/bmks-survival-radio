@@ -818,12 +818,18 @@ static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
             return;
         }               
 #endif
+#ifdef ENABLE_SURVIVAL
+        // F + * scans the current group / CUSTOM range, like a long press on *
+        ACTION_Scan(false);
+        gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
+#else
         // scan the CTCSS/DCS code
         gBackup_CROSS_BAND_RX_TX  = gEeprom.CROSS_BAND_RX_TX;
         gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;
 
         SCANNER_Start(true);
         gRequestDisplayScreen = DISPLAY_SCANNER;
+#endif
     }
     
     //gPttWasReleased = true; Fixed issue #138

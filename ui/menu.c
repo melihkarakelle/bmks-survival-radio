@@ -60,6 +60,8 @@ const t_menu_item MenuList[] =
     {"TxODir",      MENU_SFT_D         },
     {"TxOffs",      MENU_OFFSET        },
     {"ScnRev",      MENU_SC_REV        },
+    {"CStart",      MENU_SRV_C_START   },
+    {"CEnd",        MENU_SRV_C_END     },
     {"TxPMR",       MENU_SRV_TX_PMR    },
     {"TxFRS",       MENU_SRV_TX_FRS    },
     {"TxMAR",       MENU_SRV_TX_MARINE },
@@ -734,6 +736,10 @@ void UI_DisplayMenu(void)
             strcpy(String, gSubMenu_SFT_D[gSubMenuSelection]);
             break;
 
+#ifdef ENABLE_SURVIVAL
+        case MENU_SRV_C_START:
+        case MENU_SRV_C_END:
+#endif
         case MENU_OFFSET:
             if (!gIsInSubMenu || gInputBoxIndex == 0)
             {

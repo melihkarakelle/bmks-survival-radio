@@ -99,8 +99,30 @@ int FM_ConfigureChannelState(void)
     return 0;
 }
 
+#ifdef ENABLE_SURVIVAL
+// An auto scan replaces the stored list only when it found at least one
+// station, otherwise the previous list is reloaded from EEPROM.
+static void FM_FinishAutoScan(void)
+{
+    if (gFM_ChannelPosition == 0) {
+        EEPROM_ReadBuffer(0x0E40, gFM_Channels, sizeof(gFM_Channels));
+        return;
+    }
+
+    gEeprom.FM_IsMrMode        = true;
+    gEeprom.FM_SelectedChannel = 0;
+}
+#endif
+
 void FM_TurnOff(void)
 {
+#ifdef ENABLE_SURVIVAL
+    if (gFM_AutoScan && gFM_ScanState != FM_SCAN_OFF) {   // leaving FM in the middle of an auto scan
+        FM_FinishAutoScan();
+        SETTINGS_SaveFM();
+    }
+#endif
+
     gFmRadioMode              = false;
     gFM_ScanState             = FM_SCAN_OFF;
     gFM_RestoreCountdown_10ms = 0;
@@ -120,11 +142,13 @@ void FM_TurnOff(void)
 
 void FM_EraseChannels(void)
 {
+#ifndef ENABLE_SURVIVAL   // survival keeps the stored list until the new scan is saved
     uint8_t      Template[8];
     memset(Template, 0xFF, sizeof(Template));
 
     for (unsigned i = 0; i < 5; i++)
         EEPROM_WriteBuffer(0x0E40 + (i * 8), Template);
+#endif
 
     memset(gFM_Channels, 0xFF, sizeof(gFM_Channels));
 }
@@ -163,8 +187,12 @@ void FM_PlayAndUpdate(void)
     gFM_ScanState = FM_SCAN_OFF;
 
     if (gFM_AutoScan) {
+#ifdef ENABLE_SURVIVAL
+        FM_FinishAutoScan();
+#else
         gEeprom.FM_IsMrMode        = true;
         gEeprom.FM_SelectedChannel = 0;
+#endif
     }
 
     FM_ConfigureChannelState();
@@ -601,7 +629,7 @@ void FM_Play(void)
         }
     }
 
-    if (gFM_AutoScan && gEeprom.FM_FrequencyPlaying >= BK1080_GetFreqHiLimit(1))
+    if (gFM_AutoScan && gEeprom.FM_FrequencyPlaying >= BK1080_GetFreqHiLimit(gEeprom.FM_Band))
         FM_PlayAndUpdate();
     else
         FM_Tune(gEeprom.FM_FrequencyPlaying, gFM_ScanState, false);

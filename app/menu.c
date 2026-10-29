@@ -491,6 +491,16 @@ void MENU_AcceptSetting(void)
             SURVIVAL_SaveTxMask();
             return;
         }
+
+        case MENU_SRV_C_START:
+            gSurvivalCustomStart = gSubMenuSelection;
+            SURVIVAL_SaveCustomRange();
+            return;
+
+        case MENU_SRV_C_END:
+            gSurvivalCustomEnd = gSubMenuSelection;
+            SURVIVAL_SaveCustomRange();
+            return;
 #endif
 
         case MENU_SQL:
@@ -1030,6 +1040,14 @@ void MENU_ShowCurrentSetting(void)
         case MENU_SRV_TX_PMR ... MENU_SRV_TX_CB:
             gSubMenuSelection = (gSurvivalTxMask >> (UI_MENU_GetCurrentMenuId() - MENU_SRV_TX_PMR)) & 1u;
             break;
+
+        case MENU_SRV_C_START:
+            gSubMenuSelection = gSurvivalCustomStart;
+            break;
+
+        case MENU_SRV_C_END:
+            gSubMenuSelection = gSurvivalCustomEnd;
+            break;
 #endif
 
         case MENU_SQL:
@@ -1535,7 +1553,7 @@ static void MENU_Key_0_to_9(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
         return;
     }
 
-    if (UI_MENU_GetCurrentMenuId() == MENU_OFFSET)
+    if (IS_FREQ_MENU(UI_MENU_GetCurrentMenuId()))
     {
         uint32_t Frequency;
 
@@ -1645,7 +1663,7 @@ static void MENU_Key_EXIT(bool bKeyPressed, bool bKeyHeld)
 
         if (gIsInSubMenu)
         {
-            if (gInputBoxIndex == 0 || UI_MENU_GetCurrentMenuId() != MENU_OFFSET)
+            if (gInputBoxIndex == 0 || !IS_FREQ_MENU(UI_MENU_GetCurrentMenuId()))
             {
                 gAskForConfirmation = 0;
                 gIsInSubMenu        = false;
@@ -1939,6 +1957,21 @@ static void MENU_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 
         return;
     }
+
+#ifdef ENABLE_SURVIVAL
+    if (UI_MENU_GetCurrentMenuId() == MENU_SRV_C_START || UI_MENU_GetCurrentMenuId() == MENU_SRV_C_END)
+    {
+        int32_t Frequency = (Direction * gTxVfo->StepFrequency) + gSubMenuSelection;
+        if (Frequency < (int32_t)BX4819_band1.lower)
+            Frequency = BX4819_band1.lower;
+        else if (Frequency > (int32_t)BX4819_band2.upper)
+            Frequency = BX4819_band2.upper;
+
+        gSubMenuSelection     = FREQUENCY_RoundToStep(Frequency, gTxVfo->StepFrequency);
+        gRequestDisplayScreen = DISPLAY_MENU;
+        return;
+    }
+#endif
 
     if (UI_MENU_GetCurrentMenuId() == MENU_OFFSET)
     {

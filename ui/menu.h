@@ -166,11 +166,19 @@ enum
     MENU_SRV_TX_MARINE,
     MENU_SRV_TX_HAM,
     MENU_SRV_TX_CB,
+    MENU_SRV_C_START,
+    MENU_SRV_C_END,
 #endif
 };
 
 extern const uint8_t FIRST_HIDDEN_MENU_ITEM;
 extern const t_menu_item MenuList[];
+
+#ifdef ENABLE_SURVIVAL
+    #define IS_FREQ_MENU(id) ((id) == MENU_OFFSET || (id) == MENU_SRV_C_START || (id) == MENU_SRV_C_END)
+#else
+    #define IS_FREQ_MENU(id) ((id) == MENU_OFFSET)
+#endif
 
 extern const char        gSubMenu_TXP[8][6];
 extern const char        gSubMenu_SFT_D[3][4];

@@ -17,6 +17,7 @@
 #include "app/survival.h"
 #include "driver/eeprom.h"
 #include "external/printf/printf.h"
+#include "frequencies.h"
 #include "misc.h"
 #include "radio.h"
 #include "settings.h"
@@ -24,13 +25,19 @@
 
 // EEPROM 0x1FF8: 'B' 'M' 'K' 'S', table version, TX mask, FF, FF
 #define SURV_MARKER_ADDR   0x1FF8
+// EEPROM 0x1FE8: CUSTOM scan range, start and end as uint32 (10 Hz units)
+#define SURV_RANGE_ADDR    0x1FE8
+#define SURV_RANGE_START   14400000   // 144.000 MHz
+#define SURV_RANGE_END     14600000   // 146.000 MHz
 // bump when the channel tables or defaults change, radios re-init on next boot
 #define SURV_TABLE_VERSION 2
 #define SURV_TX_DEFAULT    ((1u << SURV_TX_PMR) | (1u << SURV_TX_FRS))
 
 static const uint8_t SURV_MAGIC[4] = {'B', 'M', 'K', 'S'};
 
-uint8_t gSurvivalTxMask = SURV_TX_DEFAULT;
+uint8_t  gSurvivalTxMask      = SURV_TX_DEFAULT;
+uint32_t gSurvivalCustomStart = SURV_RANGE_START;
+uint32_t gSurvivalCustomEnd   = SURV_RANGE_END;
 
 const char gSubMenu_SRV_MODE[SURV_MODE_COUNT][9] = {
     "PMR446", "FRS", "MARINE", "AIR", "HAM", "CB", "FM RADIO", "CUSTOM",
@@ -239,13 +246,31 @@ void SURVIVAL_SaveTxMask(void)
     EEPROM_WriteBuffer(SURV_MARKER_ADDR, marker);
 }
 
+void SURVIVAL_SaveCustomRange(void)
+{
+    if (gSurvivalCustomStart > gSurvivalCustomEnd) {
+        const uint32_t tmp   = gSurvivalCustomStart;
+        gSurvivalCustomStart = gSurvivalCustomEnd;
+        gSurvivalCustomEnd   = tmp;
+    }
+
+    const uint32_t range[2] = {gSurvivalCustomStart, gSurvivalCustomEnd};
+    EEPROM_WriteBuffer(SURV_RANGE_ADDR, range);
+}
+
 void SURVIVAL_Init(void)
 {
     uint8_t marker[8];
 
     EEPROM_ReadBuffer(SURV_MARKER_ADDR, marker, sizeof(marker));
     if (memcmp(marker, SURV_MAGIC, sizeof(SURV_MAGIC)) == 0 && marker[4] == SURV_TABLE_VERSION) {
+        uint32_t range[2];
+        EEPROM_ReadBuffer(SURV_RANGE_ADDR, range, sizeof(range));
         gSurvivalTxMask = marker[5];
+        if (range[0] >= BX4819_band1.lower && range[0] < range[1] && range[1] <= BX4819_band2.upper) {
+            gSurvivalCustomStart = range[0];
+            gSurvivalCustomEnd   = range[1];
+        }
         return;
     }
 
@@ -253,6 +278,16 @@ void SURVIVAL_Init(void)
     WriteDefaults();
     gSurvivalTxMask = SURV_TX_DEFAULT;
     SURVIVAL_SaveTxMask();
+    SURVIVAL_SaveCustomRange();
+}
+
+void SURVIVAL_ApplyScanRange(void)
+{
+    // CUSTOM mode (VFO) scans the user range with the VFO step
+    if (!IS_MR_CHANNEL(gRxVfo->CHANNEL_SAVE)) {
+        gScanRangeStart = gSurvivalCustomStart;
+        gScanRangeStop  = gSurvivalCustomEnd;
+    }
 }
 
 bool SURVIVAL_TxAllowed(uint32_t frequency)

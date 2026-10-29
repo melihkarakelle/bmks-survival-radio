@@ -42,6 +42,10 @@ static void NextMemChannel(void);
 
 void CHFRSCANNER_Start(const bool storeBackupSettings, const int8_t scan_direction)
 {
+#ifdef ENABLE_SURVIVAL
+    SURVIVAL_ApplyScanRange();
+#endif
+
     if (storeBackupSettings) {
         initialCROSS_BAND_RX_TX = gEeprom.CROSS_BAND_RX_TX;
         gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;
