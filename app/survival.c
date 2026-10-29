@@ -251,6 +251,7 @@ static void WriteDefaults(void)
     gEeprom.KEY_2_LONG_PRESS_ACTION  = ACTION_OPT_SCAN;
     gEeprom.SCAN_RESUME_MODE         = 0;   // STOP: stay on the channel with activity
     gEeprom.SCAN_LIST_DEFAULT        = 5;   // all channels, the group limits the scan
+    gEeprom.SQUELCH_LEVEL            = 3;   // 1 opens on noise and stops every scan
     gEeprom.POWER_ON_DISPLAY_MODE    = POWER_ON_DISPLAY_MODE_ALL;
     gEeprom.CHANNEL_DISPLAY_MODE     = MDF_NAME_FREQ;
     gEeprom.DUAL_WATCH               = DUAL_WATCH_OFF;
@@ -447,6 +448,9 @@ void SURVIVAL_FmBgFound(void)
 #ifdef ENABLE_FMRADIO
     FM_TurnOff();
 #endif
+    // the switch to the main screen ends the scan, keep the found channel
+    gEeprom.MrChannel[gEeprom.RX_VFO] = gRxVfo->CHANNEL_SAVE;
+    gRequestSaveVFO       = true;
     gRequestDisplayScreen = DISPLAY_MAIN;
 }
 
