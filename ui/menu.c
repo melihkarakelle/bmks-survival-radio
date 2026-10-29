@@ -81,6 +81,7 @@ const t_menu_item MenuList[] =
     {"BatTxt",      MENU_BAT_TXT       },
     {"Mic",         MENU_MIC           },
     {"BLTime",      MENU_ABR           },
+    {"Contr",       MENU_SET_CTR       },
     {"Beep",        MENU_BEEP          },
     {"SysInf",      MENU_VOL           },
     {"Reset",       MENU_RESET         },

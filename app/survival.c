@@ -30,7 +30,7 @@
 #define SURV_RANGE_START   14400000   // 144.000 MHz
 #define SURV_RANGE_END     14600000   // 146.000 MHz
 // bump when the channel tables or defaults change, radios re-init on next boot
-#define SURV_TABLE_VERSION 3
+#define SURV_TABLE_VERSION 4
 #define SURV_TX_DEFAULT    ((1u << SURV_TX_PMR) | (1u << SURV_TX_FRS))
 
 static const uint8_t SURV_MAGIC[4] = {'B', 'M', 'K', 'S'};
@@ -58,10 +58,9 @@ static const TxBand_t TX_BANDS[] = {
     {46255000, 46272500, SURV_TX_FRS},
     {46755000, 46772500, SURV_TX_FRS},
     {15600000, 16202500, SURV_TX_MARINE},
-    {14400000, 14600000, SURV_TX_HAM},
-    {43000000, 44000000, SURV_TX_HAM},
-    { 2696500,  2740500, SURV_TX_CB},   // CEPT
-    { 2760125,  2799125, SURV_TX_CB},   // UK 27/81
+    {14400000, 14800000, SURV_TX_HAM},  // 2 m, widest (region 2/3)
+    {42000000, 45000000, SURV_TX_HAM},  // 70 cm, widest (region 2)
+    { 2656500,  2799125, SURV_TX_CB},   // 40 ch CEPT/FCC plus national CB plans
 };
 
 // never transmit here, not even with TxAll
@@ -90,36 +89,38 @@ static const uint32_t FRS_FREQS[] = {
 
 // distress/calling first, then the common simplex ship channels, then the
 // duplex channels on the coast station frequency (coastguard MSI, ports, VTS);
-// duplex channels transmit 4.6 MHz lower on the ship frequency
+// duplex channels transmit 4.6 MHz lower on the ship frequency.
+// 201..207 = NOAA weather WX1..WX7 (US/Canada, receive only)
 static const uint8_t MARINE_NUMS[] = {
-    16, 6, 67, 8, 9, 10, 11, 12, 13, 14, 15, 17, 68, 69, 71, 72, 73, 74, 77, 201, 202,
+    16, 6, 67, 8, 9, 10, 11, 12, 13, 14, 15, 17, 68, 69, 71, 72, 73, 74, 77,
      1,  2,  3,  4,  5,  7, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
     60, 61, 62, 63, 64, 65, 66, 78, 79, 80, 81, 82, 83, 84, 85, 86,
+    201, 202, 203, 204, 205, 206, 207,
 };
 static const uint32_t MARINE_FREQS[] = {
     15680000, 15630000, 15637500, 15640000, 15645000, 15650000, 15655000,
     15660000, 15665000, 15670000, 15675000, 15685000, 15642500, 15647500,
-    15657500, 15662500, 15667500, 15672500, 15687500, 15785000, 16142500,
+    15657500, 15662500, 15667500, 15672500, 15687500,
     16065000, 16070000, 16075000, 16080000, 16085000, 16095000, 16150000,
     16155000, 16160000, 16165000, 16170000, 16175000, 16180000, 16185000,
     16190000, 16195000, 16200000, 16062500, 16067500, 16072500, 16077500,
     16082500, 16087500, 16092500, 16152500, 16157500, 16162500, 16167500,
     16172500, 16177500, 16182500, 16187500, 16192500,
+    16255000, 16240000, 16247500, 16242500, 16245000, 16250000, 16252500,
 };
 #define MARINE_DUPLEX_OFFSET 460000   // 4.6 MHz
 
-// UK VOLMET: continuous airport weather broadcasts
+// worldwide frequencies only, local tower/ATIS/VOLMET go in CUSTOM
 static const uint32_t AIR_FREQS[] = {
-    12150000, 24300000, 12310000, 12345000, 12280000, 12997500,
-    13537500, 12860000, 12660000, 12572500,
+    12150000, 24300000, 12310000, 12345000, 12280000,
 };
-static const char AIR_NAMES[] = "GUARD\0MIL GUARD\0SAR\0AIR2AIR\0UNICOM\0GLIDING\0"
-                                "VOLMET MN\0VOLMET S\0VOLMET N\0VOLMET SC";
+static const char AIR_NAMES[] = "GUARD\0MIL GUARD\0SAR\0AIR2AIR\0UNICOM";
 
+// FM calling channels for ITU region 1 (Europe/Africa/Middle East) and 2 (Americas)
 static const uint32_t HAM_FREQS[] = {
-    14550000, 43350000, 14580000,
+    14550000, 14652000, 43350000, 44600000, 14580000,
 };
-static const char HAM_NAMES[] = "2M CALL\0" "70CM CALL\0ISS";
+static const char HAM_NAMES[] = "2M CALL EU\0" "2M CALL US\0" "70 CALL EU\0" "70 CALL US\0ISS";
 
 // CEPT 40 channel plan, channel 9 = emergency
 static const uint32_t CB_FREQS[] = {
@@ -205,7 +206,7 @@ static void ChannelName(const SurvivalGroup_t *grp, uint8_t i, char *name)
 
     const uint8_t num = grp->nums ? grp->nums[i] : i + 1;
     if (num > 200)
-        sprintf(name, "%sM%u", grp->prefix, num - 200);
+        sprintf(name, "%sWX%u", grp->prefix, num - 200);
     else
         sprintf(name, "%s%u", grp->prefix, num);
 }
@@ -250,6 +251,9 @@ static void WriteDefaults(void)
     gEeprom.CHANNEL_DISPLAY_MODE     = MDF_NAME_FREQ;
     gEeprom.DUAL_WATCH               = DUAL_WATCH_OFF;
     gEeprom.CROSS_BAND_RX_TX         = CROSS_BAND_OFF;
+    gSetting_set_inv                 = false;   // normal (not negative) display
+    gSetting_set_ctr                 = 10;      // F4HWN default contrast, blank EEPROM reads as 15
+    gSetting_set_lck                 = false;   // key lock locks keys only, not PTT
 
     gEeprom.TX_VFO = 0;
     for (uint8_t vfo = 0; vfo < 2; vfo++) {
@@ -324,9 +328,11 @@ bool SURVIVAL_TxAllowed(uint32_t frequency)
         return true;
     }
 
+    // bands may overlap (70 cm contains PMR446), any permitted band is enough
     for (uint8_t i = 0; i < ARRAY_SIZE(TX_BANDS); i++) {
-        if (frequency >= TX_BANDS[i].lower && frequency <= TX_BANDS[i].upper)
-            return (gSurvivalTxMask >> TX_BANDS[i].bit) & 1u;
+        if (frequency >= TX_BANDS[i].lower && frequency <= TX_BANDS[i].upper &&
+            ((gSurvivalTxMask >> TX_BANDS[i].bit) & 1u))
+            return true;
     }
     return false;
 }
