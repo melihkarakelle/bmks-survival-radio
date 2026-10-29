@@ -1425,7 +1425,7 @@ void APP_TimeSlice10ms(void)
         return;
 #endif
 
-#if !defined(ENABLE_FEAT_F4HWN) || defined(ENABLE_FEAT_F4HWN_RESCUE_OPS)
+#if !defined(ENABLE_FEAT_F4HWN) || defined(ENABLE_FEAT_F4HWN_RESCUE_OPS) || defined(ENABLE_SURVIVAL)   // survival: on, strobe, SOS
     #ifdef ENABLE_FLASHLIGHT
         FlashlightTimeSlice();
     #endif

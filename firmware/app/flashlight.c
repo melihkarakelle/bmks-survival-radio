@@ -5,7 +5,7 @@
 
 #include "flashlight.h"
 
-#if !defined(ENABLE_FEAT_F4HWN) || defined(ENABLE_FEAT_F4HWN_RESCUE_OPS)
+#if !defined(ENABLE_FEAT_F4HWN) || defined(ENABLE_FEAT_F4HWN_RESCUE_OPS) || defined(ENABLE_SURVIVAL)   // survival: on, strobe, SOS
     enum FlashlightMode_t  gFlashLightState;
 
     void FlashlightTimeSlice()

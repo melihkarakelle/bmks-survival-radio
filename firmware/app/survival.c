@@ -37,7 +37,7 @@
 // bump when the channel tables or defaults change, radios re-init on next boot
 #define SURV_TABLE_VERSION 6
 // bump for setting changes that existing radios get without a re-init (byte 7)
-#define SURV_SETTINGS_REV  2
+#define SURV_SETTINGS_REV  3
 #define SURV_TX_DEFAULT    ((1u << SURV_TX_PMR) | (1u << SURV_TX_FRS))
 
 static const uint8_t SURV_MAGIC[4] = {'B', 'M', 'K', 'S'};
@@ -298,8 +298,8 @@ static void FmDefaults(void)
 
 static void WriteDefaults(void)
 {
-    gEeprom.KEY_1_SHORT_PRESS_ACTION = ACTION_OPT_MONITOR;
-    gEeprom.KEY_1_LONG_PRESS_ACTION  = ACTION_OPT_FLASHLIGHT;
+    gEeprom.KEY_1_SHORT_PRESS_ACTION = ACTION_OPT_FLASHLIGHT;   // light, blink, SOS, off
+    gEeprom.KEY_1_LONG_PRESS_ACTION  = ACTION_OPT_MONITOR;      // hold: monitor on / off
     gEeprom.KEY_2_SHORT_PRESS_ACTION = ACTION_OPT_FM;      // FM radio on/off, M switches modes
     gEeprom.KEY_2_LONG_PRESS_ACTION  = ACTION_OPT_SCAN;
     gEeprom.SCAN_RESUME_MODE         = 0;   // STOP: stay on the channel with activity
@@ -373,6 +373,9 @@ void SURVIVAL_Init(void)
         if (marker[7] != SURV_SETTINGS_REV) {
             // rev 1: side key 2 short press toggles the FM radio
             gEeprom.KEY_2_SHORT_PRESS_ACTION = ACTION_OPT_FM;
+            // rev 3: side key 1 tap = flashlight modes, hold = monitor
+            gEeprom.KEY_1_SHORT_PRESS_ACTION = ACTION_OPT_FLASHLIGHT;
+            gEeprom.KEY_1_LONG_PRESS_ACTION  = ACTION_OPT_MONITOR;
             SETTINGS_SaveSettings();
             // rev 2: FM band back to 87.5-108 MHz after a reset left band 3
             if (gEeprom.FM_Band == 3)
@@ -784,7 +787,7 @@ void SURVIVAL_ShowHelp(void)
 {
     sHelpPage          = 0;
     gWasFKeyPressed    = true;
-    gKeyInputCountdown = key_input_timeout_500ms;
+    gKeyInputCountdown = SURV_HELP_TIMEOUT_500MS;
     gUpdateStatus      = true;
     gUpdateDisplay     = true;
 }
@@ -792,7 +795,7 @@ void SURVIVAL_ShowHelp(void)
 static void HelpTurn(int8_t direction)
 {
     sHelpPage          = (sHelpPage + 3 + direction) % 3;
-    gKeyInputCountdown = key_input_timeout_500ms;   // keep the page up a little longer
+    gKeyInputCountdown = SURV_HELP_TIMEOUT_500MS;   // keep the page up a little longer
     gUpdateDisplay     = true;
 }
 

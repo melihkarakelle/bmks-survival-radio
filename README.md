@@ -453,3 +453,11 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 - BASIC menüye `Help` (Adv'den önce): aynı sayfaları açar.
 - F + 1/2/3/6/8/9 (F4HWN VFO A/B, VFO/MR, güç, ters, çağrı kanalı) Survival'da kapalı; yardım açık kalır.
   FM'de F+1 (FM bandı değiştir) kapalı: bant 87.5–108 MHz'de kalır.
+
+### v4.8/v4.9 (2026-10-29): yardım süresi, fener modları, yan tuş 1
+
+- Yardım sayfaları 32 sn açık kalır (F öneki için 8 sn yerine); sayfa çevirince süre baştan başlar.
+- Fener: F4HWN'de yalnızca aç/kapat vardı (BLINK/SOS kodu sadece RESCUE_OPS'ta); Survival'da açıldı.
+- Yan tuş 1: tap = fener açık → yanıp sönme → SOS → kapalı; hold = monitor aç/kapat.
+  Ayar revizyonu 3: mevcut telsizlerde yan tuş 1 ataması açılışta bu düzene çevrilir.
+- Yardım 3/3: SIDE1 LIGHT, AGAIN: BLINK, SOS, HOLD SIDE1 MONITOR, SIDE2 FM RADIO, HOLD SIDE2 SCAN.

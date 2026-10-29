@@ -25,6 +25,9 @@
 #endif
 
 #include "app/generic.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "app/menu.h"
 #include "app/scanner.h"
 #include "audio.h"
@@ -70,7 +73,11 @@ void GENERIC_Key_F(bool bKeyPressed, bool bKeyHeld)
 #endif
 
             if (gWasFKeyPressed)
+#ifdef ENABLE_SURVIVAL
+                gKeyInputCountdown = SURV_HELP_TIMEOUT_500MS;   // the F prefix shows the key help
+#else
                 gKeyInputCountdown = key_input_timeout_500ms;
+#endif
 
 #ifdef ENABLE_VOICE
             if (!gWasFKeyPressed)
