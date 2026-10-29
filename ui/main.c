@@ -819,6 +819,11 @@ void UI_DisplayMain(void)
                 sprintf(String, "M%u", gEeprom.ScreenChannel[vfo_num] + 1);
             else
                 sprintf(String, "M%.3s", INPUTBOX_GetAscii());  // show the input text
+#ifdef ENABLE_SURVIVAL
+            if (!inputting && SURVIVAL_IsFavChannel(gEeprom.ScreenChannel[vfo_num]))
+                UI_PrintStringSmallBold(String, x, 0, line + 1);
+            else
+#endif
             UI_PrintStringSmallNormal(String, x, 0, line + 1);
         }
         else if (IS_FREQ_CHANNEL(gEeprom.ScreenChannel[vfo_num]))
