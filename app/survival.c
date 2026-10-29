@@ -402,15 +402,16 @@ static void SelectModeChannel(uint8_t mode, uint8_t vfo)
     gEeprom.ScreenChannel[vfo] = ch;
 }
 
-// while a VFO range is scanned the screen is redrawn every few steps only,
-// so the kHz digits would lag: show "123.-----" until the scan stops on a signal
+// while a VFO range is scanned the screen is redrawn every few steps only, so
+// the 10 kHz and smaller digits would lag: show "123.4----" (the 100 kHz digit
+// still moves) until the scan stops on a signal
 void SURVIVAL_MaskScanDigits(char *freq)
 {
     if (gScanStateDir == SCAN_OFF || FUNCTION_IsRx())
         return;
     char *p = strchr(freq, '.');
-    if (p)
-        while (*++p)
+    if (p && p[1])
+        for (p += 2; *p; p++)
             *p = '-';
 }
 
