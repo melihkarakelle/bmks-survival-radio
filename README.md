@@ -8,12 +8,15 @@ Based on [F4HWN](https://github.com/armel/uv-k5-firmware-custom) (fork of
 [egzumer](https://github.com/egzumer/uv-k5-firmware-custom) / [DualTachyon](https://github.com/DualTachyon/uv-k5-firmware)).
 
 <p align="center">
-  <img src="docs/screens/boot_logo.png" width="384" alt="Boot logo">
-  <img src="docs/screens/main_pmr.png" width="384" alt="Main screen">
+  <img src="docs/photos/radio_logo.jpg" width="240" alt="BMKs Survival Radio boot logo on a UV-K5">
+  <img src="docs/photos/radio_boot_prompt.jpg" width="240" alt="PRESS M FOR MANUAL after the logo">
+  <img src="docs/photos/radio_help_f.jpg" width="240" alt="F key shortcut help">
 </p>
-
-> **Real screenshots.** Every image here was captured from the radio's own LCD over the programming
-> cable (`tools/k5screen.py`), not drawn.
+<p align="center">
+  <img src="docs/photos/radio_manual_index.jpg" width="240" alt="Manual index with the survival notes">
+  <img src="docs/photos/radio_manual_first_aid.jpg" width="240" alt="First aid page of the built-in manual">
+  <img src="docs/screens/main_pmr.png" width="384" alt="Main screen, LCD capture">
+</p>
 
 ## What it does
 
@@ -34,6 +37,9 @@ Based on [F4HWN](https://github.com/armel/uv-k5-firmware-custom) (fork of
 - **Readable UI:** one meaning per row, big frequency digits, plain-language menu, help on the `F` key.
 
 ## Screens
+
+Every image below was captured from the radio's own LCD over the programming cable
+(`tools/k5screen.py`), not drawn. The photos above are the same firmware on the radio.
 
 | | |
 |:---:|:---:|
