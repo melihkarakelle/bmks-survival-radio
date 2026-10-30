@@ -778,7 +778,6 @@ enum { MAN_OFF, MAN_LANDING, MAN_INDEX, MAN_TOPIC };
 static uint8_t sManual;        // MAN_*, shown in the heard list slot
 static uint8_t sManTopic;      // index cursor / open topic
 static uint8_t sManScroll;     // first row on screen
-static uint8_t sManTimer;      // half seconds left on the landing page
 
 
 // short feedback for keys that otherwise only beep, back to main after 1.5 s
@@ -802,11 +801,6 @@ void SURVIVAL_TimeSlice500ms(void)
     if (sMsgTimer && --sMsgTimer == 0 && gScreenToDisplay == DISPLAY_SCANNER)
         GUI_SelectNextDisplay(DISPLAY_MAIN);
 
-    if (sManual == MAN_LANDING && gScreenToDisplay == DISPLAY_SCANNER && --sManTimer == 0) {
-        sManual        = MAN_INDEX;
-        gUpdateDisplay = true;
-        gUpdateStatus  = true;
-    }
 }
 
 void SURVIVAL_LogHeard(void)
@@ -946,8 +940,7 @@ const char *SURVIVAL_ManualRows(uint8_t n)
 void SURVIVAL_ShowManual(void)
 {
     SURVIVAL_ShowLog();
-    sManual       = MAN_LANDING;
-    sManTimer     = 6;   // 3 s, any key goes on sooner
+    sManual       = MAN_LANDING;   // stays until a key is pressed
     gUpdateStatus = true;
 }
 
@@ -1014,7 +1007,8 @@ static void DisplayManual(void)
 
     if (sManual == MAN_LANDING) {
         static const char LANDING[] = "UP/DN>Choose topic\0" "M>Open topic\0" "UP/DN>Read on\0"
-                                      "M>Next topic\0" "EXIT>Back to list\0" "F>Close manual\0";
+                                      "M>Next topic\0" "EXIT>Back to list\0" "F>Close manual\0"
+                                      "Any key>Topic list\0";
         const char *p = LANDING;
         for (uint8_t row = 0; *p; row++, p = NextString(p))
             UI_PrintStringSmallNormal(p, 0, 0, row);
