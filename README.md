@@ -533,3 +533,8 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 - FM frekansı büyük rakamlarla ortada, yanında taban çizgisinde küçük `MHz` (genişlik: rakam 13 px, nokta 3 px).
 - Altındaki durum satırı (SAVED nn / TUNE / SEEK / FIND ALL / kaydet-sil sorusu) ortalı (v6.4).
 - Ekran kaydı: `design/screens/ui_v63_sheet.png`.
+
+### v6.5 (2026-10-30): FM ekranı alt bölümü
+
+- SAVED / TUNE satırı 1 px aşağıda; R3 ortasında ekran boyunca çizgi (üstü FM radyo, altı telsiz alıcısı).
+- WATCH / SCAN satırı ters renk değil, kalın ve ortalı; altındaki frekans da ortalı. Ekran kaydı `design/screens/ui_v65_sheet.png`.

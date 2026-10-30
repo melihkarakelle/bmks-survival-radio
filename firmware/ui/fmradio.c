@@ -36,7 +36,7 @@
 #ifdef ENABLE_SURVIVAL
 // UI v2 FM screen (design/ui_v2/UI_DESIGN.md):
 //   (title FM RADIO in the status line) R0-R1 frequency in big digits, R2 what the FM receiver does,
-//   R4 inverted: what the radio receiver does in the background, R5 its frequency,
+//   R3 a line, R4: what the radio receiver does in the background, R5 its frequency,
 //   R6 the keys that matter now
 void UI_DisplayFM(void)
 {
@@ -83,8 +83,12 @@ void UI_DisplayFM(void)
             BK1080_GetFreqHiLimit(gEeprom.FM_Band) / 10);
     }
     UI_PrintStringSmallNormal(String, 0, 127, 2);   // centred under the frequency
+    for (uint8_t i = 0; i < 128; i++) {
+        gFrameBuffer[2][i] <<= 1;     // 1 px lower, away from the digits
+        gFrameBuffer[3][i] = 0x08;    // full width line: FM above, the radio receiver below
+    }
 
-    // R4 (inverted) + R5: the radio receiver, refreshed on every scan step
+    // R4 + R5: the radio receiver, refreshed on every scan step
     const uint8_t channel = gRxVfo->CHANNEL_SAVE;
     if (IS_MR_CHANNEL(channel))
         SETTINGS_FetchChannelName(Name, channel);
@@ -92,16 +96,14 @@ void UI_DisplayFM(void)
         strcpy(Name, SURVIVAL_VfoLabel(channel));
     Name[12] = 0;
     sprintf(String, "%s %s", SURVIVAL_FmBgScanning() ? "SCAN" : "WATCH", Name);
-    UI_PrintStringSmallBold(String, 0, 0, 4);
-    for (uint8_t i = 0; i < 128; i++)
-        gFrameBuffer[4][i] ^= 0xFF;
+    UI_PrintStringSmallBold(String, 0, 127, 4);
 
     const uint32_t f = gRxVfo->freq_config_RX.Frequency;
     sprintf(String, "%u.%05u", f / 100000, f % 100000);
     if (!IS_MR_CHANNEL(channel))
         SURVIVAL_MaskScanDigits(String);
     strcat(String, " MHz");
-    UI_PrintStringSmallNormal(String, 0, 0, 5);
+    UI_PrintStringSmallNormal(String, 0, 127, 5);
 
     // R6: keys
     UI_PrintStringSmallNormal(
