@@ -711,7 +711,12 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
     if (bKeyHeld) { // menu key held down (long press)
         if (bKeyPressed) { // long press MENU key
 
-            #ifdef ENABLE_FEAT_F4HWN
+            #if defined(ENABLE_FEAT_F4HWN) && defined(ENABLE_SURVIVAL)
+            // survival: hold M opens the menu while scanning too, the scan stops where it is
+            // (F+8 puts a noisy channel on the skip list instead of F4HWN's RAM-only exclusion)
+            if(gScanStateDir != SCAN_OFF)
+                CHFRSCANNER_StopHere();
+            #elif defined(ENABLE_FEAT_F4HWN)
             // Exclude work with list 1, 2, 3 or all list
             if(gScanStateDir != SCAN_OFF)
             {

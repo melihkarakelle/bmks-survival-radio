@@ -485,3 +485,8 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 - Menü BASIC > Skip: liste (`SKIP n/16  M:DEL`), UP/DOWN seç, M sil (onaysız), EXIT çık.
 - Ana ekran: boştayken atlanan frekansta R0'da SKIP. Yardım 1/3: `5>Prio  7>Favorite`, `8>Skip in scan`.
 - Not: tarama sırasında M basılı tutmak hâlâ F4HWN'in RAM'de kalan kanal hariç tutmasını yapıyor (menü açmıyor).
+
+### v5.4 (2026-10-30): M basılı tut taramada da menü
+
+- Tarama sırasında M hold: tarama olduğu yerde durur, menü açılır (BASIC / Group).
+  F4HWN'in RAM'de kalan "M hold = kanalı taramadan çıkar" özelliği Survival'da kapalı; kalıcı yol F+8 (skip).
