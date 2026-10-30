@@ -16,6 +16,7 @@
     #include "app/fm.h"
 #endif
 #include "app/survival.h"
+#include "driver/backlight.h"
 #include "driver/eeprom.h"
 #include "external/printf/printf.h"
 #include "frequencies.h"
@@ -1308,7 +1309,7 @@ void SURVIVAL_DisplayLog(void)
 
 bool SURVIVAL_EcoOn(void)
 {
-    return gEeprom.BATTERY_SAVE == 5 && gEeprom.BACKLIGHT_TIME == 2 && gEeprom.BACKLIGHT_MAX == 5;
+    return gEeprom.BATTERY_SAVE == 5 && gEeprom.BACKLIGHT_TIME == 2 && gEeprom.BACKLIGHT_MAX == BACKLIGHT_ECO_LEVEL;
 }
 
 // eco: deepest receive duty cycle, 10 s backlight at half brightness
@@ -1316,7 +1317,7 @@ void SURVIVAL_SetEco(bool on)
 {
     gEeprom.BATTERY_SAVE   = on ? 5 : 4;
     gEeprom.BACKLIGHT_TIME = on ? 2 : 12;   // x 5 s
-    gEeprom.BACKLIGHT_MAX  = on ? 5 : 10;
+    gEeprom.BACKLIGHT_MAX  = on ? BACKLIGHT_ECO_LEVEL : 10;
     if (gEeprom.BACKLIGHT_MIN >= gEeprom.BACKLIGHT_MAX)
         gEeprom.BACKLIGHT_MIN = 0;
     gRequestSaveSettings = true;

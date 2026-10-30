@@ -522,3 +522,8 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
   tarama listesi kodu ve F4HWN F+1/2/3/9/F+yan tuş işlevleri derleme dışı. Boş flash 492 → 1340 bayt.
 - v6.1: geri sayım rakamı büyük yazıyla ortada.
 - Ekran ışığı: Eco kapalı 60 sn (varsayılan), Eco açık 10 sn; ADV > Light ile 5 sn adımlarla ayarlanır.
+
+### v6.2 (2026-10-30): uzun ışık 10 sn sonra kısılır
+
+- Işık süresi 10 sn'den uzunsa (hep açık dahil) ilk 10 sn tam parlaklık, sonra kapanana kadar Eco seviyesi (5/10);
+  Eco kapalıyken de. Her tuş / çağrı 10 sn'yi yeniden başlatır. `BACKLIGHT_DimTimeSlice500ms` (driver/backlight.c).

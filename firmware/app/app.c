@@ -1548,6 +1548,7 @@ void APP_TimeSlice500ms(void)
 {
 #ifdef ENABLE_SURVIVAL
     SURVIVAL_TimeSlice500ms();
+    BACKLIGHT_DimTimeSlice500ms();
 #endif
     gNextTimeslice_500ms = false;
     bool exit_menu = false;

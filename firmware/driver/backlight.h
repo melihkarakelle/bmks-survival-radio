@@ -43,6 +43,10 @@ void BACKLIGHT_InitHardware();
 void BACKLIGHT_TurnOn();
 void BACKLIGHT_TurnOff();
 bool BACKLIGHT_IsOn();
+#ifdef ENABLE_SURVIVAL
+#define BACKLIGHT_ECO_LEVEL 5          // Eco brightness, also where a long light dims to after 10 s
+void BACKLIGHT_DimTimeSlice500ms(void);
+#endif
 void BACKLIGHT_SetBrightness(uint8_t brigtness);
 uint8_t BACKLIGHT_GetBrightness(void);
 

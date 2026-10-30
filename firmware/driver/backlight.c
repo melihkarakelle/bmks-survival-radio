@@ -78,6 +78,18 @@ static void BACKLIGHT_Sound(void)
 }
 
 
+#ifdef ENABLE_SURVIVAL
+// full brightness for the first 10 s after a key or a call, then the Eco level until the light goes off
+static uint8_t sDimCountdown_500ms;
+
+void BACKLIGHT_DimTimeSlice500ms(void)
+{
+    if (sDimCountdown_500ms && --sDimCountdown_500ms == 0 && BACKLIGHT_IsOn() &&
+        gEeprom.BACKLIGHT_MAX > BACKLIGHT_ECO_LEVEL)
+        BACKLIGHT_SetBrightness(BACKLIGHT_ECO_LEVEL);
+}
+#endif
+
 void BACKLIGHT_TurnOn(void)
 {
     #ifdef ENABLE_FEAT_F4HWN_SLEEP
@@ -121,6 +133,10 @@ void BACKLIGHT_TurnOn(void)
     }
 #else
     BACKLIGHT_SetBrightness(gEeprom.BACKLIGHT_MAX);
+#endif
+
+#ifdef ENABLE_SURVIVAL
+    sDimCountdown_500ms = (gEeprom.BACKLIGHT_TIME > 2) ? 20 : 0;   // light time over 10 s: dim after 10 s
 #endif
 
     switch (gEeprom.BACKLIGHT_TIME) {
