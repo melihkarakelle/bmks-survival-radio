@@ -17,3 +17,6 @@ design/screens/seq/
 # Codex session logs (the results are kept as .md / .png)
 design/codex/*.log
 design/ui_v2/*.log
+
+# EEPROM dumps of the owner's radio (calibration, channels): never publish
+backups/
