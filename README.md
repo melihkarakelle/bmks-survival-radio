@@ -527,3 +527,9 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 
 - Işık süresi 10 sn'den uzunsa (hep açık dahil) ilk 10 sn tam parlaklık, sonra kapanana kadar Eco seviyesi (5/10);
   Eco kapalıyken de. Her tuş / çağrı 10 sn'yi yeniden başlatır. `BACKLIGHT_DimTimeSlice500ms` (driver/backlight.c).
+
+### v6.3/v6.4 (2026-10-30): FM ekranı ortalandı
+
+- FM frekansı büyük rakamlarla ortada, yanında taban çizgisinde küçük `MHz` (genişlik: rakam 13 px, nokta 3 px).
+- Altındaki durum satırı (SAVED nn / TUNE / SEEK / FIND ALL / kaydet-sil sorusu) ortalı (v6.4).
+- Ekran kaydı: `design/screens/ui_v63_sheet.png`.

@@ -53,9 +53,16 @@ void UI_DisplayFM(void)
         const char *ascii = INPUTBOX_GetAscii();
         sprintf(String, "%.3s.%.1s", ascii, ascii + 3);
     } else {
-        sprintf(String, "%3d.%d", gEeprom.FM_FrequencyPlaying / 10, gEeprom.FM_FrequencyPlaying % 10);
+        sprintf(String, "%d.%d", gEeprom.FM_FrequencyPlaying / 10, gEeprom.FM_FrequencyPlaying % 10);
     }
-    UI_DisplayFrequency(String, 0, 0, false);
+    {   // centred big digits (13 px, the point 3 px) and a small MHz on their baseline
+        uint8_t width = 4 + 3 * 7;
+        for (const char *c = String; *c; c++)
+            width += (*c == '.') ? 3 : 13;
+        const uint8_t x = (128 - width) / 2;
+        UI_DisplayFrequency(String, x, 0, false);
+        UI_PrintStringSmallNormal("MHz", x + width - 3 * 7 - 1, 0, 1);
+    }
 
     // R2: saved / tune / seek / find, or the save / delete question
     if (gAskToSave) {
@@ -75,7 +82,7 @@ void UI_DisplayFM(void)
             gEeprom.FM_Band == 0 ? ".5" : "",
             BK1080_GetFreqHiLimit(gEeprom.FM_Band) / 10);
     }
-    UI_PrintStringSmallNormal(String, 0, 0, 2);
+    UI_PrintStringSmallNormal(String, 0, 127, 2);   // centred under the frequency
 
     // R4 (inverted) + R5: the radio receiver, refreshed on every scan step
     const uint8_t channel = gRxVfo->CHANNEL_SAVE;
