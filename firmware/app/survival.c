@@ -562,10 +562,18 @@ void SURVIVAL_SetMode(uint8_t mode)
 #endif
 
     if (mode == SURV_MODE_CUSTOM) {
-        // free frequency (VFO); the air band slot belongs to AIR
-        if (gEeprom.FreqChannel[vfo] == AIR_VFO_CHANNEL)
-            gEeprom.FreqChannel[vfo] = FREQ_CHANNEL_FIRST + BAND6_400MHz;
-        gEeprom.ScreenChannel[vfo] = gEeprom.FreqChannel[vfo];
+        // free frequency on the band VFO of the range start; a frequency outside the
+        // range (an unused band slot can hold anything, e.g. 1300 MHz) starts at its beginning
+        const uint8_t slot = FREQ_CHANNEL_FIRST + FREQUENCY_GetBand(gSurvivalCustomStart);
+        gEeprom.FreqChannel[vfo]   = slot;
+        gEeprom.ScreenChannel[vfo] = slot;
+        RADIO_ConfigureChannel(vfo, VFO_CONFIGURE_RELOAD);
+        VFO_Info_t *v = &gEeprom.VfoInfo[vfo];
+        if (v->freq_config_RX.Frequency < gSurvivalCustomStart || v->freq_config_RX.Frequency > gSurvivalCustomEnd) {
+            v->freq_config_RX.Frequency = gSurvivalCustomStart;
+            v->freq_config_TX.Frequency = gSurvivalCustomStart;
+            SETTINGS_SaveChannel(slot, vfo, v, 2);   // saved now: the reload below reads it back
+        }
     } else if (!SelectModeChannel(mode, vfo)) {
         gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;   // FAV empty: on to the first group
         SelectModeChannel(SURV_MODE_PMR, vfo);

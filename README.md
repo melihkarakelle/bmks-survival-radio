@@ -119,7 +119,7 @@ The firmware lives in [`firmware/`](firmware/) (F4HWN v4.3 tree plus the surviva
 `app/survival.c`, `ui/survival.c` and the `ENABLE_SURVIVAL` sections). Build with Docker:
 
 ```
-EDITION=survival SURVIVAL_VERSION=v6.8 tools/build-f4hwn.sh "$PWD/firmware"
+EDITION=survival SURVIVAL_VERSION=v6.9 tools/build-f4hwn.sh "$PWD/firmware"
 ```
 
 Output: `builds/bmks.survival.bin` and `.packed.bin`. The manual text is

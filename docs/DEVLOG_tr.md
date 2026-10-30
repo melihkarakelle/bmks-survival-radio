@@ -549,3 +549,9 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 - FM seek / find-all (`gFM_ScanState != FM_SCAN_OFF`) sürerken BK4819 arka plan taraması kanal değiştirmez
   (`CHFRSCANNER_ContinueScanning` 100 ms'de bir yeniden dener). BK4819'un atlamaları BK1080'de istasyon gibi
   görünüyor, gürültü FM listesine kaydediliyordu. Bulunduğu kanalda gelen gerçek çağrı yine duyulur.
+
+### v6.9 (2026-10-30): CUSTOM aralığın başında açılır
+
+- CUSTOM'a geçince aralık başlangıcının bandına ait VFO slotu seçilir; kayıtlı frekans CStart–CEnd dışındaysa
+  (kullanılmamış slot 1300 / 840 MHz gibi rastgele değer tutabiliyordu) frekans aralığın başına alınır ve kaydedilir.
+- Yayın: GitHub public `melihkarakelle/bmks-survival-radio`; README İngilizce, bu günlük `docs/DEVLOG_tr.md`.
