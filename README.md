@@ -497,7 +497,7 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
   7 satır içerik. 1/3: 0, 4, 5, `6>Help/Manual`, 7, 8, UP/DN (FM'de 0, 3, *, 6, HOLD M, UP/DN).
   2/3 ve 3/3 kılavuzun KEYS / SIDE KEYS konularından okunur (metin tek yerde).
 - F+6 (ana ekran ve FM) ve BASIC > Help: kılavuz. Giriş sayfası (tuşlar) bir tuşa basılana kadar kalır (v5.6; v5.5 3 sn), sonra indeks (`MANUAL n/27`).
-  İndeks: UP/DN seç, M aç, EXIT/F kapat. Konu: UP/DN satır kaydır (sonda sonraki, başta önceki konu), M sonraki konu,
+  İndeks: UP/DN seç, M aç, EXIT/F kapat. Konu: UP/DN sayfa sayfa (7 satır, v5.7; sonda sonraki, başta önceki konunun son sayfası), M sonraki konu,
   EXIT indeks, F kapat. Başlıkta konu adı solda, `n/27` sağda.
 - 27 konu: kullanım (Keys, Side keys, F shortcuts, Groups, Scan, Skip list, Favorites, Priority, Heard list, FM radio,
   Air band, Custom, Sending, Squelch, Menu, Battery, Key lock, Reset) ve survival notları (Emergency, Mayday call,

@@ -978,16 +978,17 @@ static void ManualKeys(KEY_Code_t Key, bool bKeyPressed)
         if (Key == KEY_EXIT) {
             if (!bKeyPressed)
                 sManual = MAN_INDEX;
-        } else if (Key == KEY_UP && bKeyPressed) {
-            if (sManScroll > 0)
-                sManScroll--;
-            else if (sManTopic > 0)
-                sManTopic--;   // top of the previous topic
-            else
+        } else if (Key == KEY_UP && bKeyPressed) {   // a page at a time: the blank end shows a topic ended
+            if (sManScroll >= MAN_ROWS)
+                sManScroll -= MAN_ROWS;
+            else if (sManTopic > 0) {   // last page of the previous topic
+                sManTopic--;
+                sManScroll = (RowCount(SURVIVAL_ManualRows(sManTopic)) - 1) / MAN_ROWS * MAN_ROWS;
+            } else
                 return;
         } else if ((Key == KEY_DOWN && bKeyPressed) || (Key == KEY_MENU && !bKeyPressed)) {
             if (Key == KEY_DOWN && sManScroll + MAN_ROWS < rows)
-                sManScroll++;
+                sManScroll += MAN_ROWS;
             else if (sManTopic + 1 < count) {
                 sManTopic++;
                 sManScroll = 0;
@@ -1006,7 +1007,7 @@ static void DisplayManual(void)
     char String[24];
 
     if (sManual == MAN_LANDING) {
-        static const char LANDING[] = "UP/DN>Choose topic\0" "M>Open topic\0" "UP/DN>Read on\0"
+        static const char LANDING[] = "UP/DN>Choose topic\0" "M>Open topic\0" "UP/DN>Turn page\0"
                                       "M>Next topic\0" "EXIT>Back to list\0" "F>Close manual\0"
                                       "Any key>Topic list\0";
         const char *p = LANDING;
