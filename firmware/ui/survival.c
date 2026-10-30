@@ -60,6 +60,9 @@ void UI_DisplayStatus(void)
     char     String[8];
     uint8_t *line = gStatusLine;
 
+    if (SURVIVAL_DrawHeader())
+        return;
+
     memset(gStatusLine, 0, sizeof(gStatusLine));
 
     UI_PrintStringSmallBufferBold(Title(), line);
@@ -91,31 +94,39 @@ void UI_DisplayStatus(void)
 
 // ------------------------------------------------------------------ key help (F tap)
 
-// key in capitals, then > and what it does in normal case; 18 characters per row
-static const char HELP_MAIN[] = "0>FM radio\0"         "4>Heard list\0"      "5>Prio  7>Favorite\0" "8>Skip in scan\0"   "UP/DN>Squelch";
-static const char HELP_FM[]   = "0>Exit FM\0"          "3>Saved / tune\0"    "*>Find all FM\0"      "HOLD M>Save\0"      "UP/DN>Tune";
-static const char HELP_KEYS[] = "M>Next group\0"       "HOLD M>Menu\0"       "*>Scan / stop\0"      "HOLD UP/DN>Scan\0"  "HOLD F>Key lock";
-static const char HELP_SIDE[] = "SIDE1>Light, blink\0" "      Strobe, SOS\0" "HOLD SIDE1>Monitor\0" "SIDE2>FM radio\0"   "HOLD SIDE2>Scan";
+// key in capitals, then > and what it does in normal case; 18 characters per row.
+// The other pages come from the manual (design/manual.txt): F SHORTCUTS, KEYS, SIDE KEYS.
+static const char HELP_FM[] = "0>Exit FM\0" "3>Saved / tune\0" "*>Find all FM\0" "6>Help/Manual\0"
+                              "HOLD M>Save\0" "UP/DN>Tune\0";
 
-static const char *const HELP_TITLE[] = {"F + KEY      1/3", "KEYS         2/3", "SIDE KEYS    3/3"};
+#define MANUAL_KEYS      0
+#define MANUAL_SIDE_KEYS 1
+#define MANUAL_F_KEYS    2   // its first row explains the F tap, the page title does that here
 
-// drawn instead of the main / FM screen while the F prefix is active
+// drawn instead of the main / FM screen while the F prefix is active, title in the status line
 bool UI_DisplayHelp(bool fm)
 {
-    if (!gWasFKeyPressed || gInputBoxIndex > 0)
+    if (!SURVIVAL_HelpVisible())
         return false;
 
     const uint8_t page = SURVIVAL_HelpPage();
-    const char   *text = (page == 1) ? HELP_KEYS : (page == 2) ? HELP_SIDE : fm ? HELP_FM : HELP_MAIN;
+    const char   *text;
+    if (page == 1)
+        text = SURVIVAL_ManualRows(MANUAL_KEYS);
+    else if (page == 2)
+        text = SURVIVAL_ManualRows(MANUAL_SIDE_KEYS);
+    else if (fm)
+        text = HELP_FM;
+    else {
+        text = SURVIVAL_ManualRows(MANUAL_F_KEYS);
+        text += strlen(text) + 1;
+    }
 
     UI_DisplayClear();
-    UI_PrintStringSmallBold(HELP_TITLE[page], 0, 0, 0);
-    InvertRow(gFrameBuffer[0]);
-    for (uint8_t row = 1; row <= 5; row++) {
+    for (uint8_t row = 0; row < 7 && *text; row++) {
         UI_PrintStringSmallNormal(text, 0, 0, row);
         text += strlen(text) + 1;
     }
-    UI_PrintStringSmallNormal("M>Next  EXIT>Back", 0, 0, 6);
     ST7565_BlitFullScreen();
     return true;
 }

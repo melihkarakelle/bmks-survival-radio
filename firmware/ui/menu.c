@@ -58,7 +58,7 @@ const t_menu_item MenuList[] =
     {"Power",       MENU_TXP,            "TX POWER"   },
     {"Eco",         MENU_SRV_ECO,        "SAVE POWER" },
     {"Radio",       MENU_SRV_RADIO,      "FM RADIO"   },
-    {"Help",        MENU_SRV_HELP,       "KEY HELP"   },
+    {"Help",        MENU_SRV_HELP,       "MANUAL"     },
     {"Adv",         MENU_SRV_ADV,        "ADVANCED"   },   // SURV_BASIC_COUNT items up to here
     // Advanced
     {"FmScan",      MENU_SRV_FM_SCAN,    "FM SCAN"    },

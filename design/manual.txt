@@ -1,0 +1,297 @@
+# BMKs Survival Radio manual (F+6 on the radio)
+# Built into the firmware by tools/manual2c.py -> firmware/app/survival_manual.c
+# "== TITLE" starts a topic (title max 12 chars), every other line is one screen row (max 18 chars).
+# The first two topics are also pages 2 and 3 of the F key help. Lines starting with '#' are comments.
+
+== KEYS
+M>Next group
+HOLD M>Menu
+*>Scan / stop
+UP/DN>Channel/step
+HOLD UP/DN>Scan
+0-9>Type ch / freq
+EXIT>Clear typing
+HOLD F>Key lock
+PTT>Talk (if OK)
+
+== SIDE KEYS
+SIDE1>Light, blink
+      Strobe, SOS
+      then off
+HOLD SIDE1>Monitor
+  (squelch open)
+SIDE2>FM radio
+HOLD SIDE2>Scan
+
+== F SHORTCUTS
+Tap F, then a key:
+0>FM radio
+4>Heard list
+5>Priority
+6>Help/Manual
+7>Favorite
+8>Skip in scan
+UP/DN>Squelch
+*>Scan
+F again>Cancel
+
+== GROUPS
+M tap steps groups
+PMR446 EU, 16 ch
+FRS US/CA, 22 ch
+MARINE VHF + WX
+AIR 118-137 AM
+HAM 2m/70cm calls
+CB 40 ch, 27 MHz
+FM RADIO broadcast
+CUSTOM own range
+FAV your channels
+
+== SCAN
+*>Start or stop
+HOLD UP/DN>Scan
+  up or down
+Stops on a signal,
+  then listen.
+*>Scan on
+UP/DN>Stop here
+Noise stops it?
+  F+8 skips it.
+Band scans show
+  123.4---- while
+  moving.
+
+== SKIP LIST
+F+8 while a scan
+  sits on noise:
+  skip it, scan on
+F+8 at rest:
+  add / remove
+A skipped freq
+  never stops a
+  scan. You can
+  still tune it.
+Menu>Skip: list,
+  M deletes (16)
+
+== FAVORITES
+F+7>Put this ch
+  or freq in FAV
+F+7 again>Remove
+M to FAV group:
+  use, scan them
+Menu>Adv>Rename
+  gives a name
+58 places
+
+== PRIORITY
+F+5>This channel
+  is priority PRI
+Channel scans look
+  at it every 20
+  steps
+F+5 again>Clear
+Channels only,
+  not AIR/CUSTOM
+
+== HEARD LIST
+F+4>Last 8 heard
+  with age m / h
+UP/DN>Choose
+M>Go there
+EXIT>Back
+Also Menu>Heard
+
+== FM RADIO
+SIDE2/F+0>On, off
+UP/DN>Tune / saved
+*>Seek next
+HOLD M>Save
+F+*>Find all (20)
+F+3>Saved / tune
+EXIT>Leave FM
+A scan running
+  before FM goes
+  on behind it; a
+  call opens it.
+
+== AIR BAND
+118-137 MHz AM,
+  25 kHz steps
+Listen only,
+  sending blocked
+121.500 = air
+  emergency
+*>Scan the band
+0-9>Type a freq
+
+== CUSTOM
+Your own range:
+Menu>Adv>Start,
+  End and Step
+*>Scan it
+0-9>Type a freq
+Sends only where
+  TX is allowed
+
+== SENDING
+PTT sends FM only
+  on allowed bands
+PMR, FRS: on
+MARINE, HAM, CB:
+  Adv>TxMAR/HAM/CB
+TxAll>Any other
+Always blocked:
+  88-137, 225-400,
+  406.0-406.1 MHz,
+  marine ch 70
+Licence? Check
+  your local law.
+
+== SQUELCH
+Hides noise when
+  nobody talks
+F+UP/DN or
+  Menu>Quiet
+0=open, 9=only
+  strong signals
+1-2 good for scan
+
+== MENU
+HOLD M>Open
+UP/DN>Choose
+M>Edit, M>Save
+EXIT>Cancel, back
+Adv>More settings
+Help>This manual
+
+== BATTERY
+Top right: volts
+  and 3 bars
+Menu>Eco ON:
+  saves power,
+  short light
+LOW power is fine
+  for near calls
+
+== KEY LOCK
+HOLD F>Lock keys
+HOLD F>Unlock
+Side keys still
+  work
+Menu>Adv>Lock:
+  auto lock time
+
+== RESET
+Menu>Adv>Reset
+  ALL: factory
+  channels again
+Clears FAV, skip
+  list, settings
+
+== EMERGENCY
+Life at risk:
+  any channel OK
+MARINE ch16
+  156.800 distress
+CB ch 9 27.065
+PMR ch 8 (some
+  areas)
+HAM 145.500 EU
+  146.520 US
+AIR 121.500 listen
+Listen first!
+
+== MAYDAY CALL
+MAYDAY x3
+This is (name) x3
+MAYDAY (name)
+Where you are
+What happened
+Help you need
+How many people
+OVER, then listen
+Again every 2 min
+Urgent, no danger
+  to life: PAN-PAN
+
+== RADIO TIPS
+Go high, clear
+  view of the sky
+Antenna upright
+Listen before
+  you talk
+Short calls, then
+  wait
+Agree times: e.g.
+  top of each hour
+Eco ON, LOW power
+  save battery
+
+== PHONETIC
+Alfa Bravo Charlie
+Delta Echo Foxtrot
+Golf Hotel India
+Juliett Kilo Lima
+Mike November
+Oscar Papa Quebec
+Romeo Sierra Tango
+Uniform Victor
+Whiskey X-ray
+Yankee Zulu
+
+== SOS SIGNALS
+Morse SOS:
+  ... --- ...
+3 of anything =
+  help: 3 fires,
+  whistles, lights
+SIDE1 x4>SOS light
+Ground signs:
+  V need help
+  X need medic
+  -> went this way
+
+== RULE OF 3
+You can last about
+3 min without air
+3 h in cold
+  without shelter
+3 days no water
+3 weeks no food
+Order: safety,
+  shelter, water,
+  signal, food
+
+== WATER
+Boil 1 min (3 min
+  above 2000 m)
+Or filter + tabs
+Clear running
+  water is better
+Need 2-3 L a day
+
+== DIRECTION
+Sun rises east,
+  sets west
+Noon sun: south
+  (north half of
+  the world)
+North star: follow
+  the 2 end stars
+  of Big Dipper
+South half: long
+  axis of the
+  Southern Cross
+
+== FIRST AID
+Check danger first
+Bleeding: press
+  hard, keep on
+Not breathing:
+  call help, CPR
+  30 push, 2 blow
+Keep them warm
+  and still
+Breaks: do not
+  move, support

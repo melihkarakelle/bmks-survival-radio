@@ -164,6 +164,7 @@ endif
 OBJS += app/generic.o
 ifeq ($(ENABLE_SURVIVAL),1)
 	OBJS += app/survival.o
+	OBJS += app/survival_manual.o
 	OBJS += ui/survival.o
 endif
 OBJS += app/main.o

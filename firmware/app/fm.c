@@ -418,6 +418,12 @@ static void Key_FUNC(KEY_Code_t Key, uint8_t state)
                 ACTION_Scan(autoScan);
                 break;
 
+#ifdef ENABLE_SURVIVAL
+            case KEY_6:
+                SURVIVAL_ShowManual();
+                break;
+#endif
+
             default:
                 gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
                 break;

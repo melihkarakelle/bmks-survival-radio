@@ -26,6 +26,7 @@
 #include "driver/bk4819.h"
 #include "driver/st7565.h"
 #include "ui/helper.h"
+#include "ui/inputbox.h"
 #include "ui/ui.h"
 
 // EEPROM 0x1FF8: 'B' 'M' 'K' 'S', table version, TX mask, FM background scan, settings revision
@@ -771,6 +772,15 @@ static const char *sMsg1;
 static char        sMsg2[16];
 static uint8_t     sMsgTimer;   // half seconds left on the message screen
 
+// manual (F+6), shown in the heard list slot
+enum { MAN_OFF, MAN_LANDING, MAN_INDEX, MAN_TOPIC };
+
+static uint8_t sManual;        // MAN_*, shown in the heard list slot
+static uint8_t sManTopic;      // index cursor / open topic
+static uint8_t sManScroll;     // first row on screen
+static uint8_t sManTimer;      // half seconds left on the landing page
+
+
 // short feedback for keys that otherwise only beep, back to main after 1.5 s
 static void ShowMessage(const char *line1, const char *line2)
 {
@@ -791,6 +801,12 @@ void SURVIVAL_TimeSlice500ms(void)
 
     if (sMsgTimer && --sMsgTimer == 0 && gScreenToDisplay == DISPLAY_SCANNER)
         GUI_SelectNextDisplay(DISPLAY_MAIN);
+
+    if (sManual == MAN_LANDING && gScreenToDisplay == DISPLAY_SCANNER && --sManTimer == 0) {
+        sManual        = MAN_INDEX;
+        gUpdateDisplay = true;
+        gUpdateStatus  = true;
+    }
 }
 
 void SURVIVAL_LogHeard(void)
@@ -826,13 +842,10 @@ uint8_t SURVIVAL_HelpPage(void)
     return sHelpPage;
 }
 
-void SURVIVAL_ShowHelp(void)
+bool SURVIVAL_HelpVisible(void)
 {
-    sHelpPage          = 0;
-    gWasFKeyPressed    = true;
-    gKeyInputCountdown = SURV_HELP_TIMEOUT_500MS;
-    gUpdateStatus      = true;
-    gUpdateDisplay     = true;
+    return gWasFKeyPressed && gInputBoxIndex == 0 &&
+           (gScreenToDisplay == DISPLAY_MAIN || gScreenToDisplay == DISPLAY_FM);
 }
 
 static void HelpTurn(int8_t direction)
@@ -840,6 +853,7 @@ static void HelpTurn(int8_t direction)
     sHelpPage          = (sHelpPage + 3 + direction) % 3;
     gKeyInputCountdown = SURV_HELP_TIMEOUT_500MS;   // keep the page up a little longer
     gUpdateDisplay     = true;
+    gUpdateStatus      = true;   // the page title is in the status line
 }
 
 bool SURVIVAL_HelpKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
@@ -879,6 +893,185 @@ bool SURVIVAL_HelpKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
         default:
             return false;
     }
+}
+
+// ------------------------------------------------------------------ manual (F+6)
+
+extern const char gSurvivalManual[];   // survival_manual.c, generated from design/manual.txt
+
+#define MAN_ROWS 7             // the title is in the status line
+
+static const char *NextString(const char *p)
+{
+    return p + strlen(p) + 1;
+}
+
+// title of topic n, NULL past the last one
+static const char *ManualTopic(uint8_t n)
+{
+    const char *p = gSurvivalManual;
+    for (; *p; n--) {
+        if (n == 0)
+            return p;
+        do
+            p = NextString(p);
+        while (*p);
+        p++;   // the empty string after the rows
+    }
+    return NULL;
+}
+
+static uint8_t ManualCount(void)
+{
+    uint8_t n = 0;
+    while (ManualTopic(n))
+        n++;
+    return n;
+}
+
+static uint8_t RowCount(const char *row)
+{
+    uint8_t n = 0;
+    for (; *row; row = NextString(row))
+        n++;
+    return n;
+}
+
+// rows of topic n (after its title); the help pages show some topics too
+const char *SURVIVAL_ManualRows(uint8_t n)
+{
+    return NextString(ManualTopic(n));
+}
+
+void SURVIVAL_ShowManual(void)
+{
+    SURVIVAL_ShowLog();
+    sManual       = MAN_LANDING;
+    sManTimer     = 6;   // 3 s, any key goes on sooner
+    gUpdateStatus = true;
+}
+
+static void ManualClose(void)
+{
+    sManual               = MAN_OFF;
+    gUpdateStatus         = true;
+    gRequestDisplayScreen = gFmRadioMode ? DISPLAY_FM : DISPLAY_MAIN;
+}
+
+static void ManualKeys(KEY_Code_t Key, bool bKeyPressed)
+{
+    const uint8_t count = ManualCount();
+
+    if (Key == KEY_F || (Key == KEY_EXIT && sManual != MAN_TOPIC)) {
+        if (!bKeyPressed)
+            ManualClose();
+        return;
+    }
+    if (sManual == MAN_LANDING) {
+        if (!bKeyPressed)
+            sManual = MAN_INDEX;
+    } else if (sManual == MAN_INDEX) {
+        if (Key == KEY_UP && bKeyPressed && sManTopic > 0)
+            sManTopic--;
+        else if (Key == KEY_DOWN && bKeyPressed && sManTopic + 1 < count)
+            sManTopic++;
+        else if (Key == KEY_MENU && !bKeyPressed) {
+            sManual    = MAN_TOPIC;
+            sManScroll = 0;
+        } else
+            return;
+    } else {
+        const uint8_t rows = RowCount(SURVIVAL_ManualRows(sManTopic));
+        if (Key == KEY_EXIT) {
+            if (!bKeyPressed)
+                sManual = MAN_INDEX;
+        } else if (Key == KEY_UP && bKeyPressed) {
+            if (sManScroll > 0)
+                sManScroll--;
+            else if (sManTopic > 0)
+                sManTopic--;   // top of the previous topic
+            else
+                return;
+        } else if ((Key == KEY_DOWN && bKeyPressed) || (Key == KEY_MENU && !bKeyPressed)) {
+            if (Key == KEY_DOWN && sManScroll + MAN_ROWS < rows)
+                sManScroll++;
+            else if (sManTopic + 1 < count) {
+                sManTopic++;
+                sManScroll = 0;
+            } else
+                return;
+        } else
+            return;
+    }
+    gBeepToPlay           = BEEP_1KHZ_60MS_OPTIONAL;
+    gUpdateStatus         = true;
+    gRequestDisplayScreen = DISPLAY_SCANNER;
+}
+
+static void DisplayManual(void)
+{
+    char String[24];
+
+    if (sManual == MAN_LANDING) {
+        static const char LANDING[] = "UP/DN>Choose topic\0" "M>Open topic\0" "UP/DN>Read on\0"
+                                      "M>Next topic\0" "EXIT>Back to list\0" "F>Close manual\0";
+        const char *p = LANDING;
+        for (uint8_t row = 0; *p; row++, p = NextString(p))
+            UI_PrintStringSmallNormal(p, 0, 0, row);
+    } else if (sManual == MAN_INDEX) {
+        const uint8_t top = (sManTopic >= MAN_ROWS) ? sManTopic - MAN_ROWS + 1 : 0;
+        for (uint8_t row = 0; row < MAN_ROWS; row++) {
+            const char *title = ManualTopic(top + row);
+            if (!title)
+                break;
+            sprintf(String, "%2u %s", top + row + 1, title);
+            UI_PrintStringSmallNormal(String, 0, 0, row);
+            if (top + row == sManTopic)
+                for (uint8_t i = 0; i < 128; i++)
+                    gFrameBuffer[row][i] ^= 0xFF;
+        }
+    } else {
+        const char *p = SURVIVAL_ManualRows(sManTopic);
+        for (uint8_t i = 0; i < sManScroll && *p; i++)
+            p = NextString(p);
+        for (uint8_t row = 0; row < MAN_ROWS && *p; row++, p = NextString(p))
+            UI_PrintStringSmallNormal(p, 0, 0, row);
+    }
+    ST7565_BlitFullScreen();
+}
+
+// status line title bar: the F help pages and the manual use it instead of the radio status
+static void Header(const char *title, uint8_t n, uint8_t of)
+{
+    char Number[8] = {0};
+
+    memset(gStatusLine, 0, sizeof(gStatusLine));
+    UI_PrintStringSmallBufferBold(title, gStatusLine);
+    if (of) {
+        sprintf(Number, "%u/%u", n, of);
+        UI_PrintStringSmallBufferBold(Number, gStatusLine + 127 - 7 * strlen(Number));
+    }
+    for (uint8_t i = 0; i < sizeof(gStatusLine); i++)
+        gStatusLine[i] ^= 0xFF;
+    ST7565_BlitStatusLine();
+}
+
+bool SURVIVAL_DrawHeader(void)
+{
+    static const char *const HELP_TITLE[] = {"F+KEY", "KEYS", "SIDE KEYS"};
+
+    if (SURVIVAL_HelpVisible()) {
+        Header(HELP_TITLE[SURVIVAL_HelpPage()], SURVIVAL_HelpPage() + 1, 3);
+        return true;
+    }
+    if (sManual && gScreenToDisplay == DISPLAY_SCANNER && !sMsgTimer) {
+        if (sManual == MAN_TOPIC)
+            Header(ManualTopic(sManTopic), sManTopic + 1, ManualCount());
+        else
+            Header("MANUAL", (sManual == MAN_INDEX) ? sManTopic + 1 : 0, (sManual == MAN_INDEX) ? ManualCount() : 0);
+        return true;
+    }
+    return false;
 }
 
 static bool sSkipView;   // the heard list slot shows the skip list
@@ -928,6 +1121,7 @@ void SURVIVAL_ShowLog(void)
     if (gScanStateDir != SCAN_OFF)
         CHFRSCANNER_StopHere();
     sSkipView             = false;
+    sManual               = MAN_OFF;
     sLogCursor            = 0;
     sMsgTimer             = 0;
     gRequestDisplayScreen = DISPLAY_SCANNER;   // the code scanner screen is free in survival
@@ -964,6 +1158,11 @@ void SURVIVAL_LogKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
             sMsgTimer             = 0;
             gRequestDisplayScreen = DISPLAY_MAIN;
         }
+        return;
+    }
+
+    if (sManual) {
+        ManualKeys(Key, bKeyPressed);
         return;
     }
 
@@ -1014,6 +1213,11 @@ void SURVIVAL_DisplayLog(void)
     char Name[16];
 
     UI_DisplayClear();
+
+    if (!sMsgTimer && sManual) {
+        DisplayManual();
+        return;
+    }
 
     if (sMsgTimer) {
         UI_PrintString(sMsg1, 0, 127, 1, 8);
