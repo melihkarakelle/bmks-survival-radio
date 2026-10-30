@@ -11,6 +11,7 @@
 
 #include "app/action.h"
 #include "app/chFrScanner.h"
+#include "app/generic.h"
 #ifdef ENABLE_FMRADIO
     #include "app/fm.h"
 #endif
@@ -773,11 +774,12 @@ static char        sMsg2[16];
 static uint8_t     sMsgTimer;   // half seconds left on the message screen
 
 // manual (F+6), shown in the heard list slot
-enum { MAN_OFF, MAN_LANDING, MAN_INDEX, MAN_TOPIC };
+enum { MAN_OFF, MAN_LANDING, MAN_INDEX, MAN_TOPIC, MAN_PROMPT };
 
 static uint8_t sManual;        // MAN_*, shown in the heard list slot
 static uint8_t sManTopic;      // index cursor / open topic
 static uint8_t sManScroll;     // first row on screen
+static uint8_t sManTimer;      // half seconds left on the boot prompt
 
 
 // short feedback for keys that otherwise only beep, back to main after 1.5 s
@@ -800,6 +802,14 @@ void SURVIVAL_TimeSlice500ms(void)
 
     if (sMsgTimer && --sMsgTimer == 0 && gScreenToDisplay == DISPLAY_SCANNER)
         GUI_SelectNextDisplay(DISPLAY_MAIN);
+
+    if (sManual == MAN_PROMPT && gScreenToDisplay == DISPLAY_SCANNER) {   // boot prompt countdown
+        if (--sManTimer == 0) {
+            sManual = MAN_OFF;
+            GUI_SelectNextDisplay(DISPLAY_MAIN);
+        } else
+            gUpdateDisplay = true;
+    }
 
 }
 
@@ -937,6 +947,14 @@ const char *SURVIVAL_ManualRows(uint8_t n)
     return NextString(ManualTopic(n));
 }
 
+// after the boot logo: 5 s "PRESS M FOR MANUAL", M opens it, any other key skips
+void SURVIVAL_ShowBootPrompt(void)
+{
+    SURVIVAL_ShowLog();
+    sManual   = MAN_PROMPT;
+    sManTimer = 10;
+}
+
 void SURVIVAL_ShowManual(void)
 {
     SURVIVAL_ShowLog();
@@ -955,6 +973,15 @@ static void ManualKeys(KEY_Code_t Key, bool bKeyPressed)
 {
     const uint8_t count = ManualCount();
 
+    if (sManual == MAN_PROMPT) {
+        if (!bKeyPressed) {
+            if (Key == KEY_MENU)
+                SURVIVAL_ShowManual();
+            else
+                ManualClose();
+        }
+        return;
+    }
     if (Key == KEY_F || (Key == KEY_EXIT && sManual != MAN_TOPIC)) {
         if (!bKeyPressed)
             ManualClose();
@@ -1006,7 +1033,13 @@ static void DisplayManual(void)
 {
     char String[24];
 
-    if (sManual == MAN_LANDING) {
+    if (sManual == MAN_PROMPT) {
+        sprintf(String, "%u", (sManTimer + 1) / 2);
+        UI_PrintString("PRESS M", 0, 127, 0, 8);
+        UI_PrintString("FOR MANUAL", 0, 127, 2, 8);
+        UI_DisplayFrequency(String, 0, 4, true);
+        UI_PrintStringSmallNormal("other key: skip", 0, 127, 6);
+    } else if (sManual == MAN_LANDING) {
         static const char LANDING[] = "UP/DN>Choose topic\0" "M>Open topic\0" "UP/DN>Turn page\0"
                                       "M>Next topic\0" "EXIT>Back to list\0" "F>Close manual\0"
                                       "Any key>Topic list\0";
@@ -1143,7 +1176,13 @@ static void TuneTo(const Heard_t *h)
 
 void SURVIVAL_LogKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
-    if (bKeyHeld)
+    if (Key == KEY_PTT) {   // talk from every screen; the radio screen comes back
+        sManual   = MAN_OFF;
+        sMsgTimer = 0;
+        GENERIC_Key_PTT(bKeyPressed);
+        return;
+    }
+    if (bKeyHeld && Key != KEY_UP && Key != KEY_DOWN)   // held UP/DOWN repeat through the lists
         return;
 
     // keys that leave this screen act on release: otherwise the release would

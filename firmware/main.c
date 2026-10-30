@@ -272,6 +272,10 @@ void Main(void)
 #endif
 
         BOOT_ProcessMode(BootMode);
+#ifdef ENABLE_SURVIVAL
+        if (BootMode == BOOT_MODE_NORMAL)
+            SURVIVAL_ShowBootPrompt();
+#endif
 
         GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_VOICE_0);
 

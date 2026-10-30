@@ -74,7 +74,8 @@ void    SURVIVAL_ShowSkipList(void);      // Menu > Skip: see and delete entries
 #define SURV_HELP_TIMEOUT_500MS (4 * 8000 / 500)   // 32 s: time to read a help page
 uint8_t SURVIVAL_HelpPage(void);          // F tap: key help, page 0..2 while the F prefix is active
 bool    SURVIVAL_HelpVisible(void);
-void    SURVIVAL_ShowManual(void);        // F+6, Menu > Help: index of the built-in manual
+void    SURVIVAL_ShowManual(void);
+void    SURVIVAL_ShowBootPrompt(void);    // after the logo: PRESS M FOR MANUAL, 5 s        // F+6, Menu > Help: index of the built-in manual
 const char *SURVIVAL_ManualRows(uint8_t topic);   // rows of a manual topic, '\0' separated, "" ends
 bool    SURVIVAL_DrawHeader(void);        // status line title bar of the help / manual, true if drawn
 bool    SURVIVAL_HelpKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);   // true = key used by the help pages

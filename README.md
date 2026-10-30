@@ -504,3 +504,11 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
   Radio tips, Phonetic, SOS signals, Rule of 3, Water, Direction, First aid).
 - Metin kaynağı `design/manual.txt`; `tools/manual2c.py` → `firmware/app/survival_manual.c` (satır ≤ 18, başlık ≤ 12 kontrol).
   Kılavuz 4015 bayt; boş flash 780 bayt. Yeni özellikten önce kullanılmayan F4HWN kodu temizlenmeli.
+
+### v5.8/v5.9 (2026-10-30): açılışta kılavuz daveti, PTT ve basılı tutma listelerde
+
+- Logodan sonra 5 sn: büyük `PRESS M` / `FOR MANUAL`, büyük rakamla geri sayım, altta `other key: skip`.
+  M = kılavuz (giriş sayfası), başka tuş = hemen ana ekran, süre bitince ana ekran.
+- Son duyulanlar / skip listesi / kılavuz / açılış daveti ekranlarında PTT çalışıyor (önceden yutuluyordu).
+- v5.9: bu listelerde UP/DOWN basılı tutulunca tekrar eder (indeks, listeler, kılavuz sayfaları).
+- Boş flash 484 bayt: yeni özellikten önce kullanılmayan F4HWN kodu temizlenmeli.
