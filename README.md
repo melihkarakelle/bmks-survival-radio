@@ -538,3 +538,8 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 
 - SAVED / TUNE satırı 1 px aşağıda; R3 ortasında ekran boyunca çizgi (üstü FM radyo, altı telsiz alıcısı).
 - WATCH / SCAN satırı ters renk değil, kalın ve ortalı; altındaki frekans da ortalı. Ekran kaydı `design/screens/ui_v65_sheet.png`.
+
+### v6.6/v6.7 (2026-10-30): FM alıcı kutusu
+
+- Alıcı satırları (SCAN/WATCH + frekans) 4 px yukarıda, ekran genişliğinde dikdörtgen içinde (y 26..45, kenarlar x 0 ve 127);
+  alttaki tuş ipucu kutunun dışında kalır, FM radyoya ait okunur. v6.7: üst çizgi 1 px yukarı (WATCH yazısına değiyordu).
