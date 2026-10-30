@@ -543,3 +543,9 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 
 - Alıcı satırları (SCAN/WATCH + frekans) 4 px yukarıda, ekran genişliğinde dikdörtgen içinde (y 26..45, kenarlar x 0 ve 127);
   alttaki tuş ipucu kutunun dışında kalır, FM radyoya ait okunur. v6.7: üst çizgi 1 px yukarı (WATCH yazısına değiyordu).
+
+### v6.8 (2026-10-30): FM araması sırasında arka plan taraması bekler
+
+- FM seek / find-all (`gFM_ScanState != FM_SCAN_OFF`) sürerken BK4819 arka plan taraması kanal değiştirmez
+  (`CHFRSCANNER_ContinueScanning` 100 ms'de bir yeniden dener). BK4819'un atlamaları BK1080'de istasyon gibi
+  görünüyor, gürültü FM listesine kaydediliyordu. Bulunduğu kanalda gelen gerçek çağrı yine duyulur.

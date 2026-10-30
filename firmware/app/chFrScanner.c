@@ -1,6 +1,9 @@
 
 #include "app/app.h"
 #include "app/chFrScanner.h"
+#ifdef ENABLE_FMRADIO
+    #include "app/fm.h"
+#endif
 #ifdef ENABLE_SURVIVAL
     #include "app/survival.h"
     #include "driver/bk4819.h"
@@ -167,6 +170,15 @@ void CHFRSCANNER_ContinueScanning(void)
 
 void CHFRSCANNER_ContinueScanning(void)
 {
+#if defined(ENABLE_SURVIVAL) && defined(ENABLE_FMRADIO)
+    // An FM seek / find-all looks for carriers on the BK1080; the BK4819 hopping next to it
+    // showed up there as stations. The background scan holds still until the FM scan ends.
+    if (gFmRadioMode && gFM_ScanState != FM_SCAN_OFF) {
+        gScanPauseDelayIn_10ms = 10;
+        gScheduleScanListen    = false;
+        return;
+    }
+#endif
 #ifdef ENABLE_SURVIVAL
     // a frequency on the skip list never stops the scan, even with the squelch open
     const bool skipped = !sPrioPeek && SURVIVAL_IsSkipped(gRxVfo->freq_config_RX.Frequency);
