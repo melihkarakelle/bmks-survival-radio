@@ -980,6 +980,7 @@ void UI_DisplayMenu(void)
             strcpy(String, gSubMenu_OFF_ON[gSubMenuSelection]);
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_MEM_CH:
 #ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_1_CALL:
@@ -1003,6 +1004,8 @@ void UI_DisplayMenu(void)
             already_printed = true;
             break;
         }
+
+#endif
 
         case MENU_MEM_NAME:
         {
@@ -1044,9 +1047,11 @@ void UI_DisplayMenu(void)
             break;
         }
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_SAVE:
             sprintf(String, gSubMenuSelection == 0 ? gSubMenu_OFF_ON[0] : "1:%u", gSubMenuSelection);
             break;
+#endif
 
 #ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_TDR:
@@ -1170,9 +1175,11 @@ void UI_DisplayMenu(void)
             break;
 #endif
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_BAT_TXT:
             strcpy(String, gSubMenu_BAT_TXT[gSubMenuSelection]);
             break;
+#endif
 
 #ifdef ENABLE_DTMF_CALLING
 #ifndef ENABLE_SURVIVAL   // not in the survival menu
@@ -1252,6 +1259,7 @@ void UI_DisplayMenu(void)
             strcpy(String, gSubMenu_BATTYP[gSubMenuSelection]);
             break;
 
+#ifndef ENABLE_SURVIVAL   // not in the survival menu
         case MENU_F1SHRT:
         case MENU_F1LONG:
         case MENU_F2SHRT:
@@ -1261,6 +1269,7 @@ void UI_DisplayMenu(void)
 #endif
             strcpy(String, gSubMenu_SIDEFUNCTIONS[gSubMenuSelection].name);
             break;
+#endif
 
 #ifdef ENABLE_FEAT_F4HWN_SLEEP
 #ifndef ENABLE_SURVIVAL   // not in the survival menu

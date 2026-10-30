@@ -512,3 +512,13 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 - Son duyulanlar / skip listesi / kılavuz / açılış daveti ekranlarında PTT çalışıyor (önceden yutuluyordu).
 - v5.9: bu listelerde UP/DOWN basılı tutulunca tekrar eder (indeks, listeler, kılavuz sayfaları).
 - Boş flash 484 bayt: yeni özellikten önce kullanılmayan F4HWN kodu temizlenmeli.
+
+### v6.0/v6.1 (2026-10-30): açılış daveti düzeltildi, F+8 düzeltildi, flash temizliği
+
+- Açılış daveti görünmüyordu: `gRequestDisplayScreen` sadece bir tuş olayından sonra uygulanır; davet artık
+  `GUI_SelectNextDisplay` ile doğrudan açılır. Telsizden ekran kaydıyla doğrulandı (`design/screens/ui_v60_sheet.png`).
+- F+8 tap atlama yerine F4HWN'in "ekran ışığını yak" kısayolunu çalıştırıyordu (sadece 8 basılı tutma atlıyordu); kapatıldı.
+- Flash temizliği (sadece Survival derlemesi): menüden çıkarılan ChSave/ChDele/F1–F2 atamaları/BatSav/BatTxt/
+  tarama listesi kodu ve F4HWN F+1/2/3/9/F+yan tuş işlevleri derleme dışı. Boş flash 492 → 1340 bayt.
+- v6.1: geri sayım rakamı büyük yazıyla ortada.
+- Ekran ışığı: Eco kapalı 60 sn (varsayılan), Eco açık 10 sn; ADV > Light ile 5 sn adımlarla ayarlanır.

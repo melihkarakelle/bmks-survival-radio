@@ -90,7 +90,9 @@ static void toggle_chan_scanlist(void)
 
 static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
 {
+#ifndef ENABLE_SURVIVAL
     uint8_t Vfo = gEeprom.TX_VFO;
+#endif
 
 #ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
     if(gEeprom.MENU_LOCK == true) {
@@ -130,6 +132,7 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             #endif
             break;
 
+#ifndef ENABLE_SURVIVAL   // F functions not on the survival help page
         case KEY_1:
             if (!IS_FREQ_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
                 gWasFKeyPressed = false;
@@ -221,6 +224,7 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
                 gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 
             break;
+#endif
 
         case KEY_4:
             gWasFKeyPressed          = false;
@@ -297,6 +301,7 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             gRequestSaveChannel = 1;
             break;
 
+#ifndef ENABLE_SURVIVAL   // F functions not on the survival help page
         case KEY_9:
             if (RADIO_CheckValidChannel(gEeprom.CHAN_1_CALL, false, 0)) {
                 gEeprom.MrChannel[Vfo]     = gEeprom.CHAN_1_CALL;
@@ -314,6 +319,7 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             if (beep)
                 gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
             break;
+#endif
 
 #ifdef ENABLE_FEAT_F4HWN // Set Squelch F + UP or Down and Step F + SIDE1 or F + SIDE2
         case KEY_UP:
@@ -333,6 +339,7 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
 #endif
             break;
 
+#ifndef ENABLE_SURVIVAL   // F functions not on the survival help page
         case KEY_SIDE1:
             uint8_t a = FREQUENCY_GetSortedIdxFromStepIdx(gTxVfo->STEP_SETTING);
             if (a < STEP_N_ELEM - 1)
@@ -359,6 +366,7 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             gVfoConfigureMode     = VFO_CONFIGURE;
             gWasFKeyPressed = false;
             break;
+#endif
 #endif
 
         default:
@@ -624,6 +632,7 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
     gWasFKeyPressed = false;
     gUpdateStatus   = true;
 
+#ifndef ENABLE_SURVIVAL   // survival: F+8 = skip list (processFKeyFunction)
     if(Key == 8)
     {
         ACTION_BackLightOnDemand();
@@ -634,6 +643,7 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
         ACTION_BackLight();
         return;
     }
+#endif
     #ifdef ENABLE_FEAT_F4HWN_GAME
     else if(Key == 7)
     {

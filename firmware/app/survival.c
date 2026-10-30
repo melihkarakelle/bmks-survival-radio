@@ -953,6 +953,9 @@ void SURVIVAL_ShowBootPrompt(void)
     SURVIVAL_ShowLog();
     sManual   = MAN_PROMPT;
     sManTimer = 10;
+    // no key event yet: a display request would only be applied after the first key
+    GUI_SelectNextDisplay(DISPLAY_SCANNER);
+    gRequestDisplayScreen = DISPLAY_INVALID;
 }
 
 void SURVIVAL_ShowManual(void)
@@ -1037,7 +1040,7 @@ static void DisplayManual(void)
         sprintf(String, "%u", (sManTimer + 1) / 2);
         UI_PrintString("PRESS M", 0, 127, 0, 8);
         UI_PrintString("FOR MANUAL", 0, 127, 2, 8);
-        UI_DisplayFrequency(String, 0, 4, true);
+        UI_PrintString(String, 0, 127, 4, 8);
         UI_PrintStringSmallNormal("other key: skip", 0, 127, 6);
     } else if (sManual == MAN_LANDING) {
         static const char LANDING[] = "UP/DN>Choose topic\0" "M>Open topic\0" "UP/DN>Turn page\0"
