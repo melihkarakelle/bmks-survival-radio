@@ -8,6 +8,10 @@ __pycache__/
 builds/*
 !builds/bmks.survival.bin
 !builds/bmks.survival.packed.bin
+!builds/bmks.survival.v3.bin
+
+# V3 CMake build directory
+firmware-v3/build/
 
 # screen capture frames (the sheets and single shots are kept)
 design/screens/seq/

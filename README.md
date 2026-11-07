@@ -74,7 +74,11 @@ On the FM screen: `UP/DOWN` tune, `*` seek, hold `M` save, `F+*` find all statio
 
 - **Quansheng UV-K5 with the DP32G030 MCU** (the original UV-K5 and its UV-K5(8) / UV-K6 / UV-5R Plus
   siblings that run F4HWN). Tested on a UV-K5 with stock firmware 2.01.26 and bootloader 2.00.06.
-- **Not** for the newer UV-K5 V3 / UV-K1 boards with the PY32F071 MCU: different firmware, do not flash.
+- **Quansheng UV-K5 V3 / UV-K1 with the PY32F071 MCU** (stock firmware 7.00.x, "V3" printed above the
+  barcode): use the separate V3 build, `bmks.survival.v3.bin`. Tested on a UV-K5(8) V3 with stock
+  firmware 7.00.16 and bootloader 7.00.07.
+- The two builds are **not interchangeable**: never flash the V1 file on a V3 radio or the other way round.
+  The stock firmware version tells them apart (2.x: V1, 7.x: V3); `tools/k5link.py` prints it.
 - Programming cable: the usual Kenwood-type K-plug USB cable (CH340 or similar).
 
 ## Install
@@ -103,6 +107,23 @@ Download `bmks.survival.packed.bin` (browser / official updater) or `bmks.surviv
 
 To go back, flash any other UV-K5 firmware (for example the stock Quansheng one) the same way.
 
+### UV-K5 V3 / UV-K1
+
+Same steps with the V3 file and the V3 flasher. The bootloader (DFU) mode is entered the same way:
+`PTT` held at power-on, blank screen, the flashlight comes on.
+
+- **Browser (Chrome / Edge):** [UVTools2](https://armel.github.io/uvtools2/?mode=flash), select
+  `bmks.survival.v3.bin`, connect and flash.
+- **Command line:**
+  ```
+  python3 tools/k5v3flash.py --port /dev/ttyUSB0 builds/bmks.survival.v3.bin --dry-run   # checks the link only
+  python3 tools/k5v3flash.py --port /dev/ttyUSB0 builds/bmks.survival.v3.bin --yes
+  ```
+
+UVTools2 can also dump the calibration (*Dump Calib*); do that once the firmware runs. On the V3
+the settings live in SPI flash, and the survival record (first-boot marker, CUSTOM range) has its own
+sector at 0x00D000.
+
 ## Sending: read this
 
 The firmware only lets you transmit FM, and only inside bands you switch on in *Menu > Adv*
@@ -122,15 +143,28 @@ The firmware lives in [`firmware/`](firmware/) (F4HWN v4.3 tree plus the surviva
 EDITION=survival SURVIVAL_VERSION=v6.9 tools/build-f4hwn.sh "$PWD/firmware"
 ```
 
-Output: `builds/bmks.survival.bin` and `.packed.bin`. The manual text is
+Output: `builds/bmks.survival.bin` and `.packed.bin`.
+
+The V3 build lives in [`firmware-v3/`](firmware-v3/) (F4HWN V3 v4.3.2 tree, the PY32F071 port, with the
+same survival hooks merged in) and compiles the survival sources from `firmware/`, so the manual and
+the channel tables are shared. Build with Docker (or `cmake --preset Survival` with an ARM GCC toolchain):
+
+```
+SURVIVAL_VERSION=v6.9 tools/build-f4hwn-v3.sh
+```
+
+Output: `builds/bmks.survival.v3.bin`. The manual text is
 [`design/manual.txt`](design/manual.txt); `python3 tools/manual2c.py` turns it into
 `firmware/app/survival_manual.c` and checks every row fits the screen.
 
 | Path | |
 |---|---|
 | `firmware/` | firmware source (F4HWN based) |
+| `firmware-v3/` | UV-K5 V3 / UV-K1 build (F4HWN V3 based, uses the survival sources in `firmware/`) |
 | `tools/build-f4hwn.sh` | Docker build (Alpine, GCC 15) |
 | `tools/k5flash.py` | bootloader flasher for raw `.bin` files |
+| `tools/build-f4hwn-v3.sh` | Docker build of the V3 edition |
+| `tools/k5v3flash.py` | V3 / UV-K1 bootloader flasher (UVTools2 protocol) |
 | `tools/k5link.py` | version check and EEPROM dump |
 | `tools/k5screen.py` | LCD capture over the cable (F4HWN screenshot protocol) |
 | `tools/manual2c.py` | builds the manual from `design/manual.txt` |
@@ -141,7 +175,8 @@ Output: `builds/bmks.survival.bin` and `.packed.bin`. The manual text is
 
 - [DualTachyon](https://github.com/DualTachyon/uv-k5-firmware) for the open re-implementation,
   [egzumer](https://github.com/egzumer/uv-k5-firmware-custom) and [armel / F4HWN](https://github.com/armel/uv-k5-firmware-custom)
-  for the firmware this is built on, and egzumer's [uvtools](https://github.com/egzumer/uvtools) web flasher.
+  for the firmware this is built on, [muzkr and armel](https://github.com/armel/uv-k1-k5v3-firmware-custom)
+  for the PY32F071 (V3 / UV-K1) port, armel's [UVTools2](https://armel.github.io/uvtools2/), and egzumer's [uvtools](https://github.com/egzumer/uvtools) web flasher.
 - Boot logo and UI design review made with OpenAI Codex.
 - BMKs Survival Radio by Melih Karakelle.
 
