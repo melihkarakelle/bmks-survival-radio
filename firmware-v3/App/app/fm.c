@@ -21,6 +21,9 @@
 #include "app/action.h"
 #include "app/fm.h"
 #include "app/generic.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "audio.h"
 #include "driver/bk1080.h"
 #include "driver/bk4819.h"
@@ -99,8 +102,30 @@ int FM_ConfigureChannelState(void)
     return 0;
 }
 
+#ifdef ENABLE_SURVIVAL
+// An auto scan replaces the stored list only when it found at least one
+// station, otherwise the previous list is reloaded from EEPROM.
+static void FM_FinishAutoScan(void)
+{
+    if (gFM_ChannelPosition == 0) {
+        PY25Q16_ReadBuffer(0x003000, gFM_Channels, sizeof(gFM_Channels));
+        return;
+    }
+
+    gEeprom.FM_IsMrMode        = true;
+    gEeprom.FM_SelectedChannel = 0;
+}
+#endif
+
 void FM_TurnOff(void)
 {
+#ifdef ENABLE_SURVIVAL
+    if (gFM_AutoScan && gFM_ScanState != FM_SCAN_OFF) {   // leaving FM in the middle of an auto scan
+        FM_FinishAutoScan();
+        SETTINGS_SaveFM();
+    }
+#endif
+
     gFmRadioMode              = false;
     gFM_ScanState             = FM_SCAN_OFF;
     gFM_RestoreCountdown_10ms = 0;
@@ -120,11 +145,18 @@ void FM_TurnOff(void)
         gEeprom.CURRENT_STATE = 0;
         SETTINGS_WriteCurrentState();
     #endif
+
+#ifdef ENABLE_SURVIVAL
+    SURVIVAL_FmStopped();
+#endif
 }
 
 void FM_EraseChannels(void)
 {
+#ifndef ENABLE_SURVIVAL   // survival keeps the stored list until the new scan is saved
     PY25Q16_SectorErase(0x003000);
+#endif
+
     memset(gFM_Channels, 0xFF, sizeof(gFM_Channels));
 }
 
@@ -162,8 +194,12 @@ void FM_PlayAndUpdate(void)
     gFM_ScanState = FM_SCAN_OFF;
 
     if (gFM_AutoScan) {
+#ifdef ENABLE_SURVIVAL
+        FM_FinishAutoScan();
+#else
         gEeprom.FM_IsMrMode        = true;
         gEeprom.FM_SelectedChannel = 0;
+#endif
     }
 
     FM_ConfigureChannelState();
@@ -355,10 +391,12 @@ static void Key_FUNC(KEY_Code_t Key, uint8_t state)
                 ACTION_FM();
                 break;
 
+#ifndef ENABLE_SURVIVAL   // survival keeps 87.5-108 MHz (other bands from the menu only)
             case KEY_1:
                 gEeprom.FM_Band++;
                 gRequestSaveFM = true;
                 break;
+#endif
 
             // case KEY_2:
             //  gEeprom.FM_Space = (gEeprom.FM_Space + 1) % 3;
@@ -379,6 +417,12 @@ static void Key_FUNC(KEY_Code_t Key, uint8_t state)
             case KEY_STAR:
                 ACTION_Scan(autoScan);
                 break;
+
+#ifdef ENABLE_SURVIVAL
+            case KEY_6:
+                SURVIVAL_ShowManual();
+                break;
+#endif
 
             default:
                 gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
@@ -437,8 +481,18 @@ static void Key_EXIT(uint8_t state)
 
 static void Key_MENU(uint8_t state)
 {
+#ifdef ENABLE_SURVIVAL
+    // survival: tap M switches mode, hold M saves/deletes the station
+    if (state == BUTTON_EVENT_SHORT) {
+        ACTION_SurvivalGroup();
+        return;
+    }
+    if (state != BUTTON_EVENT_HELD)
+        return;
+#else
     if (state != BUTTON_EVENT_SHORT)
         return;
+#endif
 
 
     gRequestDisplayScreen = DISPLAY_FM;
@@ -481,6 +535,20 @@ static void Key_MENU(uint8_t state)
 
 static void Key_UP_DOWN(uint8_t state, int8_t Step)
 {
+#ifdef ENABLE_SURVIVAL
+    // hold up/down: seek the next station in that direction
+    if (state == BUTTON_EVENT_HELD) {
+        if (gInputBoxIndex == 0 && gFM_ScanState == FM_SCAN_OFF && !gAskToSave) {
+            gEeprom.FM_IsMrMode = false;
+            gFM_AutoScan        = false;
+            BK1080_GetFrequencyDeviation(gEeprom.FM_FrequencyPlaying);
+            FM_Tune(gEeprom.FM_FrequencyPlaying, Step, false);
+            gRequestDisplayScreen = DISPLAY_FM;
+        }
+        return;
+    }
+#endif
+
     if (state == BUTTON_EVENT_PRESSED) {
         if (gInputBoxIndex) {
             gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
@@ -540,6 +608,11 @@ Bail:
 void FM_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
     uint8_t state = bKeyPressed + 2 * bKeyHeld;
+
+#ifdef ENABLE_SURVIVAL
+    if (gWasFKeyPressed && gInputBoxIndex == 0 && SURVIVAL_HelpKeys(Key, bKeyPressed, bKeyHeld))
+        return;
+#endif
 
     switch (Key) {
         case KEY_0...KEY_9:
@@ -608,7 +681,7 @@ void FM_Play(void)
         }
     }
 
-    if (gFM_AutoScan && gEeprom.FM_FrequencyPlaying >= BK1080_GetFreqHiLimit(1))
+    if (gFM_AutoScan && gEeprom.FM_FrequencyPlaying >= BK1080_GetFreqHiLimit(gEeprom.FM_Band))
         FM_PlayAndUpdate();
     else
         FM_Tune(gEeprom.FM_FrequencyPlaying, gFM_ScanState, false);

@@ -127,6 +127,9 @@ enum ACTION_OPT_t {
     ACTION_OPT_REGA_ALARM,
     ACTION_OPT_REGA_TEST,
 #endif
+#ifdef ENABLE_SURVIVAL
+    ACTION_OPT_GROUP,
+#endif
     ACTION_OPT_LEN
 };
 

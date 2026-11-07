@@ -1,6 +1,13 @@
 
 #include "app/app.h"
 #include "app/chFrScanner.h"
+#ifdef ENABLE_FMRADIO
+    #include "app/fm.h"
+#endif
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+    #include "driver/bk4819.h"
+#endif
 #include "functions.h"
 #include "misc.h"
 #include "settings.h"
@@ -37,8 +44,67 @@ uint8_t             initialCROSS_BAND_RX_TX;
 static void NextFreqChannel(void);
 static void NextMemChannel(void);
 
+#ifdef ENABLE_SURVIVAL
+// Fast scan: a short first look at the RSSI after every hop. A step at the
+// noise floor is left after ~20 ms, anything clearly above it gets the full
+// 90 ms so the squelch can decide. The floor is learned from the empty steps.
+#define SCAN_PRECHECK_10MS 2
+#define SCAN_FULL_10MS     9
+
+static bool     sPrecheck;
+static uint16_t sNoiseFloor;    // RSSI (0.5 dB units) of empty steps, 0 = not known yet
+static uint8_t  sDisplaySteps;
+static uint8_t  sPrioSteps;     // steps since the last look at the priority channel
+static bool     sPrioPeek;      // the radio is on the priority channel right now
+
+#define PRIO_EVERY_STEPS 20
+
+static void ScanStepDone(void)
+{
+    gScanPauseDelayIn_10ms = SCAN_PRECHECK_10MS;
+    sPrecheck              = true;
+
+    // channel scans redraw on every step (a fixed step count aliases with small
+    // groups: with 2 FAV channels one of them was never shown); range scans
+    // redraw every 4th step, their kHz digits are dashed anyway
+    if (IS_MR_CHANNEL(gNextMrChannel) || ++sDisplaySteps >= 4) {
+        sDisplaySteps  = 0;
+        gUpdateDisplay = true;
+    }
+}
+
+// true when the step is at the noise floor and can be left right away
+static bool PrecheckEmpty(void)
+{
+    const uint16_t rssi   = BK4819_GetRSSI();
+    const uint16_t margin = 4 + 2 * gEeprom.SQUELCH_LEVEL;   // 3 dB at SQL1, 5 dB at SQL3
+
+    if (sNoiseFloor == 0) {   // first step of a scan: learn, give it the full time
+        sNoiseFloor = rssi;
+        return false;
+    }
+    if (rssi + margin < sNoiseFloor)
+        sNoiseFloor = rssi;   // clearly lower: the first step was busy, drop at once
+    if (rssi > sNoiseFloor + margin)
+        return false;
+
+    sNoiseFloor = (sNoiseFloor * 7 + rssi) / 8;   // follow the floor slowly
+    return true;
+}
+#endif
+
 void CHFRSCANNER_Start(const bool storeBackupSettings, const int8_t scan_direction)
 {
+#ifdef ENABLE_SURVIVAL
+    sNoiseFloor = 0;   // bands differ, learn the floor again
+    sPrecheck   = false;
+    sPrioPeek   = false;
+    sPrioSteps  = 0;
+#endif
+#ifdef ENABLE_SURVIVAL
+    SURVIVAL_ApplyScanRange();
+#endif
+
     if (storeBackupSettings) {
         initialCROSS_BAND_RX_TX = gEeprom.CROSS_BAND_RX_TX;
         gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;
@@ -104,7 +170,62 @@ void CHFRSCANNER_ContinueScanning(void)
 
 void CHFRSCANNER_ContinueScanning(void)
 {
+#if defined(ENABLE_SURVIVAL) && defined(ENABLE_FMRADIO)
+    // An FM seek / find-all looks for carriers on the BK1080; the BK4819 hopping next to it
+    // showed up there as stations. The background scan holds still until the FM scan ends.
+    if (gFmRadioMode && gFM_ScanState != FM_SCAN_OFF) {
+        gScanPauseDelayIn_10ms = 10;
+        gScheduleScanListen    = false;
+        return;
+    }
+#endif
+#ifdef ENABLE_SURVIVAL
+    // a frequency on the skip list never stops the scan, even with the squelch open
+    const bool skipped = !sPrioPeek && SURVIVAL_IsSkipped(gRxVfo->freq_config_RX.Frequency);
+
+    if (skipped) {
+        sPrecheck = false;
+    } else if (gCurrentFunction != FUNCTION_INCOMING) {
+        if (sPrioPeek) {
+            // nothing on the priority channel: NextMemChannel goes on from gNextMrChannel
+            sPrioPeek = false;
+            sPrecheck = false;
+        } else {
+            if (sPrecheck) {
+                sPrecheck = false;
+                if (!PrecheckEmpty()) {
+                    // something above the noise floor: give the squelch the full time
+                    gScanPauseDelayIn_10ms = SCAN_FULL_10MS - SCAN_PRECHECK_10MS;
+                    gScheduleScanListen    = false;
+                    return;
+                }
+            }
+
+            // channel scans look at the priority channel every few steps (one receiver:
+            // a short call elsewhere can be missed while looking)
+            if (IS_MR_CHANNEL(gNextMrChannel) && IS_MR_CHANNEL(gSurvivalPrio) &&
+                gSurvivalPrio != gNextMrChannel && ++sPrioSteps >= PRIO_EVERY_STEPS)
+            {
+                sPrioSteps = 0;
+                sPrioPeek  = true;
+                gEeprom.ScreenChannel[gEeprom.RX_VFO] = gSurvivalPrio;
+                RADIO_ConfigureChannel(gEeprom.RX_VFO, VFO_CONFIGURE_RELOAD);
+                RADIO_SetupRegisters(true);
+                gScanPauseDelayIn_10ms = SCAN_FULL_10MS;
+                gScheduleScanListen    = false;
+                gScanPauseMode         = false;
+                gRxReceptionMode       = RX_MODE_NONE;
+                return;
+            }
+        }
+    }
+    sPrecheck = false;
+#endif
+
     if (gCurrentFunction == FUNCTION_INCOMING &&
+#ifdef ENABLE_SURVIVAL
+        !skipped &&
+#endif
         (IS_FREQ_CHANNEL(gNextMrChannel) || gCurrentCodeType == CODE_TYPE_OFF))
     {
         APP_StartListening(gMonitor ? FUNCTION_MONITOR : FUNCTION_RECEIVE);
@@ -185,6 +306,17 @@ void CHFRSCANNER_Found(void)
     gScanKeepResult = true;
 }
 
+#ifdef ENABLE_SURVIVAL
+// stop on the channel/frequency the scan is on now (Stop alone goes back to the
+// start position when nothing was found)
+void CHFRSCANNER_StopHere(void)
+{
+    lastFoundFrqOrChan = IS_MR_CHANNEL(gNextMrChannel) ? gRxVfo->CHANNEL_SAVE : gRxVfo->freq_config_RX.Frequency;
+    gScanKeepResult    = true;
+    CHFRSCANNER_Stop();
+}
+#endif
+
 void CHFRSCANNER_Stop(void)
 {
     if(initialCROSS_BAND_RX_TX != CROSS_BAND_OFF) {
@@ -238,6 +370,9 @@ static void NextFreqChannel(void)
     RADIO_ConfigureSquelchAndOutputPower(gRxVfo);
     RADIO_SetupRegisters(true);
 
+#ifdef ENABLE_SURVIVAL
+    ScanStepDone();
+#else
 #ifdef ENABLE_FASTER_CHANNEL_SCAN
     gScanPauseDelayIn_10ms = 9;   // 90ms
 #else
@@ -245,6 +380,7 @@ static void NextFreqChannel(void)
 #endif
 
     gUpdateDisplay     = true;
+#endif
 }
 
 static void NextMemChannel(void)
@@ -334,7 +470,11 @@ static void NextMemChannel(void)
 
     if (!enabled || chan == 0xff)
     {       
+#ifdef ENABLE_SURVIVAL
+        chan = SURVIVAL_FindNextChannel(gNextMrChannel + gScanStateDir, gScanStateDir, true, gEeprom.SCAN_LIST_DEFAULT);
+#else
         chan = RADIO_FindNextChannel(gNextMrChannel + gScanStateDir, gScanStateDir, true, gEeprom.SCAN_LIST_DEFAULT);
+#endif
         if (chan == 0xFF)
         {   // no valid channel found
             chan = MR_CHANNEL_FIRST;
@@ -354,13 +494,19 @@ static void NextMemChannel(void)
         RADIO_ConfigureChannel(gEeprom.RX_VFO, VFO_CONFIGURE_RELOAD);
         RADIO_SetupRegisters(true);
 
+#ifndef ENABLE_SURVIVAL
         gUpdateDisplay = true;
+#endif
     }
 
+#ifdef ENABLE_SURVIVAL
+    ScanStepDone();
+#else
 #ifdef ENABLE_FASTER_CHANNEL_SCAN
     gScanPauseDelayIn_10ms = 9;  // 90ms .. <= ~60ms it misses signals (squelch response and/or PLL lock time) ?
 #else
     gScanPauseDelayIn_10ms = scan_pause_delay_in_3_10ms;
+#endif
 #endif
 
     if (enabled)

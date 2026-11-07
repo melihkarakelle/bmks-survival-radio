@@ -22,6 +22,9 @@
 void ACTION_Power(void);
 void ACTION_Monitor(void);
 void ACTION_Scan(bool bRestart);
+#ifdef ENABLE_SURVIVAL
+void ACTION_ScanDirection(int8_t direction);
+#endif
 #ifdef ENABLE_VOX
     void ACTION_Vox(void);
 #endif

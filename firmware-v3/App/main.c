@@ -41,6 +41,9 @@
 #endif
 
 #include "app/app.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "app/dtmf.h"
 
 #include "driver/backlight.h"
@@ -98,6 +101,10 @@ void Main(void)
     BOARD_ADC_GetBatteryInfo(&gBatteryCurrentVoltage, &gBatteryCurrent);
 
     SETTINGS_InitEEPROM();
+
+#ifdef ENABLE_SURVIVAL
+    SURVIVAL_Init();
+#endif
 
     #ifdef ENABLE_FEAT_F4HWN
         gDW = gEeprom.DUAL_WATCH;
@@ -214,6 +221,9 @@ void Main(void)
     }
     else
     {
+#ifdef ENABLE_SURVIVAL
+        boot_counter_10ms = 400;   // logo stays 4 s (first boot channel setup may have used up the default)
+#endif
         UI_DisplayWelcome();
 
         BACKLIGHT_TurnOn();
@@ -255,6 +265,10 @@ void Main(void)
 #endif
 
         BOOT_ProcessMode(BootMode);
+#ifdef ENABLE_SURVIVAL
+        if (BootMode == BOOT_MODE_NORMAL)
+            SURVIVAL_ShowBootPrompt();
+#endif
 
         // GPIO_ClearBit(&GPIOA->DATA, GPIOA_PIN_VOICE_0);
 

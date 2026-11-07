@@ -26,6 +26,10 @@
 #include "app/generic.h"
 #include "app/main.h"
 #include "app/scanner.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+    #include "ui/menu.h"
+#endif
 
 #ifdef ENABLE_SPECTRUM
 #include "app/spectrum.h"
@@ -86,7 +90,9 @@ static void toggle_chan_scanlist(void)
 
 static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
 {
+#ifndef ENABLE_SURVIVAL
     uint8_t Vfo = gEeprom.TX_VFO;
+#endif
 
 #ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
     if(gEeprom.MENU_LOCK == true) {
@@ -105,16 +111,28 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
         gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
         return;
     }
+
+#ifdef ENABLE_SURVIVAL
+    // only the shortcuts on the help page; the other F functions are upstream VFO tools
+    if (Key != KEY_0 && Key != KEY_4 && Key != KEY_5 && Key != KEY_6 && Key != KEY_7 && Key != KEY_8 && Key != KEY_UP && Key != KEY_DOWN) {
+        if (beep)
+            gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        return;
+    }
+#endif
     
     gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
 
     switch (Key) {
         case KEY_0:
-            #ifdef ENABLE_FMRADIO
+            #if defined(ENABLE_SURVIVAL) && defined(ENABLE_FMRADIO)
+                SURVIVAL_SetMode(SURV_MODE_FM);   // stops a running scan first
+            #elif defined(ENABLE_FMRADIO)
                 ACTION_FM();
             #endif
             break;
 
+#ifndef ENABLE_SURVIVAL   // F functions not on the survival help page
         case KEY_1:
             if (!IS_FREQ_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
                 gWasFKeyPressed = false;
@@ -206,9 +224,14 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
                 gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
 
             break;
+#endif
 
         case KEY_4:
             gWasFKeyPressed          = false;
+#ifdef ENABLE_SURVIVAL
+            SURVIVAL_ShowLog();   // recently heard list instead of the code scanner
+            break;
+#endif
 
             gBackup_CROSS_BAND_RX_TX  = gEeprom.CROSS_BAND_RX_TX;
             gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;
@@ -221,6 +244,10 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             break;
 
         case KEY_5:
+#ifdef ENABLE_SURVIVAL
+            SURVIVAL_TogglePrio();
+            break;
+#endif
             if(beep) {
 #ifdef ENABLE_NOAA
                 if (!IS_NOAA_CHANNEL(gTxVfo->CHANNEL_SAVE)) {
@@ -246,10 +273,18 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             break;
 
         case KEY_6:
+#ifdef ENABLE_SURVIVAL
+            SURVIVAL_ShowManual();
+            break;
+#endif
             ACTION_Power();
             break;
 
         case KEY_7:
+#ifdef ENABLE_SURVIVAL
+            SURVIVAL_AddFav();
+            break;
+#endif
 #ifdef ENABLE_VOX
             ACTION_Vox();
 //#else
@@ -258,10 +293,15 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             break;
 
         case KEY_8:
+#ifdef ENABLE_SURVIVAL
+            SURVIVAL_ToggleSkip();
+            break;
+#endif
             gTxVfo->FrequencyReverse = gTxVfo->FrequencyReverse == false;
             gRequestSaveChannel = 1;
             break;
 
+#ifndef ENABLE_SURVIVAL   // F functions not on the survival help page
         case KEY_9:
             if (RADIO_CheckValidChannel(gEeprom.CHAN_1_CALL, false, 0)) {
                 gEeprom.MrChannel[Vfo]     = gEeprom.CHAN_1_CALL;
@@ -279,19 +319,27 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             if (beep)
                 gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
             break;
+#endif
 
 #ifdef ENABLE_FEAT_F4HWN // Set Squelch F + UP or Down and Step F + SIDE1 or F + SIDE2
         case KEY_UP:
             gEeprom.SQUELCH_LEVEL = (gEeprom.SQUELCH_LEVEL < 9) ? gEeprom.SQUELCH_LEVEL + 1: 9;
             gVfoConfigureMode     = VFO_CONFIGURE;
             gWasFKeyPressed = false;
+#ifdef ENABLE_SURVIVAL
+            gRequestSaveSettings  = true;   // F4HWN kept this change in RAM only
+#endif
             break;
         case KEY_DOWN:
             gEeprom.SQUELCH_LEVEL = (gEeprom.SQUELCH_LEVEL > 0) ? gEeprom.SQUELCH_LEVEL - 1: 0;
             gVfoConfigureMode     = VFO_CONFIGURE;
             gWasFKeyPressed = false;
+#ifdef ENABLE_SURVIVAL
+            gRequestSaveSettings  = true;
+#endif
             break;
 
+#ifndef ENABLE_SURVIVAL   // F functions not on the survival help page
         case KEY_SIDE1:
             uint8_t a = FREQUENCY_GetSortedIdxFromStepIdx(gTxVfo->STEP_SETTING);
             if (a < STEP_N_ELEM - 1)
@@ -318,6 +366,7 @@ static void processFKeyFunction(const KEY_Code_t Key, const bool beep)
             gVfoConfigureMode     = VFO_CONFIGURE;
             gWasFKeyPressed = false;
             break;
+#endif
 #endif
 
         default:
@@ -573,9 +622,17 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
         return;
     }
 
+#ifdef ENABLE_SURVIVAL
+    if (Key != KEY_0 && Key != KEY_4 && Key != KEY_5 && Key != KEY_6 && Key != KEY_7 && Key != KEY_8) {   // not on the help page: the page stays
+        gBeepToPlay = BEEP_500HZ_60MS_DOUBLE_BEEP_OPTIONAL;
+        return;
+    }
+#endif
+
     gWasFKeyPressed = false;
     gUpdateStatus   = true;
 
+#ifndef ENABLE_SURVIVAL   // survival: F+8 = skip list (processFKeyFunction)
     if(Key == 8)
     {
         ACTION_BackLightOnDemand();
@@ -586,6 +643,7 @@ static void MAIN_Key_DIGITS(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
         ACTION_BackLight();
         return;
     }
+#endif
     #ifdef ENABLE_FEAT_F4HWN_GAME
     else if(Key == 7)
     {
@@ -672,7 +730,12 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
     if (bKeyHeld) { // menu key held down (long press)
         if (bKeyPressed) { // long press MENU key
 
-            #ifdef ENABLE_FEAT_F4HWN
+            #if defined(ENABLE_FEAT_F4HWN) && defined(ENABLE_SURVIVAL)
+            // survival: hold M opens the menu while scanning too, the scan stops where it is
+            // (F+8 puts a noisy channel on the skip list instead of F4HWN's RAM-only exclusion)
+            if(gScanStateDir != SCAN_OFF)
+                CHFRSCANNER_StopHere();
+            #elif defined(ENABLE_FEAT_F4HWN)
             // Exclude work with list 1, 2, 3 or all list
             if(gScanStateDir != SCAN_OFF)
             {
@@ -703,7 +766,15 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
                 gWasFKeyPressed = false;
                 gUpdateStatus   = true;
 
+#ifdef ENABLE_SURVIVAL
+                // survival: hold M opens the menu (tap M switches mode, below), always on Basic / Group
+                gMenuLevel            = 0;
+                gMenuCursor           = 0;
+                gFlagRefreshSetting   = true;
+                gRequestDisplayScreen = DISPLAY_MENU;
+#else
                 ACTION_Handle(KEY_MENU, bKeyPressed, bKeyHeld);
+#endif
             }
         }
 
@@ -713,6 +784,13 @@ static void MAIN_Key_MENU(bool bKeyPressed, bool bKeyHeld)
     if (!bKeyPressed && !gDTMF_InputMode) { // menu key released
         const bool bFlag = !gInputBoxIndex;
         gInputBoxIndex   = 0;
+
+#ifdef ENABLE_SURVIVAL
+        if (bFlag) {   // tap M: next mode, also while scanning
+            ACTION_SurvivalGroup();
+            return;
+        }
+#endif
 
         if (bFlag) {
             if (gScanStateDir != SCAN_OFF) {
@@ -789,6 +867,13 @@ static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
     
     if (!gWasFKeyPressed) // pressed without the F-key
     {   
+#ifdef ENABLE_SURVIVAL
+        // survival: tap * starts/stops the scan (no DTMF entry)
+        ACTION_Scan(false);
+        gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
+        gUpdateStatus = true;
+        return;
+#endif
         if (gScanStateDir == SCAN_OFF 
 #ifdef ENABLE_NOAA
             && !IS_NOAA_CHANNEL(gTxVfo->CHANNEL_SAVE)
@@ -820,12 +905,18 @@ static void MAIN_Key_STAR(bool bKeyPressed, bool bKeyHeld)
             return;
         }               
 #endif
+#ifdef ENABLE_SURVIVAL
+        // F + * scans the current group / CUSTOM range, like a long press on *
+        ACTION_Scan(false);
+        gBeepToPlay = BEEP_1KHZ_60MS_OPTIONAL;
+#else
         // scan the CTCSS/DCS code
         gBackup_CROSS_BAND_RX_TX  = gEeprom.CROSS_BAND_RX_TX;
         gEeprom.CROSS_BAND_RX_TX = CROSS_BAND_OFF;
 
         SCANNER_Start(true);
         gRequestDisplayScreen = DISPLAY_SCANNER;
+#endif
     }
     
     //gPttWasReleased = true; Fixed issue #138
@@ -846,6 +937,10 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
                 processFKeyFunction(KEY_DOWN, false);
                 break;
         }
+#ifdef ENABLE_SURVIVAL
+        gUpdateStatus  = true;   // close the key help, show the new SQL
+        gUpdateDisplay = true;
+#endif
         return;
     }
 #endif
@@ -853,6 +948,41 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 #ifdef ENABLE_FEAT_F4HWN_RESCUE_OPS
     gRemoveOffset = false;
     gPowerHigh = false;
+#endif
+
+#ifdef ENABLE_SURVIVAL
+    // a press that stopped the scan must not restart it when it lasts past the hold delay
+    static bool sStoppedScan;
+
+    if (!bKeyPressed) {
+        if (sStoppedScan) {
+            sStoppedScan = false;
+            return;
+        }
+    }
+
+    // short press while scanning: stop right here
+    if (bKeyPressed && !bKeyHeld && gScanStateDir != SCAN_OFF && gInputBoxIndex == 0) {
+        CHFRSCANNER_StopHere();
+        sStoppedScan = true;
+        gBeepToPlay  = BEEP_1KHZ_60MS_OPTIONAL;
+        return;
+    }
+
+    if (sStoppedScan)
+        return;
+
+    // hold up/down: scan in that direction until there is activity
+    // (the fast repeat events while the key stays down are ignored)
+    if (bKeyHeld) {
+        if (bKeyPressed && gInputBoxIndex == 0) {
+            if (gScanStateDir == SCAN_OFF)
+                ACTION_ScanDirection(Direction);
+            else
+                gScanStateDir = Direction;
+        }
+        return;
+    }
 #endif
 
     uint8_t Channel = gEeprom.ScreenChannel[gEeprom.TX_VFO];
@@ -900,7 +1030,11 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
                 return;
             }
 
+#ifdef ENABLE_SURVIVAL
+            Next = SURVIVAL_FindNextChannel(Channel + Direction, Direction, false, 0);
+#else
             Next = RADIO_FindNextChannel(Channel + Direction, Direction, false, 0);
+#endif
             if (Next == 0xFF)
                 return;
             if (Channel == Next)
@@ -938,6 +1072,10 @@ static void MAIN_Key_UP_DOWN(bool bKeyPressed, bool bKeyHeld, int8_t Direction)
 
 void MAIN_ProcessKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld)
 {
+#ifdef ENABLE_SURVIVAL
+    if (gWasFKeyPressed && gInputBoxIndex == 0 && SURVIVAL_HelpKeys(Key, bKeyPressed, bKeyHeld))
+        return;
+#endif
 #ifdef ENABLE_FMRADIO
     if (gFmRadioMode && Key != KEY_PTT && Key != KEY_EXIT) {
         if (!bKeyHeld && bKeyPressed)

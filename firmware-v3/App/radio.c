@@ -33,6 +33,10 @@
 #include "helper/battery.h"
 #include "misc.h"
 #include "radio.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/chFrScanner.h"
+    #include "app/survival.h"
+#endif
 #include "settings.h"
 #include "ui/menu.h"
 
@@ -693,9 +697,14 @@ void RADIO_SetupRegisters(bool switchToForeground)
         }
     #endif
 
-    AUDIO_AudioPathOff();
-
-    gEnableSpeaker = false;
+#if defined(ENABLE_SURVIVAL) && defined(ENABLE_FMRADIO)
+    // keep the FM radio audible while the BK4819 scans channels in the background
+    if (!(gFmRadioMode && gScanStateDir != SCAN_OFF))
+#endif
+    {
+        AUDIO_AudioPathOff();
+        gEnableSpeaker = false;
+    }
 
     BK4819_ToggleGpioOut(BK4819_GPIO6_PIN2_GREEN, false);
 
@@ -752,10 +761,16 @@ void RADIO_SetupRegisters(bool switchToForeground)
     #endif
     BK4819_SetFrequency(Frequency);
 
+#if defined(ENABLE_SURVIVAL) && defined(ENABLE_FMRADIO)
+    gBK4819_KeepAfDac = gFmRadioMode && gScanStateDir != SCAN_OFF;   // FM background scan hop
+#endif
     BK4819_SetupSquelch(
         gRxVfo->SquelchOpenRSSIThresh,    gRxVfo->SquelchCloseRSSIThresh,
         gRxVfo->SquelchOpenNoiseThresh,   gRxVfo->SquelchCloseNoiseThresh,
         gRxVfo->SquelchCloseGlitchThresh, gRxVfo->SquelchOpenGlitchThresh);
+#if defined(ENABLE_SURVIVAL) && defined(ENABLE_FMRADIO)
+    gBK4819_KeepAfDac = false;
+#endif
 
     BK4819_PickRXFilterPathBasedOnFrequency(Frequency);
 
@@ -1127,7 +1142,13 @@ void RADIO_PrepareTX(void)
 
     RADIO_SelectCurrentVfo();
 
-#ifdef ENABLE_FEAT_F4HWN
+#if defined(ENABLE_SURVIVAL)
+        // per-band TX permission always applies, the per-channel TX_LOCK bit is ignored
+        if(TX_freq_check(gCurrentVfo->pTX->Frequency) != 0
+    #if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
+            && gAlarmState != ALARM_STATE_SITE_ALARM
+    #endif
+#elif defined(ENABLE_FEAT_F4HWN)
         if(TX_freq_check(gCurrentVfo->pTX->Frequency) != 0 && gCurrentVfo->TX_LOCK == true
     #if defined(ENABLE_ALARM) || defined(ENABLE_TX1750)
             && gAlarmState != ALARM_STATE_SITE_ALARM

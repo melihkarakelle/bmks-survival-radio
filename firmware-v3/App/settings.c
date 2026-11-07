@@ -27,6 +27,9 @@
 #include "misc.h"
 #include "settings.h"
 #include "ui/menu.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 
 #ifdef ENABLE_FEAT_F4HWN_RESET_CHANNEL
 static const uint32_t gDefaultFrequencyTable[] =
@@ -590,6 +593,11 @@ void SETTINGS_FactoryReset(bool bIsAll)
             gEeprom.MENU_LOCK = 0;
         }
     #endif
+#ifdef ENABLE_SURVIVAL
+    // both resets: the VFO reset also wipes the channel frequencies, so the
+    // survival channels and defaults are rewritten on the next boot
+    SURVIVAL_EraseMarker();
+#endif
 }
 
 #ifdef ENABLE_FMRADIO

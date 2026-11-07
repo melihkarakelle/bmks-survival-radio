@@ -8,7 +8,7 @@ static inline void Flashlight_TurnOn(){ GPIO_SetOutputPin(GPIO_PIN_FLASHLIGHT); 
 static inline void Flashlight_TurnOff(){ GPIO_ResetOutputPin(GPIO_PIN_FLASHLIGHT); }
 static inline void Flashlight_Toggle(){ GPIO_TogglePin(GPIO_PIN_FLASHLIGHT); }
 
-#if !defined(ENABLE_FEAT_F4HWN) || defined(ENABLE_FEAT_F4HWN_RESCUE_OPS)
+#if !defined(ENABLE_FEAT_F4HWN) || defined(ENABLE_FEAT_F4HWN_RESCUE_OPS) || defined(ENABLE_SURVIVAL)   // survival: on, strobe, SOS
     enum FlashlightMode_t  gFlashLightState;
 
     void FlashlightTimeSlice()
@@ -17,6 +17,17 @@ static inline void Flashlight_Toggle(){ GPIO_TogglePin(GPIO_PIN_FLASHLIGHT); }
             Flashlight_Toggle();
             return;
         }
+
+#ifdef ENABLE_SURVIVAL
+        if (gFlashLightState == FLASHLIGHT_STROBE) {   // called every 10 ms
+            const uint8_t phase = gFlashLightBlinkCounter % 100;
+            if (phase < 18 && (phase / 3) % 2 == 0)
+                Flashlight_TurnOn();
+            else
+                Flashlight_TurnOff();
+            return;
+        }
+#endif
 
         if (gFlashLightState == FLASHLIGHT_SOS) {
             const uint16_t u = 15;
@@ -58,6 +69,9 @@ static inline void Flashlight_Toggle(){ GPIO_TogglePin(GPIO_PIN_FLASHLIGHT); }
                 break;
             case FLASHLIGHT_ON:
             case FLASHLIGHT_BLINK:
+#ifdef ENABLE_SURVIVAL
+            case FLASHLIGHT_STROBE:
+#endif
                 gFlashLightState++;
                 break;
             case FLASHLIGHT_SOS:

@@ -54,6 +54,7 @@ static void convertTime(uint8_t *line, uint8_t type)
 #endif
 #endif
 
+#ifndef ENABLE_SURVIVAL   // survival: ui/survival.c
 void UI_DisplayStatus()
 {
     char str[8] = "";
@@ -291,3 +292,4 @@ void UI_DisplayStatus()
 
     ST7565_BlitStatusLine();
 }
+#endif

@@ -140,6 +140,22 @@ enable_feature(ENABLE_FLASHLIGHT
     app/flashlight.c
 )
 
+# BMKs Survival Radio: fixed channel groups, built-in manual, safe transmit
+# The survival sources are shared with the V1 build (firmware/), SURVIVAL_TARGET_V3
+# selects the V3 storage code in them.
+set(SURVIVAL_SRC ${CMAKE_CURRENT_SOURCE_DIR}/../../firmware)
+enable_feature(ENABLE_SURVIVAL
+    ${SURVIVAL_SRC}/app/survival.c
+    ${SURVIVAL_SRC}/app/survival_manual.c
+    ${SURVIVAL_SRC}/ui/survival.c
+)
+if(ENABLE_SURVIVAL)
+    if(NOT SURVIVAL_VERSION)
+        set(SURVIVAL_VERSION "v1.0")
+    endif()
+    target_compile_definitions(App INTERFACE "SURVIVAL_VERSION=\"${SURVIVAL_VERSION}\"" SURVIVAL_TARGET_V3)
+endif()
+
 # ---- CUSTOM MODS ----
 
 enable_feature(ENABLE_SPECTRUM

@@ -44,6 +44,7 @@ static const uint16_t FSK_RogerTable[7] = {0xF1A2, 0x7446, 0x61A4, 0x6544, 0x4E8
 static uint16_t gBK4819_GpioOutState;
 
 bool gRxIdleMode;
+bool gBK4819_KeepAfDac;   // retune without powering down the AF DAC (no click while FM plays)
 
 static inline void CS_Assert()
 {
@@ -876,8 +877,9 @@ void BK4819_RX_TurnOn(void)
     //
     BK4819_WriteRegister(BK4819_REG_37, 0x9F1F);  // 0001111100001111
 
-    // Turn off everything
-    BK4819_WriteRegister(BK4819_REG_30, 0);
+    // Turn off everything (except the AF DAC when asked: its power cycle clicks
+    // in the speaker while the FM radio shares the audio path)
+    BK4819_WriteRegister(BK4819_REG_30, gBK4819_KeepAfDac ? BK4819_REG_30_ENABLE_AF_DAC : 0);
 
 
     BK4819_WriteRegister(BK4819_REG_30, 0xBFF1);

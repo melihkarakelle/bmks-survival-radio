@@ -26,6 +26,9 @@
 typedef struct {
     const char  name[7];    // menu display area only has room for 6 characters
     uint8_t     menu_id;
+#ifdef ENABLE_SURVIVAL
+    const char  title[12];  // plain-language title above the value
+#endif
 } t_menu_item;
 
 enum
@@ -158,11 +161,44 @@ enum
     MENU_F2SHRT,
     MENU_F2LONG,
     MENU_MLONG,
-    MENU_BATTYP
+    MENU_BATTYP,
+#ifdef ENABLE_SURVIVAL
+    MENU_SRV_GROUP,
+    MENU_SRV_TX_PMR,    // order must match SURV_TX_*
+    MENU_SRV_TX_FRS,
+    MENU_SRV_TX_MARINE,
+    MENU_SRV_TX_HAM,
+    MENU_SRV_TX_CB,
+    MENU_SRV_TX_ALL,
+    MENU_SRV_C_START,
+    MENU_SRV_C_END,
+    MENU_SRV_FM_SCAN,
+    MENU_SRV_ECO,
+    MENU_SRV_HEARD,     // actions: M runs them, no value to edit
+    MENU_SRV_SKIP,
+    MENU_SRV_FAV,
+    MENU_SRV_PRIO,
+    MENU_SRV_RADIO,
+    MENU_SRV_HELP,
+    MENU_SRV_ADV,
+#endif
 };
+
+#ifdef ENABLE_SURVIVAL
+    // MenuList starts with the Basic level; Adv is its last item, Advanced follows
+    #define SURV_BASIC_COUNT 11
+    #define IS_SURV_ACTION(id) ((id) >= MENU_SRV_HEARD && (id) <= MENU_SRV_ADV)
+    extern uint8_t gMenuLevel;      // 0 Basic, 1 Advanced
+#endif
 
 extern const uint8_t FIRST_HIDDEN_MENU_ITEM;
 extern const t_menu_item MenuList[];
+
+#ifdef ENABLE_SURVIVAL
+    #define IS_FREQ_MENU(id) ((id) == MENU_OFFSET || (id) == MENU_SRV_C_START || (id) == MENU_SRV_C_END)
+#else
+    #define IS_FREQ_MENU(id) ((id) == MENU_OFFSET)
+#endif
 
 extern const char        gSubMenu_TXP[8][6];
 extern const char        gSubMenu_SFT_D[3][4];

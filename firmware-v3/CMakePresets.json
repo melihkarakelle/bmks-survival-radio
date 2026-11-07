@@ -191,6 +191,36 @@
                 "EDITION_STRING": "Fusion",
                 "TARGET": "f4hwn.fusion"
             }
+        },
+        {
+            "name": "Survival",
+            "inherits": "default",
+            "cacheVariables": {
+                "ENABLE_SURVIVAL": true,
+                "ENABLE_FMRADIO": true,
+                "ENABLE_FEAT_F4HWN_SCREENSHOT": true,
+                "ENABLE_FEAT_F4HWN_PMR": true,
+                "ENABLE_FEAT_F4HWN_GMRS_FRS_MURS": true,
+                "ENABLE_AM_FIX": true,
+                "ENABLE_SPECTRUM": false,
+                "ENABLE_VOX": false,
+                "ENABLE_AIRCOPY": false,
+                "ENABLE_FEAT_F4HWN_GAME": false,
+                "ENABLE_NOAA": false,
+                "ENABLE_FEAT_F4HWN_RESCUE_OPS": false,
+                "ENABLE_AUDIO_BAR": false,
+                "ENABLE_FEAT_F4HWN_RESUME_STATE": false,
+                "ENABLE_FEAT_F4HWN_SLEEP": false,
+                "ENABLE_FEAT_F4HWN_RX_TX_TIMER": false,
+                "ENABLE_FEAT_F4HWN_CA": false,
+                "ENABLE_NO_CODE_SCAN_TIMEOUT": false,
+                "EDITION_STRING": "Survival",
+                "AUTHOR_STRING_1": "BMKs",
+                "AUTHOR_STRING_2": "BMKs",
+                "AUTHOR_STRING": "BMKs",
+                "VERSION_STRING_2": "v6.9",
+                "SURVIVAL_VERSION": "v6.9"
+            }
         }
     ],
     "buildPresets": [
@@ -221,6 +251,10 @@
         {
             "name": "Fusion",
             "configurePreset": "Fusion"
+        },
+        {
+            "name": "Survival",
+            "configurePreset": "Survival"
         }
     ]
 }

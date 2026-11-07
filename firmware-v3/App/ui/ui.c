@@ -38,6 +38,9 @@
 #include "ui/menu.h"
 #include "ui/scanner.h"
 #include "ui/ui.h"
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include "../misc.h"
 
 GUI_DisplayType_t gScreenToDisplay;
@@ -87,6 +90,9 @@ void GUI_SelectNextDisplay(GUI_DisplayType_t Display)
         gInputBoxIndex       = 0;
         gIsInSubMenu         = false;
         gCssBackgroundScan   = false;
+#ifdef ENABLE_SURVIVAL
+        if (!SURVIVAL_FmBgScanning())   // the FM background scan survives the switch to the FM screen
+#endif
         gScanStateDir        = SCAN_OFF;
         #ifdef ENABLE_FMRADIO
             gFM_ScanState    = FM_SCAN_OFF;
