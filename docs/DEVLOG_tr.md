@@ -567,3 +567,13 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
   yük imzası (RX/TX, FM, fener, hoparlör) değişince 3 sn beklenip yeni referans alınır. v7.1: ışık seviyesi imzadan
   çıktı (okumayı 2-3 birim oynatıyor); 10 sn kısılması bekleme penceresi açıp çıkarmayı yutuyordu.
 - Şarjda pil bölmeleri 500 ms'de bir 0→3 dolar, voltaj yerine yüzde görünür. Açılışta şarja takılıysa görülmez.
+
+### Pin taraması (2026-11-10): şarj başka bir pinde mi?
+
+- Tanılama derlemesi (`SURVIVAL_DIAG=1 tools/build-f4hwn.sh`, UART 0x0601, `tools/k5pins.py`): boş pinler
+  (PA0-2, PA15, PB0-5, PB12-13, PC6-7) kendi halinde / pull-up / pull-down okunur, 16 ADC kanalı okunur.
+  Tanılama derlemesinde kılavuz metni yer açmak için çıkarılır (manual2c.py).
+- Sonuç: USB-C tak/çıkar sırasında hiçbir boş pin değişmedi (hepsi boşta, pull'a göre dönüyor), CH9 hep 0;
+  değişen tek kanal CH4 (pil voltajı, çıkarınca −35). Mavi şarj LED'i MCU'ya bağlı değil. v7.1'deki voltaj
+  sıçraması yöntemi tek yol. Not: F4HWN ekran görüntüsü modülü UART'a kendiliğinden AA 55 kareleri karıştırabiliyor;
+  k5pins.py AB CD başlığını arayarak senkron kalıyor.

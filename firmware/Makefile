@@ -50,6 +50,7 @@ ENABLE_SCAN_RANGES              ?= 1
 ENABLE_REGA                     ?= 0
 # Thank you @reppad
 ENABLE_EXTRA_UART_CMD           ?= 0
+ENABLE_SURVIVAL_DIAG            ?= 0
 
 # ---- F4HWN MODS ----
 
@@ -518,6 +519,9 @@ ifeq ($(ENABLE_FEAT_F4HWN_CA),1)
 endif
 ifeq ($(ENABLE_FEAT_F4HWN_DEBUG),1)
 	CFLAGS  += -DENABLE_FEAT_F4HWN_DEBUG
+endif
+ifeq ($(ENABLE_SURVIVAL_DIAG),1)
+	CFLAGS  += -DENABLE_SURVIVAL_DIAG
 endif
 ifeq ($(ENABLE_EXTRA_UART_CMD),1)
 	CFLAGS  += -DENABLE_EXTRA_UART_CMD

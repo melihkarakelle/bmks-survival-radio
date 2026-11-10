@@ -26,6 +26,10 @@
 #include "board.h"
 #include "bsp/dp32g030/dma.h"
 #include "bsp/dp32g030/gpio.h"
+#ifdef ENABLE_SURVIVAL_DIAG
+    #include "bsp/dp32g030/portcon.h"
+    #include "driver/systick.h"
+#endif
 #include "driver/aes.h"
 #include "driver/backlight.h"
 #include "driver/bk4819.h"
@@ -334,6 +338,78 @@ static void CMD_051D(const uint8_t *pBuffer)
     SendReply(&Reply, sizeof(Reply));
 }
 
+#ifdef ENABLE_SURVIVAL_DIAG
+// Pin report for finding the charger: port data as configured, then the pins nothing uses
+// (PA0-2, PA15, PB0-5, PB12-13, PC6-7) as inputs floating / pulled up / pulled down, then every
+// ADC channel. The pins get their old setup back before the reply goes out.
+#define FREE_A 0x8007u
+#define FREE_B 0x303Fu
+#define FREE_C 0x00C0u
+
+static void CMD_0601(void)
+{
+    struct {
+        Header_t Header;
+        struct {
+            uint32_t Port[4][3];   // as configured, floating, pull-up, pull-down x A B C
+            uint16_t Adc[16];
+        } Data;
+    } Reply;
+
+    Reply.Header.ID   = 0x0602;
+    Reply.Header.Size = sizeof(Reply.Data);
+
+    Reply.Data.Port[0][0] = GPIOA->DATA;
+    Reply.Data.Port[0][1] = GPIOB->DATA;
+    Reply.Data.Port[0][2] = GPIOC->DATA;
+
+    const uint32_t dirA = GPIOA->DIR, dirB = GPIOB->DIR, dirC = GPIOC->DIR;
+    const uint32_t ieA = PORTCON_PORTA_IE, ieB = PORTCON_PORTB_IE, ieC = PORTCON_PORTC_IE;
+    const uint32_t puA = PORTCON_PORTA_PU, puB = PORTCON_PORTB_PU, puC = PORTCON_PORTC_PU;
+    const uint32_t pdA = PORTCON_PORTA_PD, pdB = PORTCON_PORTB_PD, pdC = PORTCON_PORTC_PD;
+    const uint32_t a0 = PORTCON_PORTA_SEL0, a1 = PORTCON_PORTA_SEL1;
+    const uint32_t b0 = PORTCON_PORTB_SEL0, b1 = PORTCON_PORTB_SEL1, c0 = PORTCON_PORTC_SEL0;
+
+    // GPIO function (0) for the free pins, input, input buffer on
+    PORTCON_PORTA_SEL0 = a0 & ~0x00000FFFu;   // A0-A2
+    PORTCON_PORTA_SEL1 = a1 & ~0xF0000000u;   // A15
+    PORTCON_PORTB_SEL0 = b0 & ~0x00FFFFFFu;   // B0-B5
+    PORTCON_PORTB_SEL1 = b1 & ~0x00FF0000u;   // B12-B13
+    PORTCON_PORTC_SEL0 = c0 & ~0xFF000000u;   // C6-C7
+    GPIOA->DIR = dirA & ~FREE_A;
+    GPIOB->DIR = dirB & ~FREE_B;
+    GPIOC->DIR = dirC & ~FREE_C;
+    PORTCON_PORTA_IE = ieA | FREE_A;
+    PORTCON_PORTB_IE = ieB | FREE_B;
+    PORTCON_PORTC_IE = ieC | FREE_C;
+
+    for (uint8_t mode = 1; mode < 4; mode++) {
+        const bool up = mode == 2, down = mode == 3;
+        PORTCON_PORTA_PU = up   ? puA | FREE_A : puA & ~FREE_A;
+        PORTCON_PORTB_PU = up   ? puB | FREE_B : puB & ~FREE_B;
+        PORTCON_PORTC_PU = up   ? puC | FREE_C : puC & ~FREE_C;
+        PORTCON_PORTA_PD = down ? pdA | FREE_A : pdA & ~FREE_A;
+        PORTCON_PORTB_PD = down ? pdB | FREE_B : pdB & ~FREE_B;
+        PORTCON_PORTC_PD = down ? pdC | FREE_C : pdC & ~FREE_C;
+        SYSTICK_DelayUs(200);
+        Reply.Data.Port[mode][0] = GPIOA->DATA;
+        Reply.Data.Port[mode][1] = GPIOB->DATA;
+        Reply.Data.Port[mode][2] = GPIOC->DATA;
+    }
+
+    PORTCON_PORTA_PU = puA; PORTCON_PORTB_PU = puB; PORTCON_PORTC_PU = puC;
+    PORTCON_PORTA_PD = pdA; PORTCON_PORTB_PD = pdB; PORTCON_PORTC_PD = pdC;
+    PORTCON_PORTA_IE = ieA; PORTCON_PORTB_IE = ieB; PORTCON_PORTC_IE = ieC;
+    GPIOA->DIR = dirA; GPIOB->DIR = dirB; GPIOC->DIR = dirC;
+    PORTCON_PORTA_SEL0 = a0; PORTCON_PORTA_SEL1 = a1;
+    PORTCON_PORTB_SEL0 = b0; PORTCON_PORTB_SEL1 = b1; PORTCON_PORTC_SEL0 = c0;
+
+    BOARD_ADC_ReadAll(Reply.Data.Adc);
+
+    SendReply(&Reply, sizeof(Reply));
+}
+#endif
+
 #ifdef ENABLE_EXTRA_UART_CMD
 // read RSSI
 static void CMD_0527(void)
@@ -348,6 +424,7 @@ static void CMD_0527(void)
 
     SendReply(&Reply, sizeof(Reply));
 }
+
 
 // read ADC
 static void CMD_0529(void)
@@ -599,6 +676,11 @@ void UART_HandleCommand(void)
         case 0x0521:    // Not implementing non-authentic command
             break;
 
+#ifdef ENABLE_SURVIVAL_DIAG
+        case 0x0601:
+            CMD_0601();
+            break;
+#endif
 #ifdef ENABLE_EXTRA_UART_CMD
         case 0x0527:
             CMD_0527();

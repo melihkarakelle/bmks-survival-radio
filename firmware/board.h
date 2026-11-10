@@ -26,6 +26,9 @@ void     BOARD_PORTCON_Init(void);
 void     BOARD_ADC_Init(void);
 void     BOARD_ADC_GetBatteryInfo(uint16_t *pVoltage, uint16_t *pCurrent);
 void     BOARD_Init(void);
+#ifdef ENABLE_SURVIVAL_DIAG
+void     BOARD_ADC_ReadAll(uint16_t *pValues);
+#endif
 
 #endif
 

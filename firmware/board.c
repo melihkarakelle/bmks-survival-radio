@@ -487,6 +487,42 @@ void BOARD_ADC_GetBatteryInfo(uint16_t *pVoltage, uint16_t *pCurrent)
     *pCurrent = ADC_GetValue(ADC_CH9);
 }
 
+#ifdef ENABLE_SURVIVAL_DIAG
+// diagnostics: one conversion of all 16 ADC channels, then back to CH4 + CH9
+void BOARD_ADC_ReadAll(uint16_t *pValues)
+{
+    ADC_Config_t Config;
+
+    Config.CLK_SEL            = SYSCON_CLK_SEL_W_SARADC_SMPL_VALUE_DIV2;
+    Config.CH_SEL             = 0xFFFF;
+    Config.AVG                = SARADC_CFG_AVG_VALUE_8_SAMPLE;
+    Config.CONT               = SARADC_CFG_CONT_VALUE_SINGLE;
+    Config.MEM_MODE           = SARADC_CFG_MEM_MODE_VALUE_CHANNEL;
+    Config.SMPL_CLK           = SARADC_CFG_SMPL_CLK_VALUE_INTERNAL;
+    Config.SMPL_WIN           = SARADC_CFG_SMPL_WIN_VALUE_15_CYCLE;
+    Config.SMPL_SETUP         = SARADC_CFG_SMPL_SETUP_VALUE_1_CYCLE;
+    Config.ADC_TRIG           = SARADC_CFG_ADC_TRIG_VALUE_CPU;
+    Config.CALIB_KD_VALID     = SARADC_CALIB_KD_VALID_VALUE_YES;
+    Config.CALIB_OFFSET_VALID = SARADC_CALIB_OFFSET_VALID_VALUE_YES;
+    Config.DMA_EN             = SARADC_CFG_DMA_EN_VALUE_DISABLE;
+    Config.IE_CHx_EOC         = SARADC_IE_CHx_EOC_VALUE_NONE;
+    Config.IE_FIFO_FULL       = SARADC_IE_FIFO_FULL_VALUE_DISABLE;
+    Config.IE_FIFO_HFULL      = SARADC_IE_FIFO_HFULL_VALUE_DISABLE;
+    ADC_Configure(&Config);
+    ADC_Enable();
+    ADC_SoftReset();
+    ADC_Start();
+
+    for (uint8_t ch = 0; ch < 16; ch++) {
+        uint32_t timeout = 100000;
+        while (!ADC_CheckEndOfConversion(1u << ch) && --timeout) {}
+        pValues[ch] = timeout ? ADC_GetValue(1u << ch) : 0xFFFF;
+    }
+
+    BOARD_ADC_Init();
+}
+#endif
+
 void BOARD_Init(void)
 {
     BOARD_PORTCON_Init();

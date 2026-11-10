@@ -41,6 +41,9 @@ def main():
         "",
         "// Topics one after another: title, rows, each '\\0' terminated; an empty string ends",
         "// a topic, a second empty string (the final terminator) ends the manual.",
+        "#ifdef ENABLE_SURVIVAL_DIAG   // pin scan test builds need the flash",
+        'const char gSurvivalManual[] = "DIAG BUILD\\0" "Manual left out\\0" "\\0";',
+        "#else",
         "const char gSurvivalManual[] =",
     ]
     for topic in topics:
@@ -49,7 +52,7 @@ def main():
             out.append(f'        "{row}\\0"')
         out.append('        "\\0"')
     out[-1] += ";"
-    out += ["", "#endif", ""]
+    out += ["#endif", "", "#endif", ""]
     OUT.write_text("\n".join(out))
     size = sum(len(s) + 1 for t in topics for s in t) + len(topics) + 1
     print(f"{len(topics)} topics, {sum(len(t) - 1 for t in topics)} rows, {size} bytes -> {OUT.relative_to(ROOT)}")

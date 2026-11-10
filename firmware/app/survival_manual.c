@@ -3,6 +3,9 @@
 
 // Topics one after another: title, rows, each '\0' terminated; an empty string ends
 // a topic, a second empty string (the final terminator) ends the manual.
+#ifdef ENABLE_SURVIVAL_DIAG   // pin scan test builds need the flash
+const char gSurvivalManual[] = "DIAG BUILD\0" "Manual left out\0" "\0";
+#else
 const char gSurvivalManual[] =
     "KEYS\0"
         "M>Next group\0"
@@ -297,5 +300,6 @@ const char gSurvivalManual[] =
         "Breaks: do not\0"
         "  move, support\0"
         "\0";
+#endif
 
 #endif
