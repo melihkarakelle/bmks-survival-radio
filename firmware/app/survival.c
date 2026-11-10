@@ -807,6 +807,7 @@ static Heard_t  sHeard[HEARD_N];
 static uint8_t  sHeardCount;
 static uint8_t  sLogCursor;
 static uint32_t sHalfSeconds;
+static bool     sTxSeen;   // a transmission since boot: the battery recovering would look like charging
 
 void SURVIVAL_TimeSlice500ms(void)
 {
@@ -814,6 +815,8 @@ void SURVIVAL_TimeSlice500ms(void)
 
     if (gChargingWithTypeC)
         gUpdateStatus = true;   // charging animation
+    if (gCurrentFunction == FUNCTION_TRANSMIT)
+        sTxSeen = true;
 
     if (sMsgTimer && --sMsgTimer == 0 && gScreenToDisplay == DISPLAY_SCANNER)
         GUI_SelectNextDisplay(DISPLAY_MAIN);
@@ -1327,12 +1330,21 @@ void SURVIVAL_DisplayLog(void)
 // big loads (RX/TX, FM, flashlight, speaker) have not changed meanwhile. The backlight is left
 // out: it moves the reading by 2-3 counts only, and its 10 s dim used to open a settle window
 // that swallowed an unplug.
-#define CHARGE_STEP 8
+#define CHARGE_STEP  8
+#define CHARGE_CREEP 5     // switched on while charging: rise within a minute
+
+static void SetCharging(bool on)
+{
+    gChargingWithTypeC = on;
+    gUpdateStatus      = true;
+    if (on)
+        BACKLIGHT_TurnOn();   // show that the charger was seen
+}
 
 void SURVIVAL_ChargeDetect(uint16_t raw)
 {
-    static uint16_t ref;
-    static uint8_t  sig, settle = 3, hits;
+    static uint16_t ref, base;
+    static uint8_t  sig, settle = 3, hits, window;
 
     const uint8_t s = gCurrentFunction | (gFmRadioMode << 3) | (gEnableSpeaker << 4) | (gFlashLightState << 5);
     if (s != sig) {   // load changed: let the voltage settle, then take a new reference
@@ -1342,25 +1354,34 @@ void SURVIVAL_ChargeDetect(uint16_t raw)
         return;
     }
     if (settle) {
-        if (--settle == 0)
-            ref = raw;
+        if (--settle == 0) {
+            ref    = raw;
+            base   = raw;
+            window = 0;
+        }
         return;
     }
 
     const int16_t d = raw - ref;
     if (gChargingWithTypeC ? d <= -CHARGE_STEP : d >= CHARGE_STEP) {
         if (++hits >= 2) {
-            gChargingWithTypeC = !gChargingWithTypeC;
-            ref           = raw;
-            hits          = 0;
-            gUpdateStatus = true;
-            if (gChargingWithTypeC)
-                BACKLIGHT_TurnOn();   // show that the charger was seen
+            SetCharging(!gChargingWithTypeC);
+            ref  = raw;
+            hits = 0;
         }
         return;
     }
     hits = 0;
     ref  = (ref * 7 + raw) / 8;   // follow the slow drift: charging creep, discharge
+
+    // switched on with the charger already in: no step to see, but while charging the voltage
+    // keeps creeping up (+8 in 40 s measured), at rest it stays flat or falls. First 3 minutes only.
+    if (!gChargingWithTypeC && !sTxSeen && sHalfSeconds < 360 && ++window >= 60) {
+        if (ref >= base + CHARGE_CREEP)
+            SetCharging(true);
+        base   = ref;
+        window = 0;
+    }
 }
 
 uint8_t SURVIVAL_AnimPhase(void)

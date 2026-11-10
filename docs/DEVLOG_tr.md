@@ -577,3 +577,8 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
   değişen tek kanal CH4 (pil voltajı, çıkarınca −35). Mavi şarj LED'i MCU'ya bağlı değil. v7.1'deki voltaj
   sıçraması yöntemi tek yol. Not: F4HWN ekran görüntüsü modülü UART'a kendiliğinden AA 55 kareleri karıştırabiliyor;
   k5pins.py AB CD başlığını arayarak senkron kalıyor.
+
+### v7.2 (2026-11-10): şarjdayken açılınca da algılar
+
+- Açılıştan sonraki ilk 3 dakikada (TX olmadıysa) her 60 sn'lik pencerede ortalanmış okuma ≥5 birim yükselirse
+  şarj sayılır (ölçüm: şarjda 40 sn'de +8; dinlenmede düz ya da düşüş). Pil neredeyse doluysa yükseliş az, algılamayabilir.
