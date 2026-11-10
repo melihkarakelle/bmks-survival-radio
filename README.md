@@ -34,8 +34,9 @@ Based on [F4HWN](https://github.com/armel/uv-k5-firmware-custom) (fork of
 - **Built-in manual** (`F+6`): 27 topics, from the keys to MAYDAY calls, the phonetic alphabet,
   SOS signals, water, direction finding and first aid.
 - **Flashlight:** on, blink, strobe and SOS with the side key.
-- **Charging indicator:** plug the USB-C charger in while the radio is on and the battery icon
-  animates (detected from the battery voltage step; the charge current line reads nothing on these units).
+- **Charging indicator:** the battery icon animates while the USB-C charger is in: at once when you
+  plug it into a running radio, within a minute or two when you switch on with it already plugged in
+  (detected from the battery voltage; the charge current line reads nothing on these units).
 - **Readable UI:** one meaning per row, big frequency digits, plain-language menu, help on the `F` key.
 
 ## Screens
@@ -123,7 +124,7 @@ The firmware lives in [`firmware/`](firmware/) (F4HWN v4.3 tree plus the surviva
 `app/survival.c`, `ui/survival.c` and the `ENABLE_SURVIVAL` sections). Build with Docker:
 
 ```
-EDITION=survival SURVIVAL_VERSION=v7.1 tools/build-f4hwn.sh "$PWD/firmware"
+EDITION=survival SURVIVAL_VERSION=v7.2 tools/build-f4hwn.sh "$PWD/firmware"
 ```
 
 Output: `builds/bmks.survival.bin` and `.packed.bin`. The manual text is
