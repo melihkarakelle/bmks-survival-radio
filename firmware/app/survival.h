@@ -81,6 +81,8 @@ bool    SURVIVAL_DrawHeader(void);        // status line title bar of the help /
 bool    SURVIVAL_HelpKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);   // true = key used by the help pages
 void    SURVIVAL_LogKeys(KEY_Code_t Key, bool bKeyPressed, bool bKeyHeld);
 void    SURVIVAL_DisplayLog(void);
+void    SURVIVAL_ChargeDetect(uint16_t raw);   // newest battery ADC sample, once a second
+uint8_t SURVIVAL_AnimPhase(void);         // 0..3, steps every 500 ms (charging animation)
 bool    SURVIVAL_EcoOn(void);
 void    SURVIVAL_SetEco(bool on);
 void    SURVIVAL_MaskScanDigits(char *freq);

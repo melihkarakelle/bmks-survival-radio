@@ -555,3 +555,14 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 - CUSTOM'a geçince aralık başlangıcının bandına ait VFO slotu seçilir; kayıtlı frekans CStart–CEnd dışındaysa
   (kullanılmamış slot 1300 / 840 MHz gibi rastgele değer tutabiliyordu) frekans aralığın başına alınır ve kaydedilir.
 - Yayın: GitHub public `melihkarakelle/bmks-survival-radio`; README İngilizce, bu günlük `docs/DEVLOG_tr.md`.
+
+### v7.0 (2026-11-10): USB-C şarj algılama ve animasyon
+
+- Bu telsizde USB-C şarj akımı girişi (ADC CH9) hep 0 okuyor; F4HWN/egzumer/DualTachyon'un hepsi "akım > 500 = şarj"
+  kuralına baktığı için hiçbiri şarjı göstermez. USB-C–USB-C kablo/PD şarj aleti hiç güç vermiyor (CC dirençleri yok),
+  USB-A→C kabloyla ~200 mA şarj oluyor, gövdedeki mavi LED yanıyor.
+- Ölçüm (`tools/k5batt.py`, UART 0x0529, test derlemesinde ENABLE_EXTRA_UART_CMD=1): takınca pil ADC'si tek okumada
+  ~+15 (2005→2020), çıkarınca ~−12 (2018→2006); gürültü ±2, tek sivri ±7.
+- `SURVIVAL_ChargeDetect`: en yeni ham okuma referanstan ≥8 yukarı (şarjdayken ≥8 aşağı) ve 2 okuma sürerse durum değişir;
+  yük imzası (ışık seviyesi, RX/TX, FM, fener, hoparlör) değişince 3 sn beklenip yeni referans alınır.
+- Şarjda pil bölmeleri 500 ms'de bir 0→3 dolar, voltaj yerine yüzde görünür. Açılışta şarja takılıysa görülmez.

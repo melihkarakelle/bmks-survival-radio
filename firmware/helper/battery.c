@@ -14,6 +14,9 @@
  *     limitations under the License.
  */
 
+#ifdef ENABLE_SURVIVAL
+    #include "app/survival.h"
+#endif
 #include <assert.h>
 
 #include "battery.h"
@@ -141,6 +144,10 @@ void BATTERY_GetReadings(const bool bDisplayBatteryLevel)
     if ((gScreenToDisplay == DISPLAY_MENU) && UI_MENU_GetCurrentMenuId() == MENU_VOL)
         gUpdateDisplay = true;
 
+#ifdef ENABLE_SURVIVAL
+    // the charge current input reads 0 on these radios: detect the charger from the battery voltage
+    SURVIVAL_ChargeDetect(gBatteryVoltages[(gBatteryVoltageIndex + 3) & 3]);
+#else
     if (gBatteryCurrent < 501)
     {
         if (gChargingWithTypeC)
@@ -162,6 +169,7 @@ void BATTERY_GetReadings(const bool bDisplayBatteryLevel)
 
         gChargingWithTypeC = true;
     }
+#endif
 
     if (PreviousBatteryLevel != gBatteryDisplayLevel)
     {

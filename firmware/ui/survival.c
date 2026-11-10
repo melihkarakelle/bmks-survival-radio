@@ -72,12 +72,17 @@ void UI_DisplayStatus(void)
     else if (gEeprom.KEY_LOCK)
         memcpy(line + 61, LOCK_ICON, sizeof(LOCK_ICON));
 
-    // voltage and a three segment battery, full status line height
-    sprintf(String, "%u.%u", gBatteryVoltageAverage / 100, (gBatteryVoltageAverage / 10) % 10);
-    UI_PrintStringSmallBufferNormal(String, line + 84);
+    // voltage (percentage while charging) and a three segment battery, full status line height
+    const uint8_t percent = BATTERY_VoltsToPercent(gBatteryVoltageAverage);
+    if (gChargingWithTypeC)
+        sprintf(String, "%3u%%", percent);
+    else
+        sprintf(String, "%u.%u", gBatteryVoltageAverage / 100, (gBatteryVoltageAverage / 10) % 10);
+    UI_PrintStringSmallBufferNormal(String, line + (gChargingWithTypeC ? 77 : 84));
 
-    const uint8_t percent  = BATTERY_VoltsToPercent(gBatteryVoltageAverage);
-    const uint8_t segments = (percent > 66) ? 3 : (percent > 33) ? 2 : (percent > 5) ? 1 : 0;
+    // charging: the segments fill up one by one, every 500 ms
+    const uint8_t segments = gChargingWithTypeC ? SURVIVAL_AnimPhase() :
+                             (percent > 66) ? 3 : (percent > 33) ? 2 : (percent > 5) ? 1 : 0;
     line[107] = 0x7F;
     for (uint8_t x = 108; x < 125; x++)
         line[x] = 0x41;
@@ -86,8 +91,6 @@ void UI_DisplayStatus(void)
     for (uint8_t s = 0; s < segments; s++)
         for (uint8_t x = 0; x < 4; x++)
             line[109 + s * 5 + x] = 0x7F;
-    if (gChargingWithTypeC)
-        line[117] ^= 0x1C;
 
     ST7565_BlitStatusLine();
 }

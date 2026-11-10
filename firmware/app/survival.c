@@ -12,6 +12,9 @@
 #include "app/action.h"
 #include "app/chFrScanner.h"
 #include "app/generic.h"
+#ifdef ENABLE_FLASHLIGHT
+    #include "app/flashlight.h"
+#endif
 #ifdef ENABLE_FMRADIO
     #include "app/fm.h"
 #endif
@@ -809,6 +812,9 @@ void SURVIVAL_TimeSlice500ms(void)
 {
     sHalfSeconds++;
 
+    if (gChargingWithTypeC)
+        gUpdateStatus = true;   // charging animation
+
     if (sMsgTimer && --sMsgTimer == 0 && gScreenToDisplay == DISPLAY_SCANNER)
         GUI_SelectNextDisplay(DISPLAY_MAIN);
 
@@ -1311,6 +1317,54 @@ void SURVIVAL_DisplayLog(void)
     }
 
     ST7565_BlitFullScreen();
+}
+
+// ---------------------------------------------------------------- charging
+
+// These radios read 0 on the USB-C charge current input, but plugging the charger in lifts the
+// battery reading by ~15 ADC counts at once (unplugging drops it the same way; noise is +-2,
+// single spikes up to +-7). A step counts only when it holds for 2 samples and the radio's own
+// load (backlight level, RX/TX, FM, flashlight, speaker) has not changed meanwhile.
+#define CHARGE_STEP 8
+
+void SURVIVAL_ChargeDetect(uint16_t raw)
+{
+    static uint16_t ref, sig;
+    static uint8_t  settle = 3, hits;
+
+    const uint16_t s = gCurrentFunction | (gFmRadioMode << 3) | (gEnableSpeaker << 4) |
+                       (gFlashLightState << 5) | (BACKLIGHT_GetBrightness() << 8);
+    if (s != sig) {   // load changed: let the voltage settle, then take a new reference
+        sig    = s;
+        settle = 3;
+        hits   = 0;
+        return;
+    }
+    if (settle) {
+        if (--settle == 0)
+            ref = raw;
+        return;
+    }
+
+    const int16_t d = raw - ref;
+    if (gChargingWithTypeC ? d <= -CHARGE_STEP : d >= CHARGE_STEP) {
+        if (++hits >= 2) {
+            gChargingWithTypeC = !gChargingWithTypeC;
+            ref           = raw;
+            hits          = 0;
+            gUpdateStatus = true;
+            if (gChargingWithTypeC)
+                BACKLIGHT_TurnOn();   // show that the charger was seen
+        }
+        return;
+    }
+    hits = 0;
+    ref  = (ref * 7 + raw) / 8;   // follow the slow drift: charging creep, discharge
+}
+
+uint8_t SURVIVAL_AnimPhase(void)
+{
+    return sHalfSeconds & 3;
 }
 
 // ---------------------------------------------------------------- eco
