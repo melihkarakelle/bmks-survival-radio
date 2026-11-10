@@ -34,6 +34,8 @@ Based on [F4HWN](https://github.com/armel/uv-k5-firmware-custom) (fork of
 - **Built-in manual** (`F+6`): 27 topics, from the keys to MAYDAY calls, the phonetic alphabet,
   SOS signals, water, direction finding and first aid.
 - **Flashlight:** on, blink, strobe and SOS with the side key.
+- **Charging indicator:** plug the USB-C charger in while the radio is on and the battery icon
+  animates (detected from the battery voltage step; the charge current line reads nothing on these units).
 - **Readable UI:** one meaning per row, big frequency digits, plain-language menu, help on the `F` key.
 
 ## Screens
@@ -76,6 +78,8 @@ On the FM screen: `UP/DOWN` tune, `*` seek, hold `M` save, `F+*` find all statio
   siblings that run F4HWN). Tested on a UV-K5 with stock firmware 2.01.26 and bootloader 2.00.06.
 - **Not** for the newer UV-K5 V3 / UV-K1 boards with the PY32F071 MCU: different firmware, do not flash.
 - Programming cable: the usual Kenwood-type K-plug USB cable (CH340 or similar).
+- Charging over the body USB-C socket: use a **USB-A to USB-C cable**. The radio lacks the USB-C
+  CC resistors, so C-to-C cables and PD chargers supply nothing.
 
 ## Install
 
@@ -119,7 +123,7 @@ The firmware lives in [`firmware/`](firmware/) (F4HWN v4.3 tree plus the surviva
 `app/survival.c`, `ui/survival.c` and the `ENABLE_SURVIVAL` sections). Build with Docker:
 
 ```
-EDITION=survival SURVIVAL_VERSION=v6.9 tools/build-f4hwn.sh "$PWD/firmware"
+EDITION=survival SURVIVAL_VERSION=v7.1 tools/build-f4hwn.sh "$PWD/firmware"
 ```
 
 Output: `builds/bmks.survival.bin` and `.packed.bin`. The manual text is
