@@ -564,5 +564,6 @@ Tablo sürümü 6 (ilk açılışta kanallar yeniden yazılır, FAV alanı temiz
 - Ölçüm (`tools/k5batt.py`, UART 0x0529, test derlemesinde ENABLE_EXTRA_UART_CMD=1): takınca pil ADC'si tek okumada
   ~+15 (2005→2020), çıkarınca ~−12 (2018→2006); gürültü ±2, tek sivri ±7.
 - `SURVIVAL_ChargeDetect`: en yeni ham okuma referanstan ≥8 yukarı (şarjdayken ≥8 aşağı) ve 2 okuma sürerse durum değişir;
-  yük imzası (ışık seviyesi, RX/TX, FM, fener, hoparlör) değişince 3 sn beklenip yeni referans alınır.
+  yük imzası (RX/TX, FM, fener, hoparlör) değişince 3 sn beklenip yeni referans alınır. v7.1: ışık seviyesi imzadan
+  çıktı (okumayı 2-3 birim oynatıyor); 10 sn kısılması bekleme penceresi açıp çıkarmayı yutuyordu.
 - Şarjda pil bölmeleri 500 ms'de bir 0→3 dolar, voltaj yerine yüzde görünür. Açılışta şarja takılıysa görülmez.

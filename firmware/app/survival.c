@@ -1324,16 +1324,17 @@ void SURVIVAL_DisplayLog(void)
 // These radios read 0 on the USB-C charge current input, but plugging the charger in lifts the
 // battery reading by ~15 ADC counts at once (unplugging drops it the same way; noise is +-2,
 // single spikes up to +-7). A step counts only when it holds for 2 samples and the radio's own
-// load (backlight level, RX/TX, FM, flashlight, speaker) has not changed meanwhile.
+// big loads (RX/TX, FM, flashlight, speaker) have not changed meanwhile. The backlight is left
+// out: it moves the reading by 2-3 counts only, and its 10 s dim used to open a settle window
+// that swallowed an unplug.
 #define CHARGE_STEP 8
 
 void SURVIVAL_ChargeDetect(uint16_t raw)
 {
-    static uint16_t ref, sig;
-    static uint8_t  settle = 3, hits;
+    static uint16_t ref;
+    static uint8_t  sig, settle = 3, hits;
 
-    const uint16_t s = gCurrentFunction | (gFmRadioMode << 3) | (gEnableSpeaker << 4) |
-                       (gFlashLightState << 5) | (BACKLIGHT_GetBrightness() << 8);
+    const uint8_t s = gCurrentFunction | (gFmRadioMode << 3) | (gEnableSpeaker << 4) | (gFlashLightState << 5);
     if (s != sig) {   // load changed: let the voltage settle, then take a new reference
         sig    = s;
         settle = 3;
