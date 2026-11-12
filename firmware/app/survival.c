@@ -7,6 +7,7 @@
 
 #ifdef ENABLE_SURVIVAL
 
+#include <assert.h>
 #include <string.h>
 
 #include "app/action.h"
@@ -21,6 +22,9 @@
 #include "app/survival.h"
 #include "driver/backlight.h"
 #include "driver/eeprom.h"
+#ifdef SURVIVAL_TARGET_V3
+    #include "driver/py25q16.h"
+#endif
 #include "external/printf/printf.h"
 #include "frequencies.h"
 #include "functions.h"
@@ -38,6 +42,26 @@
 #define SURV_MARKER_ADDR   0x1FF8
 // EEPROM 0x1FE8: CUSTOM scan range, start and end as uint32 (10 Hz units)
 #define SURV_RANGE_ADDR    0x1FE8
+#ifdef SURVIVAL_TARGET_V3
+// UV-K1 / UV-K5 V3 keep the settings in SPI flash behind an EEPROM map with holes:
+// 0x1FE8 is not mapped (writes are dropped), and 0x1FF8 shares a sector with F4HWN
+// settings written in append mode, which erases the rest of the sector. The two
+// records get their own sector, 0x00D000, outside the EEPROM map.
+#define SURV_FLASH_ADDR    0x00D000
+
+static void SurvRead(uint16_t addr, void *buf, uint8_t size)
+{
+    PY25Q16_ReadBuffer(SURV_FLASH_ADDR + (addr == SURV_RANGE_ADDR ? 8 : 0), buf, size);
+}
+
+static void SurvWrite(uint16_t addr, const void *buf)
+{
+    PY25Q16_WriteBuffer(SURV_FLASH_ADDR + (addr == SURV_RANGE_ADDR ? 8 : 0), buf, 8, false);
+}
+#else
+#define SurvRead  EEPROM_ReadBuffer
+#define SurvWrite EEPROM_WriteBuffer
+#endif
 #define SURV_RANGE_START   14400000   // 144.000 MHz
 #define SURV_RANGE_END     14600000   // 146.000 MHz
 // bump when the channel tables or defaults change, radios re-init on next boot
@@ -200,8 +224,8 @@ static const SurvivalGroup_t GROUPS[] = {
     {"CB ",  CB_FREQS,     0,        0,    ARRAY_SIZE(CB_FREQS),     SURV_NARROW|SURV_HIGH, NULL,        NULL},
 };
 
-static_assert(ARRAY_SIZE(MARINE_NUMS) == ARRAY_SIZE(MARINE_FREQS));
-static_assert(ARRAY_SIZE(GROUPS) == SURV_MODE_FM);
+static_assert(ARRAY_SIZE(MARINE_NUMS) == ARRAY_SIZE(MARINE_FREQS), "");
+static_assert(ARRAY_SIZE(GROUPS) == SURV_MODE_FM, "");
 
 #define GROUP_NONE 0xFF
 
@@ -303,6 +327,14 @@ static void WriteChannels(void)
     uint8_t     ch   = 0;
     char        name[16];
 
+#ifdef SURVIVAL_TARGET_V3
+    // Every channel and name is rewritten below. Blank the two flash sectors that
+    // hold only them (EEPROM 0x0000-0x0C7F and 0x0F50-0x1BCF), so each write
+    // programs erased flash instead of erasing a 4 KB sector per channel.
+    PY25Q16_SectorErase(0x000000);
+    PY25Q16_SectorErase(0x00e000);
+#endif
+
     for (uint8_t g = 0; g < ARRAY_SIZE(GROUPS); g++) {
         const SurvivalGroup_t *grp = &GROUPS[g];
 
@@ -381,7 +413,7 @@ void SURVIVAL_SaveSettings(void)
         SURV_MAGIC[0], SURV_MAGIC[1], SURV_MAGIC[2], SURV_MAGIC[3],
         SURV_TABLE_VERSION, gSurvivalTxMask, gSurvivalFmScan, SURV_SETTINGS_REV,
     };
-    EEPROM_WriteBuffer(SURV_MARKER_ADDR, marker);
+    SurvWrite(SURV_MARKER_ADDR, marker);
 }
 
 void SURVIVAL_SaveCustomRange(void)
@@ -393,14 +425,14 @@ void SURVIVAL_SaveCustomRange(void)
     }
 
     const uint32_t range[2] = {gSurvivalCustomStart, gSurvivalCustomEnd};
-    EEPROM_WriteBuffer(SURV_RANGE_ADDR, range);
+    SurvWrite(SURV_RANGE_ADDR, range);
 }
 
 void SURVIVAL_Init(void)
 {
     uint8_t marker[8];
 
-    EEPROM_ReadBuffer(SURV_MARKER_ADDR, marker, sizeof(marker));
+    SurvRead(SURV_MARKER_ADDR, marker, sizeof(marker));
     // the priority channel is marked with the (otherwise unused) scan list 1 bit
     for (uint8_t c = 0; IS_MR_CHANNEL(c); c++) {
         if (gMR_ChannelAttributes[c].scanlist1 && RADIO_CheckValidChannel(c, false, 0)) {
@@ -412,7 +444,7 @@ void SURVIVAL_Init(void)
     if (memcmp(marker, SURV_MAGIC, sizeof(SURV_MAGIC)) == 0 && marker[4] == SURV_TABLE_VERSION) {
         uint32_t range[2];
         LoadSkip();
-        EEPROM_ReadBuffer(SURV_RANGE_ADDR, range, sizeof(range));
+        SurvRead(SURV_RANGE_ADDR, range, sizeof(range));
         gSurvivalTxMask = marker[5];
         if (marker[6] <= SURV_FMSCAN_LAST)
             gSurvivalFmScan = marker[6];
@@ -484,7 +516,7 @@ void SURVIVAL_EraseMarker(void)
 {
     uint8_t blank[8];
     memset(blank, 0xFF, sizeof(blank));
-    EEPROM_WriteBuffer(SURV_MARKER_ADDR, blank);
+    SurvWrite(SURV_MARKER_ADDR, blank);
 }
 
 uint8_t SURVIVAL_GetMode(void)
